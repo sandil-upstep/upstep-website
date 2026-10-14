@@ -1,0 +1,129 @@
+"use client";
+
+import { useEffect, useRef, type ReactNode } from "react";
+
+// Pins the Anand section while vertical scrolling drives its card slider
+// sideways, releasing once the last card is fully in view. The section sticks
+// with its bottom edge on the viewport's bottom (or its top on the viewport's
+// top, if it fits), so the cards row stays visible the whole time. Does nothing
+// when the cards already fit and the slider has nothing to scroll.
+// `markers` draws ScrollTrigger-style debug lines: the pin starts when the
+// green "start" line reaches the "scroller" line and ends at the red "end" line.
+export default function AnandSliderPin({ children, markers = false }: { children: ReactNode; markers?: boolean }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const section = wrap?.firstElementChild as HTMLElement | null;
+    const slider = section?.querySelector<HTMLElement>(".anand__slider");
+    if (!wrap || !section || !slider) return;
+
+    let distance = 0;
+    let stickTop = 0;
+
+    const sync = () => {
+      if (distance <= 0) return;
+      const progress = (stickTop - wrap.getBoundingClientRect().top) / distance;
+      slider.scrollLeft = Math.min(1, Math.max(0, progress)) * distance;
+    };
+
+    const measure = () => {
+      distance = Math.max(0, slider.scrollWidth - slider.clientWidth);
+      const active = distance > 1;
+      wrap.classList.toggle("anand-pin--active", active);
+      if (!active) {
+        distance = 0;
+        wrap.style.height = "";
+        return;
+      }
+      stickTop = Math.min(0, window.innerHeight - section.offsetHeight);
+      wrap.style.setProperty("--pin-top", `${stickTop}px`);
+      wrap.style.setProperty("--pin-distance", `${distance}px`);
+      // Extra height gives the vertical scroll room to cover the slider's width.
+      wrap.style.height = `${section.offsetHeight + distance}px`;
+      sync();
+    };
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(section);
+    observer.observe(slider);
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", sync, { passive: true });
+    measure();
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", sync);
+      wrap.classList.remove("anand-pin--active");
+      wrap.style.height = "";
+    };
+  }, []);
+
+  // Publishes how far the page has scrolled through the section as --anand-scroll
+  // (0 = its top entering the viewport bottom, 1 = its wrapper leaving the top),
+  // which the checkerboard uses to zoom and rotate. Measured on the wrapper so
+  // it keeps moving while the section is pinned.
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const section = wrap?.firstElementChild as HTMLElement | null;
+    if (!wrap || !section) return;
+
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const rect = wrap.getBoundingClientRect();
+      const progress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
+      section.style.setProperty("--anand-scroll", Math.min(1, Math.max(0, progress)).toFixed(4));
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    update();
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, []);
+
+  // The page cover starts light and switches to its dark theme once the
+  // section's top has scrolled 40% of the way up the viewport, then back to
+  // light once the "What we offer" section (.wwo) reaches that same line.
+  useEffect(() => {
+    const section = wrapRef.current?.firstElementChild;
+    const cover = section?.closest(".main-cover");
+    if (!section || !cover) return;
+    const offer = cover.querySelector(".wwo");
+
+    const past = new Map<Element, boolean>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) past.set(entry.target, entry.isIntersecting);
+        const dark = past.get(section) && !(offer && past.get(offer));
+        cover.classList.toggle("main-cover--dark", Boolean(dark));
+      },
+      { rootMargin: "0px 0px -40% 0px" },
+    );
+    observer.observe(section);
+    if (offer) observer.observe(offer);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={wrapRef} className="anand-pin0">
+      {children}
+      {markers && (
+        <>
+          <span className="anand-pin__marker anand-pin__marker--scroller">scroller</span>
+          <span className="anand-pin__marker anand-pin__marker--start">start</span>
+          <span className="anand-pin__marker anand-pin__marker--end">end</span>
+        </>
+      )}
+    </div>
+  );
+}

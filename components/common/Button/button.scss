@@ -1,0 +1,127 @@
+$btn-orange-light: #ff7a2b;
+$btn-orange: #f8661a;
+$btn-orange-dark: #ec5a0f;
+$btn-text: #ffffff;
+$btn-radius: 10px;
+
+.upstep-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+  isolation: isolate;
+
+  border: none;
+  border-radius: $btn-radius;
+  background: linear-gradient(
+    110deg,
+    $btn-orange-light 0%,
+    $btn-orange 45%,
+    $btn-orange-dark 100%
+  );
+  color: $btn-text;
+  font-family: inherit;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+
+  box-shadow:
+    0 10px 30px -6px rgba($btn-orange, 0.35),
+    0 4px 12px -4px rgba($btn-orange-dark, 0.3);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+
+  // Glossy diagonal sheen across the middle of the button
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+      110deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.22) 52%,
+      transparent 64%
+    );
+    background-size: 250% 100%;
+    background-position: 50% 0;
+    transition: background-position 0.6s ease;
+    pointer-events: none;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 16px 36px -8px rgba($btn-orange, 0.45),
+      0 6px 16px -4px rgba($btn-orange-dark, 0.35);
+
+    &::before {
+      background-position: 0% 0;
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+    filter: brightness(0.96);
+  }
+
+  &:focus-visible {
+    outline: 3px solid rgba($btn-orange, 0.45);
+    outline-offset: 3px;
+  }
+
+  &:disabled,
+  &[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+    box-shadow: none;
+  }
+
+  // Sizes
+  &--sm {
+    padding: 10px 20px;
+    font-size: 0.9375rem;
+  }
+
+  &--md {
+    padding: 16px 30px;
+    font-size: 1.25rem;
+  }
+
+  &--lg {
+    padding: 20px 40px;
+    font-size: 1.5rem;
+  }
+
+  &--full {
+    width: 100%;
+  }
+
+  @media (max-width: 640px) {
+    &--md {
+      padding: 14px 24px;
+      font-size: 1.0625rem;
+    }
+
+    &--lg {
+      padding: 16px 30px;
+      font-size: 1.25rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &::before {
+      transition: none;
+    }
+  }
+}

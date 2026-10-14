@@ -1,0 +1,409 @@
+$lg: 1024px;
+$sm: 640px;
+$lg-max: $lg - 1px;
+$sm-max: $sm - 1px;
+
+// Fluid desktop gutter, shared by the copy column (lg:px-[…] in the TSX) and
+// the card row so their left edges line up.
+$desktop-gutter: clamp(2.5rem, 4vw, 5rem);
+
+.video-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.masked-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  // Desktop and stacked layouts each get their own tilted mask.
+  &.is-masked {
+    clip-path: url(#videoClipMobile);
+    -webkit-clip-path: url(#videoClipMobile);
+
+    @media (min-width: 1024px) {
+      clip-path: url(#videoClip);
+      -webkit-clip-path: url(#videoClip);
+    }
+  }
+}
+
+.hero-title {
+  // Span the full copy column, even though the column is items-start.
+  width: 100%;
+  // Fluid size tracks the copy column (an @container), not the viewport, so
+  // the title fills its parent whether the hero is stacked or side-by-side.
+  // The rem floor and cap keep it honoring the user's root font size.
+  // 8.9cqi keeps "Learning, Personalized" on one line on desktop, so the
+  // title holds the design's three lines down to 1024.
+  font-size: clamp(2rem, 7.5cqi, 5.125rem);
+  line-height: 1.1;
+  font-weight: 700;
+  // `pretty` lets lines run to the column edge; `balance` would shorten them.
+  text-wrap: pretty;
+  color: #071025;
+
+  // Keep the lines clear of the cube floating at the title's right.
+  @media (max-width: $lg-max) {
+    padding-right: 3.5rem;
+  }
+
+  // Desktop: Chrome's `pretty` rebalances this short title into four even
+  // lines; plain wrapping gives the design's three.
+  @media (min-width: $lg) {
+    text-wrap: wrap;
+  }
+
+  // Tablets: the full-width column would otherwise push it past 4rem.
+  @media (min-width: $sm) and (max-width: $lg-max) {
+    font-size: clamp(2rem, 8.9cqi, 3.75rem);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    color: #fafafa;
+  }
+}
+
+// SplitText's per-line clipping masks for the intro reveal. At line-height
+// 1.1 a bare mask would shave the descenders (g, y, z), so it's padded down
+// and pulled back by the same amount to keep the line spacing unchanged.
+.hero-title-line-mask {
+  padding-bottom: 0.15em;
+  margin-bottom: -0.15em;
+}
+
+$gold-deep: #e9a01c;
+$gold-mid: #f5bd5a;
+$gold-light: #fde4b8;
+
+// Frosted-glass rating card: translucent white wash that thins out toward the
+// bottom-right, soft warm haze in the top corner, and a backdrop blur. The
+// design's cards have no hard edge, so the border and shadow stay faint.
+.hero-glass-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  // Milky-white glass: a faintly grey core with a thick, blurred white rim
+  // glowing inward, and a soft grey halo just outside the edge.
+  background: rgba(246, 246, 246, 0.7);
+  box-shadow:
+    0 0 6px rgba(0, 0, 0, 0.06),
+    0 14px 36px -20px rgba(0, 0, 0, 0.1),
+    inset 0 0 14px 6px rgba(255, 255, 255, 0.95),
+    inset 0 0 2px 1px rgba(255, 255, 255, 1);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+
+  @media (prefers-color-scheme: dark) {
+    border-color: rgba(255, 255, 255, 0.12);
+    background:
+      var(--card-glow, none),
+      linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0.03) 100%
+      );
+    box-shadow:
+      0 12px 32px -12px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+}
+
+// Rating-card row: a staggered two-up grid below lg (right column dropped a
+// step), and a single row pinned to the bottom of the hero on desktop.
+.rating-card-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem 0.75rem;
+  width: 100%;
+  max-width: 80rem;
+  // Extra bottom room for the dropped right column.
+  padding: 0 1rem 3.75rem;
+
+  // Anchors the stacked grid's cubes.
+  @media (max-width: $lg-max) {
+    position: relative;
+  }
+
+  @media (min-width: $sm) {
+    gap: 1rem;
+    padding-inline: 2.5rem;
+  }
+
+  // Desktop: the row stops about three-quarters across, as in the design,
+  // but never squeezes the four cards below ~62rem.
+  @media (min-width: $lg) {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: clamp(1rem, 2.35vw, 3rem);
+    width: max(75%, 62rem);
+    max-width: none;
+    padding: 0 0 clamp(1.25rem, 4vw, 5rem) $desktop-gutter;
+  }
+}
+
+// Outer wrapper carries the scroll parallax; the inner card carries the
+// stagger-in, so the two tweens never share a transform.
+.rating-card-wrapper {
+  flex: 1 1 0;
+  will-change: transform;
+
+  // Stacked grid: drop the right column. `translate` rather than `transform`
+  // so it can't collide with the gsap tweens, and it leaves the grid rows be.
+  @media (max-width: $lg-max) {
+    &:nth-child(even) {
+      translate: 0 2.5rem;
+    }
+  }
+
+  // Desktop stagger: each card a step lower than the last (~50px at 1920).
+  @media (min-width: $lg) {
+    @for $i from 2 through 4 {
+      &:nth-child(#{$i}) {
+        margin-top: calc(#{$i - 1} * clamp(1.5rem, 2.6vw, 3.25rem));
+      }
+    }
+  }
+}
+
+.rating-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  // The label sizes off the card's own width (cqi), so it stays on one line.
+  container-type: inline-size;
+  // Scales with the viewport like the design (~195px tall at 1920), with a
+  // floor that still fits the Google card's three rows.
+  min-height: clamp(8.5rem, 10.2vw, 12.25rem);
+  padding: 1.125rem;
+  color: #000;
+
+  @media (max-width: 1200px) {
+    padding: 1rem;
+  }
+
+  @media (max-width: $sm-max) {
+    padding: 0.875rem;
+    min-height: 120px;
+    border-radius: 16px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    color: #fafafa;
+  }
+}
+
+.rating-stars {
+  display: flex;
+  gap: 0.25rem;
+
+  svg {
+    width: clamp(1.5rem, 2vw, 2.5rem);
+    height: clamp(1.5rem, 2vw, 2.5rem);
+
+    // Five stars have to fit a half-width card.
+    @media (max-width: $sm-max) {
+      width: 1.375rem;
+      height: 1.375rem;
+    }
+  }
+}
+
+.rating-card-google {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rating-card-google-score {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rating-card-google-logo {
+  flex-shrink: 0;
+  width: clamp(1.75rem, 2.2vw, 2.75rem);
+  height: clamp(1.75rem, 2.2vw, 2.75rem);
+
+  @media (max-width: $sm-max) {
+    width: 1.625rem;
+    height: 1.625rem;
+  }
+}
+
+.rating-card-google-rating {
+  // Sized off the card's width (~48px at 1920, as in the design) so
+  // "4.8 stars" stays on one line beside the logo.
+  font-size: clamp(1.5rem, 13.5cqi, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.rating-card-google-reviews {
+  font-size: clamp(.75rem, 8.6cqi, 1.625rem);
+  font-weight: 500;
+
+  span {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+}
+
+.rating-card-illustration {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  width: auto;
+  height: 50%;
+  min-height:80px;
+  pointer-events: none;
+  @media (max-width: 1200px) {
+    height: 40%;
+  }
+  @media (max-width: $sm-max) {
+    top: 0.625rem;
+    right: 0.625rem;
+    height: 3rem;
+    min-height: 0;
+  }
+}
+
+.rating-card-value {
+  position: relative;
+  // ~52px at 1920, as in the design.
+  font-size: clamp(1.75rem, 0.5rem + 2.3vw, 3.25rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
+.rating-card-label {
+  position: relative;
+  margin-top: 0.5rem;
+  // Sized to fit the longest label ("Chess Classes Delivered") on one line
+  // across the card, so it never wraps up into the illustration.
+  font-size: clamp(0.75rem, 8.6cqi, 1.625rem);
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+
+  @media (max-width: $lg-max) {
+    font-size: clamp(0.75rem, 8.6cqi, 1.125rem);
+  }
+}
+
+// Decorative cubes. Desktop ones are placed in % of the 16:10 section,
+// measured off the 1920x1200 design; stacked ones hang off their neighbours.
+.hero-cube {
+  position: absolute;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+// On the frame line, level with the bottom of the title.
+.hero-cube--frame {
+  left: 38.9%;
+  top: 40.7%;
+  width: 2.9%;
+  transform: rotate(-8deg);
+  @media (max-width: $lg-max) {
+    display: none;
+  }
+}
+
+// Blurred, low between the first two cards.
+.hero-cube--cards {
+  left: 20.7%;
+  top: 77%;
+  width: 2.6%;
+  transform: rotate(18deg);
+  filter: blur(2px);
+  // Below ~1200 the section's min-height stretches it past 16:10, so the %
+  // spot drifts onto the Google card — drop it there.
+  @media (max-width: 1199px) {
+    display: none;
+  }
+}
+
+// Stacked: right of the title.
+.hero-cube--title {
+  top: 0.75rem;
+  right: -0.25rem;
+  width: 3.25rem;
+  transform: rotate(-10deg);
+  @media (min-width: $lg) {
+    display: none;
+  }
+}
+
+// Stacked: blurred, just under the photo's slanted edge at the left.
+.hero-cube--photo {
+  left: 4%;
+  bottom: 1%;
+  width: 2.5rem;
+  transform: rotate(20deg);
+  filter: blur(1.5px);
+  @media (min-width: $lg) {
+    display: none;
+  }
+}
+
+// Stacked: either side of the card grid.
+.hero-cube--grid-left,
+.hero-cube--grid-right {
+  z-index: 1;
+  width: 2.25rem;
+  @media (min-width: $lg) {
+    display: none;
+  }
+}
+.hero-cube--grid-left {
+  left: 0.25rem;
+  top: 48%;
+  transform: rotate(-24deg);
+}
+.hero-cube--grid-right {
+  right: 0.25rem;
+  top: 46%;
+  transform: rotate(16deg);
+}
+
+// Golden gradient title: deep gold on the left, a pale highlight through the
+// middle, warming back to gold on the right.
+.hero-gold-text {
+  background: linear-gradient(
+    90deg,
+    $gold-deep 0%,
+    $gold-mid 35%,
+    $gold-light 65%,
+    $gold-mid 85%,
+    $gold-deep 100%
+  );
+  // Keep the gradient spanning just the number, not the whole card width.
+  width: fit-content;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+// Stroke-only heading text — no fill, just the outline. Paired with
+// BoldStrokeText, which clip-path wipes it in left-to-right once it
+// crosses the viewport's midline.
+.bold-stroke-text {
+  // color: transparent;
+  font-family: var(--font-open-sans), sans-serif;
+  -webkit-text-stroke: 1.5px var(--foreground);
+  text-stroke: 1.5px var(--foreground);
+  paint-order: stroke;
+  fill: black;
+}

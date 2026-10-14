@@ -1,0 +1,74 @@
+$gap-gold-dark: #6b4a12;
+$gap-gold: #a87a24;
+$gap-gold-light: #f3d27a;
+
+// Placeholder for the gold "GAP" badge: dark bronze plate with a shield
+// emblem on the left and engraved-gold lettering.
+.gap-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 46px;
+  padding: 0 18px 0 30px;
+  border-radius: 6px;
+  background: linear-gradient(110deg, $gap-gold-dark 0%, $gap-gold 50%, $gap-gold-dark 100%);
+  box-shadow: inset 0 0 0 1px rgba($gap-gold-light, 0.35);
+  text-decoration: none;
+  position: relative;
+  isolation: isolate;
+
+  // Glossy diagonal sheen that sweeps across on hover (same as .upstep-btn).
+  // Kept on a pseudo-element rather than using overflow: hidden, so the
+  // shield artwork can still hang off the left edge.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: linear-gradient(
+      110deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.22) 52%,
+      transparent 64%
+    );
+    background-size: 250% 100%;
+    background-position: 50% 0;
+    transition: background-position 0.6s ease;
+    pointer-events: none;
+  }
+
+  &:hover::before {
+    background-position: 0% 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::before {
+      transition: none;
+    }
+  }
+
+  &__shield {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 36px;
+    clip-path: polygon(50% 0, 100% 15%, 100% 60%, 50% 100%, 0 60%, 0 15%);
+    background: linear-gradient(180deg, $gap-gold-light, $gap-gold);
+    color: $gap-gold-dark;
+    font-size: 8px;
+    font-weight: 800;
+  }
+
+  &__text {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    background: linear-gradient(180deg, #fff3c4 0%, $gap-gold-light 50%, #d9a441 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: white;
+  }
+}

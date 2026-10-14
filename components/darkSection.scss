@@ -1,0 +1,54 @@
+// Translucent card behind the "Certified by" copy and the slide cards — a
+// faint white-to-grey wash over the section's navy background.
+.certified-card {
+  background: linear-gradient(100.5deg, rgba(255, 255, 255, 0.1) 13.06%, rgba(153, 153, 153, 0.089) 81.56%);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.6);
+}
+
+// Card row scrolls sideways without showing a scrollbar, and fades out on
+// all four sides. The two gradients are intersected so the corners fade too.
+// Vertical fade is a fixed 40px so it stays inside the row's top/bottom
+// padding rather than eating the photos' heads.
+.sliding-window {
+  $fade-x: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  $fade-y: linear-gradient(180deg, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+  mask-image: $fade-x, $fade-y;
+  mask-composite: intersect;
+  -webkit-mask-image: $fade-x, $fade-y;
+  -webkit-mask-composite: source-in;
+
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// Photo fades out at the bottom so it melts into the card behind the copy.
+.slide-card-photo {
+  mask-image: linear-gradient(180deg, #000 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent 100%);
+}
+
+// Championship years: gold outline only, with a soft grey wash rising from
+// the bottom of each glyph.
+.champion-year {
+  font-family: var(--font-open-sans), sans-serif;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.5px #f5bd5a;
+  background: linear-gradient(180deg, transparent 45%, rgba(190, 190, 190, 0.55) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.why-txt-img{
+  @media (max-width: 1200px) {
+    width: auto;
+    height: auto;
+    max-height: 200px;
+  }
+
+  @media (max-width: 767px) {
+    margin-bottom: 20px;
+  }
+}

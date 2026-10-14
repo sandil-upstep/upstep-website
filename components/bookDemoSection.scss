@@ -1,0 +1,464 @@
+// "Book a demo" — what a family needs (time, willingness, a device, age) next
+// to a photo, then the four steps of the demo as staggered cards joined by a
+// dashed trail, closing on the demo CTA. Grid lines and spacing tokens match
+// the Review section above so the page keeps one visual rhythm down the column.
+//
+// Sizes are taken from the 1920px design and expressed in cqw (1cqw = 19.2px
+// at that width) so the whole section scales with the viewport.
+
+$ink: #111111;
+$text: #222222;
+$line: #efeae7;
+$outline: #b4b4b4;
+$amber: #f2a81d;
+$cobalt: #3d78de;
+
+.book-demo {
+  --off: 4.64cqw;
+  --w: 69.18cqw;
+  --radius: clamp(18px, 1.46cqw, 28px);
+
+  position: relative;
+  container-type: inline-size;
+  overflow: hidden;
+  padding: 70px 0 clamp(80px, 4.7cqw, 90px);
+  background: #ffffff;
+  color: $ink;
+  font-family: var(--font-plus-jakarta-sans), "Helvetica Neue", Arial, sans-serif;
+}
+
+.book-demo__lines span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: $line;
+  pointer-events: none;
+
+  &:nth-child(1) { left: calc((100% - var(--w)) / 2 - var(--off)); }
+  &:nth-child(2) { left: calc((100% - var(--w)) / 2); }
+  &:nth-child(3) { right: calc((100% - var(--w)) / 2); }
+  &:nth-child(4) { right: calc((100% - var(--w)) / 2 - var(--off)); }
+}
+
+.book-demo__inner {
+  position: relative;
+  z-index: 2;
+  width: var(--w);
+  margin: 0 auto;
+}
+
+// ---------- Decorations ----------
+// Isometric board running off the left edge, tucked in under the first card.
+.book-demo__board {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  top: 31.25cqw;
+  width: 24.7cqw;
+  height: auto;
+  pointer-events: none;
+}
+
+.book-demo__cube {
+  position: absolute;
+  z-index: 3;
+  width: clamp(30px, 2.4cqw, 46px);
+  aspect-ratio: 1 / 1;
+  border-radius: 20%;
+  background: linear-gradient(140deg, #9db8dc 0%, #6f94c8 45%, #3f68a8 100%);
+  box-shadow: inset -4px -6px 8px rgba(20, 40, 90, 0.35), inset 3px 3px 6px rgba(255, 255, 255, 0.5),
+    0 14px 22px rgba(63, 104, 168, 0.35);
+  pointer-events: none;
+}
+
+// Blurred, on the outer-right grid line beside the photo.
+.book-demo__cube--right {
+  top: 13.1cqw;
+  right: calc((100% - var(--w)) / 2 - var(--off));
+  transform: translateX(50%) rotate(45deg);
+  filter: blur(1.5px);
+}
+
+// Small sand-coloured cube sitting on the far corner of the board.
+.book-demo__cube--tan {
+  top: 28.9cqw;
+  left: calc((100% - var(--w)) / 2 - var(--off));
+  width: clamp(24px, 1.8cqw, 36px);
+  transform: translateX(-50%) rotate(40deg);
+  background: linear-gradient(140deg, #f3e6cf 0%, #e2cba5 50%, #c9a978 100%);
+  box-shadow: inset -3px -4px 6px rgba(110, 80, 30, 0.25), inset 2px 2px 4px rgba(255, 255, 255, 0.6),
+    0 8px 14px rgba(150, 120, 70, 0.25);
+}
+
+// Peeks out from under the bottom-left corner of the third card.
+.book-demo__cube--steps {
+  z-index: 2;
+  left: 34.4cqw;
+  top: 23.3cqw;
+  width: clamp(30px, 2.6cqw, 50px);
+  transform: rotate(-20deg);
+  background: linear-gradient(140deg, #7aa3e0 0%, #2f5fb3 50%, #1c3f86 100%);
+}
+
+// ---------- Headline ----------
+.book-demo__eyebrow {
+  position: relative;
+  margin: 0 0 clamp(14px, 1.1cqw, 22px) calc(-1 * var(--off));
+  padding-left: 15px;
+  font-family: var(--font-open-sans), system-ui, sans-serif;
+  font-size: 20px;
+  line-height: 28px;
+  color: $text;
+  font-weight: 600;
+}
+
+.book-demo__eyebrow-box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #3274cd;
+}
+
+.book-demo__title {
+  margin: 0;
+  font-family: var(--font-open-sans), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(64px, 9.1cqw, 175px);
+  line-height: 0.88;
+  letter-spacing: -0.005em;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 2.5px $outline;
+}
+
+// ---------- Requirements ----------
+.book-demo__list {
+  display: grid;
+  // Second column sizes to its label so "Willingness to learn…" stays on one line.
+  grid-template-columns: 14.2cqw max-content;
+  gap: clamp(14px, 1.1cqw, 22px) 0;
+  margin: clamp(28px, 2.3cqw, 44px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.book-demo__item {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 0.6cqw, 12px);
+  font-size: clamp(15px, 1.04cqw, 20px);
+  line-height: 1.35;
+  color: $text;
+}
+
+.book-demo__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: clamp(44px, 3.75cqw, 72px);
+  height: clamp(44px, 3.75cqw, 72px);
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+  }
+}
+
+// ---------- Photo ----------
+// Pinned to the top-right, running past the inner right grid line to the
+// outer one; the first card slides in under its left edge.
+.book-demo__photo {
+  position: absolute;
+  z-index: 1;
+  top: 4.1cqw;
+  right: calc(-1 * var(--off));
+  width: 32.6cqw;
+  border-radius: var(--radius);
+  overflow: hidden;
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 626 / 595;
+    object-fit: cover;
+  }
+}
+
+// ---------- Steps ----------
+.book-demo__steps {
+  position: relative;
+  margin: 3.3cqw -1.2cqw 0 0;
+  // background: #f7f7f7;
+}
+
+.book-demo__trail {
+  position: absolute;
+  z-index: 0;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  pointer-events: none;
+
+  path {
+    stroke: $cobalt;
+    stroke-width: 1.5;
+    stroke-dasharray: 6 6;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+}
+
+// Four columns, stepping down like stairs: 1 high, 2 & 3 level, 4 lowest.
+.book-demo__cards {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: start;
+  gap: 0 1.5cqw;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.book-demo__step {
+  display: grid;
+  grid-template-columns: clamp(48px, 3.6cqw, 70px) 1fr;
+  grid-template-rows: auto 1fr;
+  column-gap: 0.4cqw;
+  padding: clamp(20px, 1.8cqw, 34px) clamp(14px, 1.2cqw, 24px) clamp(22px, 1.6cqw, 32px) clamp(8px, 0.5cqw, 10px);
+  border-radius: var(--radius);
+  background: linear-gradient(129.75deg, rgba(255, 255, 255, 0.2) 16.54%, rgba(153, 153, 153, 0.08) 77.83%);
+  box-shadow: 0 10px 30px rgba(17, 17, 17, 0.04);
+  background: #99999966;
+
+  &:nth-child(2),
+  &:nth-child(3) { margin-top: 6.3cqw; }
+  // Tighter number column and right padding so "Free 30-Minute" holds one line.
+  &:nth-child(4) {
+    margin-top: 10.8cqw;
+    grid-template-columns: clamp(40px, 3.4cqw, 66px) 1fr;
+    column-gap: 0.3cqw;
+    padding-right: clamp(8px, 0.6cqw, 12px);
+  }
+}
+
+.book-demo__num {
+  grid-row: 1;
+  font-family: var(--font-open-sans), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: clamp(34px, 2.75cqw, 53px);
+  line-height: 1;
+  margin-top: 0.08em;
+  letter-spacing: -0.02em;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.5px $amber;
+}
+
+.book-demo__step-title {
+  grid-column: 2;
+  margin: 0 0 clamp(10px, 1.05cqw, 20px);
+  font-weight: 500;
+  font-size: clamp(20px, 1.67cqw, 32px);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: $ink;
+}
+
+.book-demo__step-text {
+  grid-column: 2;
+  font-size: clamp(15px, 0.94cqw, 18px);
+  line-height: 1.39;
+  color: $text;
+
+  p { margin: 0; }
+  b { font-weight: 700; color: $ink; }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-weight: 700;
+    color: $ink;
+  }
+
+  li::before { content: "– "; }
+}
+
+// Mobile-only pieces: card connectors and the disclaimer line.
+.book-demo__link,
+.book-demo__note { display: none; }
+
+// ---------- CTA ----------
+// Offset outline behind the button, same treatment as the hero CTA.
+.book-demo__cta {
+  position: relative;
+  display: inline-flex;
+  margin: 3.2cqw 0 0 calc(22.2cqw);
+}
+
+.book-demo__cta-outline {
+  position: absolute;
+  inset: 0;
+  transform: translate(-10px, 10px);
+  border: 1px solid #b4511d;
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.book-demo__cta-btn {
+  position: relative;
+  z-index: 1;
+}
+
+// ---------- Responsive ----------
+// Below desktop the photo drops into the flow and the cards sit in a plain
+// two-up grid; the stair offsets, trail and decorations go.
+@media (max-width: 1024px) {
+  .book-demo__board,
+  .book-demo__cube { display: none; }
+  .book-demo__list { grid-template-columns: repeat(2, minmax(0, 260px)); column-gap: 16px; }
+  .book-demo__photo {
+    position: static;
+    width: 100%;
+    max-width: 640px;
+    margin-top: 36px;
+  }
+  .book-demo__steps { margin: 36px 0 0; }
+  .book-demo__trail { display: none; }
+  .book-demo__cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+  .book-demo__step:nth-child(n) { margin-top: 0; }
+  .book-demo__step:nth-child(4) {
+    grid-template-columns: clamp(48px, 3.6cqw, 70px) 1fr;
+    column-gap: 0.4cqw;
+    padding-right: clamp(14px, 1.2cqw, 24px);
+  }
+  .book-demo__cta { margin: 48px 0 0 10px; }
+}
+
+// Phone: cards zig-zag left/right down the column, joined by dashed curls,
+// then the disclaimer and a full-width CTA.
+@mixin phone-cube($from, $mid, $to) {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  aspect-ratio: 1 / 1;
+  border-radius: 20%;
+  background: linear-gradient(140deg, $from 0%, $mid 50%, $to 100%);
+  box-shadow: inset -3px -4px 6px rgba(20, 40, 90, 0.25), inset 2px 2px 4px rgba(255, 255, 255, 0.5),
+    0 8px 14px rgba(20, 40, 90, 0.2);
+  pointer-events: none;
+}
+
+@media (max-width: 767.98px) {
+  // Lines pinned 12px / 28px in from each edge, as in the other sections.
+  .book-demo { --off: 16px; --w: calc(100cqw - 56px); padding: 64px 0 56px; }
+  .book-demo__title { -webkit-text-stroke-width: 2px; }
+  .book-demo__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .book-demo__photo { margin-top: 28px; }
+  .book-demo__steps { margin-top: 20px; }
+
+  .book-demo__cards {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .book-demo__step,
+  .book-demo__step:nth-child(4) {
+    position: relative;
+    width: 90%;
+    grid-template-columns: 60px 1fr;
+    column-gap: 0;
+    padding: 18px 12px 22px 10px;
+
+    &:nth-child(even) { justify-self: end; }
+
+    // Sand cube on the outer grid line left of card 2, blue cube on card 3's corner.
+    &:nth-child(2)::before {
+      @include phone-cube(#f3e6cf, #e2cba5, #c9a978);
+      // Card is 90% of the column, so its offset from the inner line is 1/9 of its width.
+      left: calc(-100% / 9 - 26px);
+      top: -12px;
+      width: 20px;
+      transform: rotate(40deg);
+    }
+    &:nth-child(3)::before {
+      @include phone-cube(#7aa3e0, #2f5fb3, #1c3f86);
+      right: -16px;
+      bottom: -18px;
+      width: 36px;
+      transform: rotate(-20deg);
+    }
+  }
+
+  .book-demo__num {
+    font-size: 40px;
+    -webkit-text-stroke-width: 2px;
+  }
+
+  .book-demo__step-title {
+    margin-bottom: 8px;
+    font-size: 20px;
+    line-height: 1.25;
+  }
+
+  .book-demo__step-text {
+    font-size: 14px;
+    line-height: 1.3;
+
+    // The roadmap points run on as one sentence here.
+    ul, li { display: inline; }
+    li::before { content: none; }
+    li:nth-child(1)::after { content: " "; }
+    li:nth-child(2)::after { content: ", "; }
+    li:nth-child(3)::after { content: " and "; }
+  }
+
+  .book-demo__link {
+    display: block;
+    position: absolute;
+    z-index: -1;
+    top: calc(100% - 4px);
+    overflow: visible;
+    pointer-events: none;
+
+    path {
+      stroke: $cobalt;
+      stroke-width: 1.5;
+      stroke-dasharray: 5 5;
+      stroke-linecap: round;
+    }
+  }
+  .book-demo__link--1 { left: 30px; width: 170px; height: 120px; }
+  .book-demo__link--2 { right: 10px; width: 90px; height: 120px; }
+  .book-demo__link--3 { left: 30px; width: 80px; height: 140px; }
+
+  .book-demo__note {
+    display: block;
+    margin: 36px 0 0;
+    font-style: italic;
+    font-size: 16px;
+    line-height: 1.4;
+    color: $ink;
+  }
+
+  .book-demo__cta {
+    display: flex;
+    margin: 28px 0 0;
+  }
+  .book-demo__cta-outline { display: none; }
+  .book-demo__cta-btn { flex: 1; }
+}

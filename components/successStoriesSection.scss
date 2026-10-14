@@ -1,0 +1,488 @@
+// "Success stories" — student story on the left, a tilted yellow card with
+// the student's cut-out photo on the right, prev/next arrows on the sides.
+
+$line: #efeae7;
+$ink: #000000;
+$muted: #555555;
+$outline: #b8b8b8;
+$orange: #f26b2a;
+$yellow: #f3bb4f;
+
+// ---------- Section shell ----------
+// The grid lines sit at the same spots as the other sections (10.77% /
+// 15.41% / 85.6% / 90.25% of the width); content hangs off the inner pair.
+// The tokens use cqw, which resolves where they're used, against this section.
+.stories {
+  // Layout tokens (desktop ≥ 1441px)
+  --arrow: 7.29cqw; // arrow button size: 140px at 1920, same as What we offer
+  --off: 4.64cqw; // gap between paired grid lines
+  --w: 69.18cqw; // content width: between the inner pair of lines
+
+  position: relative;
+  container-type: inline-size;
+  overflow: hidden;
+  padding: 170px 0 110px;
+  background: #ffffff;
+  color: $ink;
+  font-family: var(--font-plus-jakarta-sans), "Helvetica Neue", Arial, sans-serif;
+}
+
+// ---------- Vertical grid lines ----------
+.stories__lines span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: $line;
+  pointer-events: none;
+
+  &:nth-child(1) { left: calc((100% - var(--w)) / 2 - var(--off)); }
+  &:nth-child(2) { left: calc((100% - var(--w)) / 2); }
+  &:nth-child(3) { right: calc((100% - var(--w)) / 2); }
+  &:nth-child(4) { right: calc((100% - var(--w)) / 2 - var(--off)); }
+}
+
+// ---------- Inner grid ----------
+.stories__inner {
+  position: relative;
+  width: var(--w);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.16fr);
+  grid-template-areas: "content visual";
+  column-gap: 24px;
+}
+
+// ---------- Content ----------
+.stories__content {
+  grid-area: content;
+  position: relative;
+  z-index: 2;
+}
+
+.stories__eyebrow {
+  position: relative;
+  margin: 0 0 22px calc(-1 * var(--off));
+  padding-left: 15px;
+  font-family: var(--font-open-sans), Arial, sans-serif;
+  font-size: 20px;
+  line-height: 28px;
+  color: #222222;
+  font-weight: 600;
+}
+
+.stories__eyebrow-box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #3274CD;
+}
+
+.stories__title {
+  margin: 0 0 30px;
+  font-family: var(--font-open-sans), Arial, sans-serif;
+  font-weight: 800;
+  // "Champs" is ~4.1em wide and the content column ~31cqw, so 7.2cqw keeps the
+  // word inside the column (the reveal mask clips anything past its edge).
+  font-size: clamp(64px, 7.2cqw, 170px);
+  line-height: 0.9;
+  letter-spacing: -0.005em;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 2px $outline;
+}
+
+// Scales with the content column (~31cqw wide on desktop) so the headline
+// always breaks into two balanced lines.
+.stories__story-title {
+  margin: 0 0 30px;
+  font-size: clamp(1.5rem, 2.15cqw, 2.625rem);
+  text-wrap: balance;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.stories__lead {
+  margin: 0 0 22px;
+  max-width: 520px;
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+.stories__list {
+  margin: 0;
+  padding-left: 24px;
+  max-width: 520px;
+  list-style: disc;
+  font-size: 16px;
+  line-height: 27px;
+  // color: $muted;
+  color:#616161;
+
+  li::marker { font-size: 12px; }
+}
+
+// ---------- Visual ----------
+// Desktop: the visual stretches to the text column's height, and the square
+// box inside takes the largest size that fits (normally the full height),
+// so the artwork and the copy end up the same height.
+.stories__visual {
+  grid-area: visual;
+  position: relative;
+  align-self: stretch;
+  margin-right: calc(-1 * var(--off));
+  container-type: size;
+  margin-top: 55px;
+}
+
+// Square stage for the artwork; percentages and cqw below resolve against it.
+.stories__visual-box {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: min(100cqw, 100cqh);
+  aspect-ratio: 1 / 1;
+  transform: translateY(-50%);
+  container-type: inline-size;
+}
+
+// Rotated mask: same footprint as the yellow card, extended upward so the
+// head can pop out of the top.
+.stories__clip {
+  position: absolute;
+  left: 11%;
+  top: -12.4%;
+  width: 78%;
+  height: 101.4%;
+  transform-origin: 50% 61.5%;
+  transform: rotate(20deg);
+  overflow: hidden;
+  border-radius: 0 0 11.5% 11.5% / 0 0 8.85% 8.85%;
+}
+
+.stories__card {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 11.5%;
+  background: radial-gradient(circle at 30% 20%, #f6c86a 0%, $yellow 55%, #efb444 100%);
+}
+
+// Counter-rotated back into normal orientation.
+.stories__photo-wrap {
+  position: absolute;
+  left: -14.1%;
+  top: 12.2%;
+  width: 128.2%;
+  height: 98.6%;
+  transform-origin: 50% 50%;
+  transform: rotate(-20deg);
+}
+
+.stories__photo {
+  position: absolute;
+  left: 12%;
+  top: 2.5%;
+  width: 76%;
+  height: 97.5%;
+
+  img {
+    object-fit: cover;
+    object-position: center top;
+  }
+}
+
+.stories__photo-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+
+  // Stays laid out (so it can be sized) but invisible until textures load.
+  &:not([data-ready]) { visibility: hidden; }
+}
+
+.stories__name {
+  position: absolute;
+  z-index: 3;
+  top: 2.2%;
+  left: 26%;
+  right: 17.5%;
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  font-family: var(--font-poppins), Arial, sans-serif;
+  font-weight: 800;
+  font-size: 5.1cqw;
+  line-height: 1.2;
+}
+
+.stories__location {
+  position: absolute;
+  z-index: 3;
+  top: 20%;
+  left: 70%;
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  margin: 0;
+  font-family: var(--font-poppins), Arial, sans-serif;
+  font-weight: 700;
+  font-size: max(15px, 2.8cqw);
+
+  svg {
+    width: 0.85em;
+    height: 1.1em;
+    flex: none;
+  }
+}
+
+// ---------- Decorative cubes ----------
+.stories__cube {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 18%;
+  aspect-ratio: 1 / 1;
+}
+
+.stories__cube--blue {
+  background: linear-gradient(140deg, #9db8dc 0%, #6f94c8 45%, #3f68a8 100%);
+  box-shadow: inset -4px -6px 8px rgba(20, 40, 90, 0.35), inset 3px 3px 6px rgba(255, 255, 255, 0.5);
+}
+
+.stories__cube--beige {
+  background: linear-gradient(140deg, #f5ead8 0%, #e6d4b6 55%, #cdb791 100%);
+  box-shadow: inset -4px -6px 10px rgba(120, 90, 50, 0.25), inset 3px 3px 6px rgba(255, 255, 255, 0.7);
+}
+
+.stories__cube--duo {
+  background: linear-gradient(120deg, #efe2cc 0 52%, #3f68a8 52% 100%);
+  box-shadow: inset -3px -4px 6px rgba(20, 40, 90, 0.3);
+}
+
+.stories__cube--1 { width: 40px; right: -20px; top: -40px; transform: rotate(18deg); filter: blur(1.5px); }
+.stories__cube--2 { width: 46px; left: calc(-1 * var(--off) - 24px); top: 140px; transform: rotate(-30deg); }
+.stories__cube--3 { width: 8.3%; left: 9.7%; top: 22.4%; transform: rotate(-12deg); z-index: 2; }
+.stories__cube--4 { width: 12%; left: 84%; top: 62%; transform: rotate(-24deg); filter: blur(1.5px); z-index: 4; }
+
+// ---------- Arrows ----------
+.stories__arrow {
+  position: absolute;
+  z-index: 5;
+  top: 58%;
+  transform: translateY(-50%);
+  width: var(--arrow);
+  height: var(--arrow);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  border: 1.5px solid $ink;
+  color: $ink;
+  transition: background 0.2s, color 0.2s;
+
+  svg { width: 32%; height: 32%; }
+
+  &:hover { background: $ink; color: #ffffff; }
+  &:focus-visible { outline: 3px solid $orange; outline-offset: 4px; }
+  &:disabled { cursor: default; }
+}
+
+.stories__arrow--prev {
+  grid-area: prev;
+  left: calc(-1 * (var(--off) + var(--arrow)));
+}
+
+.stories__arrow--next {
+  grid-area: next;
+  right: calc(-1 * (var(--off) + var(--arrow)));
+  border-color: $orange;
+  color: $orange;
+
+  &:hover { background: $orange; color: #ffffff; }
+}
+
+// =========================================================
+// Small desktop / laptop (1025px – 1440px)
+// =========================================================
+@media (max-width: 1440px) {
+  .stories { padding: 130px 0 90px; }
+  .stories__lead { font-size: 18px; }
+  .stories__list { font-size: 15px; line-height: 25px; }
+  .stories__eyebrow { font-size: 18px; }
+}
+
+// =========================================================
+// Tablet (641px – 1024px)
+// =========================================================
+@media (max-width: 1024px) {
+  .stories { padding: 96px 0 80px; }
+
+  .stories__inner {
+    grid-template-columns: var(--arrow) minmax(0, 1fr) var(--arrow);
+    grid-template-areas:
+      "content content content"
+      "prev    visual  next";
+    column-gap: 16px;
+  }
+
+  .stories__arrow { position: static; transform: none; align-self: center; }
+
+  // Stacked layouts go back to a plain square sized by its width.
+  .stories__visual {
+    width: 100%;
+    max-width: 560px;
+    justify-self: center;
+    margin: 64px 0 0;
+    aspect-ratio: 1 / 1;
+    container-type: normal;
+  }
+
+  .stories__visual-box {
+    position: relative;
+    top: 0;
+    width: 100%;
+    transform: none;
+  }
+
+  .stories__title { font-size: clamp(80px, 13vw, 140px); }
+  .stories__story-title { font-size: 2.125rem; max-width: 640px; }
+  .stories__lead { font-size: 19px; max-width: 600px; }
+  .stories__list { max-width: 600px; font-size: 16px; line-height: 26px; }
+
+  .stories__cube--1 { top: -50px; right: -18px; }
+  .stories__cube--2 { width: 38px; top: 120px; left: calc(-1 * var(--off) - 19px); }
+}
+
+// Arrow sizes follow What we offer: they scale with the width from 1200px
+// up, then step down to fixed sizes.
+@media (max-width: 1199.98px) {
+  .stories { --arrow: 84px; }
+}
+
+// Below 768px the other sections pin their lines 12px / 28px in from each
+// edge instead of using percentages.
+@media (max-width: 767.98px) {
+  .stories { --arrow: 60px; --off: 16px; --w: calc(100cqw - 56px); }
+}
+
+// =========================================================
+// Mobile (≤ 640px)
+// =========================================================
+@media (max-width: 640px) {
+  .stories { padding: 72px 0 64px; }
+
+  // Heading, then the photo card, then the story copy. The content wrapper
+  // drops out of the box tree so its children can sit around the visual.
+  .stories { --arrow: 54px; }
+
+  .stories__inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "eyebrow"
+      "title"
+      "visual"
+      "story";
+  }
+
+  .stories__content { display: contents; }
+  .stories__eyebrow { grid-area: eyebrow; }
+  .stories__title { grid-area: title; display:flex; gap:.7rem; line-height: 50px; }
+  .stories__story { grid-area: story; margin-top: 40px; }
+
+  // Arrows overlay the lower corners of the card, out on the outer lines.
+  .stories__arrow {
+    top:50%;
+    
+    grid-area: visual;
+    position: relative;
+    align-self: center;
+    margin-bottom: 4%;
+  }
+  .stories__arrow--prev { justify-self: start; left: calc(-1 * var(--off)); }
+  .stories__arrow--next { justify-self: end; right: calc(-1 * var(--off)); }
+
+  .stories__visual { max-width: 420px; margin-top: 24px; }
+
+  // First and last name stack in the card's top-left corner.
+  .stories__name {
+    top: 13%;
+    left: 9%;
+    right: auto;
+    flex-direction: column;
+    justify-content: flex-start;
+    font-size: 6.2cqw;
+    line-height: 1.15;
+  }
+
+  .stories__eyebrow { font-size: 16px; line-height: 24px; margin-bottom: 12px; padding-left: 12px; }
+  .stories__eyebrow-box { width: 20px; height: 20px; }
+  // One line, as in the design: scales with the viewport so it always fits.
+  .stories__title { font-size: min(12vw, 64px); white-space: nowrap; -webkit-text-stroke: 1.5px $outline; margin-bottom: 24px; }
+  .stories__title br { display: none; }
+  .stories__story-title { font-size: 1.375rem; line-height: 1.3; margin-bottom: 14px; }
+  .stories__lead { font-size: 17px; line-height: 1.3; margin-bottom: 16px; }
+  .stories__list { font-size: 14px; line-height: 23px; padding-left: 20px; }
+
+  .stories__cube--1 { width: 28px; top: -44px; right: -14px; }
+  .stories__cube--2 { width: 30px; top: 96px; left: calc(-1 * var(--off) - 15px); }
+}
+
+// =========================================================
+// Slide transition
+// The component toggles stories--out-{dir} while the current story leaves,
+// then stories--in-{dir} (transitions off) to park the next one on the
+// opposite side before releasing it to slide into place.
+// =========================================================
+.stories__story,
+.stories__photo,
+.stories__name,
+.stories__location {
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+// Text slides vertically: "next" exits upward and the new story rises from
+// below; "prev" runs the other way.
+@mixin slide-text($dir, $y, $instant: false) {
+  .stories--#{$dir} {
+    .stories__story,
+    .stories__name,
+    .stories__location {
+      opacity: 0;
+      transform: translateY($y);
+      @if $instant { transition: none; }
+    }
+
+    // Once the WebGL canvas is live it handles the photo transition itself.
+    .stories__photo:not(:has(> .stories__photo-canvas[data-ready])) {
+      opacity: 0;
+      transform: translateY(6%);
+      @if $instant { transition: none; }
+    }
+  }
+}
+
+@include slide-text(out-next, -24px);
+@include slide-text(out-prev, 24px);
+@include slide-text(in-next, 24px, true);
+@include slide-text(in-prev, -24px, true);
+
+@media (prefers-reduced-motion: reduce) {
+  .stories__arrow { transition: none; }
+
+  .stories__story,
+  .stories__photo,
+  .stories__name,
+  .stories__location {
+    transition: opacity 0.2s linear;
+    transform: none !important;
+  }
+}

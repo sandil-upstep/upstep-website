@@ -1,0 +1,652 @@
+// "Why we are #1" — GM Anand certificate feature plus a sideways card slider.
+// Desktop spans the full width and scales the 1077px design with it (see
+// --u below); tablet and mobile pin --u to 1px and override in plain pixels.
+
+$bg: #071025;
+$line: rgba(255, 255, 255, 0.07);
+$checker: #111b37;
+$muted: #aeb6c8;
+$gold: #c9973a;
+$accent: #3d6df2;
+$orange: #f26b2a;
+$card-border: rgba(255, 255, 255, 0.09);
+$design-width: 1077;
+
+// Max scale, so the layout stops growing past a ~1920px-wide screen.
+$max-scale: 1.78px;
+
+@mixin mask($value) {
+  -webkit-mask-image: $value;
+  mask-image: $value;
+}
+
+// 1u = 1px of the 1077px design, relative to the section's width.
+@function u($n) {
+  @return calc(var(--u) * #{$n});
+}
+
+$theme-transition: 0.7s ease;
+
+// ---------- Page theme ----------
+// The page cover (app/page.tsx) starts on a light theme; AnandSliderPin adds
+// .main-cover--dark as this section scrolls into view, and every themed colour
+// below transitions with it. The section itself is transparent.
+.main-cover {
+  --anand-bg: #fff;
+  --anand-fg: #000;
+  --anand-muted: #5b6475;
+  --anand-card-text: #3a4152;
+  --anand-stroke: rgba(0, 0, 0, 0.28);
+  --anand-line: rgba(0, 0, 0, 0.07);
+  --anand-border: rgba(0, 0, 0, 0.1);
+  --anand-checker-opacity: 0;
+  background: var(--anand-bg);
+  color: var(--anand-fg);
+  transition: background-color $theme-transition, color $theme-transition;
+
+  &.main-cover--dark {
+    --anand-bg: #{$bg};
+    --anand-fg: #fff;
+    --anand-muted: #{$muted};
+    --anand-card-text: #dfe3ec;
+    --anand-stroke: rgba(255, 255, 255, 0.28);
+    --anand-line: #{$line};
+    --anand-border: #{$card-border};
+    --anand-checker-opacity: 1;
+  }
+}
+
+// ---------- Section shell ----------
+// The section can't measure itself with cqw, so its padding scales with vw.
+.anand {
+  --u: min(calc(100vw / #{$design-width}), #{$max-scale});
+  position: relative;
+  overflow: hidden;
+  padding: u(46) 0 u(110);
+  isolation: isolate;
+  container-type: inline-size;
+}
+
+// Pinned while vertical scroll drives the slider (see AnandSliderPin.tsx).
+// Snapping is off so the scripted scrollLeft can move smoothly.
+.anand-pin--active {
+  > .anand {
+    position: sticky;
+    top: var(--pin-top, 0px);
+  }
+
+  .anand__slider { scroll-snap-type: none; }
+}
+
+// Debug markers (AnandSliderPin `markers` prop). "start"/"end" sit in the
+// wrapper and scroll with the page; "scroller" is fixed to the viewport top.
+.anand-pin { position: relative; }
+
+.anand-pin__marker {
+  display: none;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  border-top: 2px solid;
+  padding: 2px 8px;
+  font: 600 12px/1.2 monospace;
+  pointer-events: none;
+
+  .anand-pin--active > & { display: block; }
+}
+
+.anand-pin__marker--scroller {
+  position: fixed;
+  top: 0;
+  left: auto;
+  width: 120px;
+  color: #3d9bff;
+  text-align: right;
+}
+
+.anand-pin__marker--start {
+  position: absolute;
+  top: calc(-1 * var(--pin-top, 0px));
+  color: #2ecc71;
+}
+
+.anand-pin__marker--end {
+  position: absolute;
+  top: calc(var(--pin-distance, 0px) - var(--pin-top, 0px));
+  color: #ff4d4d;
+}
+
+// --u is set on the section's children so cqw resolves against the section.
+.anand__deco,
+.anand__inner {
+  --u: min(calc(100cqw / #{$design-width}), #{$max-scale});
+}
+
+// Decorative layer: vertical lines, checkerboard, cubes
+.anand__deco {
+  // position: absolute;
+  inset: 0;
+  width: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.anand__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--anand-line);
+  transition: background-color $theme-transition;
+
+  // Same grid as the other sections: two pairs mirrored about the centre.
+  &:nth-child(1) { left: 10.77%; }
+  &:nth-child(2) { left: 15.41%; }
+  &:nth-child(3) { right: 15.41%; }
+  &:nth-child(4) { right: 10.77%; }
+}
+
+.anand__checker {
+  position: absolute;
+  top: u(60);
+  right: 0;
+  width: u(340);
+  height: u(440);
+  background: conic-gradient($checker 25%, transparent 0 50%, $checker 0 75%, transparent 0) 0 0 / u(60) u(60);
+  @include mask(radial-gradient(ellipse 60% 55% at 55% 45%, #000 35%, transparent 100%));
+  opacity: var(--anand-checker-opacity);
+  transition: opacity $theme-transition;
+  // Zooms in and turns as the page scrolls through the section
+  // (--anand-scroll is set by AnandSliderPin).
+  transform: scale(calc(1 + var(--anand-scroll, 0) * 0.6)) rotate(calc(var(--anand-scroll, 0) * 45deg));
+  will-change: transform;
+
+  @media (prefers-reduced-motion: reduce) { transform: none; }
+}
+
+.anand__cube { position: absolute; height: auto; }
+.anand__cube--1 { left: 88.8%; top: u(52); width: u(26); }
+.anand__cube--2 { left: 9.4%; top: u(188); width: u(34); }
+.anand__cube--3 { left: 84%; top: u(288); width: u(30); }
+.anand__cube--4 { left: 88.5%; top: u(442); width: u(36); }
+
+// ---------- Content container ----------
+.anand__inner {
+  position: relative;
+  width: 100%;
+  padding-left: u(116);
+}
+
+// Accent square tucked behind the start of the label (matches .stories__eyebrow).
+.anand__eyebrow {
+  position: relative;
+  padding-left: 15px;
+  font-family: var(--font-open-sans), Arial, sans-serif;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+
+  @media (max-width: 1440px) { font-size: 18px; }
+}
+
+.anand__eyebrow-box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #3274CD;
+}
+
+// Outlined headline: transparent fill with a faint white stroke.
+.anand__title {
+  margin: u(24) 0 0 u(50);
+  font-family: var(--font-open-sans), sans-serif;
+  font-size: u(96);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  color: transparent;
+  -webkit-text-stroke: max(1.4px, #{u(1.4)}) var(--anand-stroke);
+  transition: -webkit-text-stroke-color $theme-transition;
+}
+
+// ---------- Feature (certificate + Anand) ----------
+.anand__feature {
+  position: relative;
+  width: u(692);
+  height: u(278);
+  margin: u(-22) 0 0 u(50);
+  isolation: isolate;
+}
+
+.anand__card {
+  position: absolute;
+  left: u(89);
+  top: u(61);
+  width: u(395);
+  height: u(177);
+  padding: u(26) u(24) 0 u(65);
+  border-radius: u(18);
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--anand-border);
+  transition: border-color $theme-transition;
+}
+
+// Rolling heading + copy inside the card (rendered by RollingText).
+.anand__card-title {
+  font-size: u(20);
+  font-weight: 500;
+  line-height: 1.25;
+  margin-bottom: u(14);
+}
+
+.anand__card-text {
+  font-size: u(11.5);
+  line-height: 1.45;
+  color: var(--anand-card-text);
+  transition: color $theme-transition;
+  max-width: u(190);
+}
+
+// Certificate hangs off the card's left edge.
+.anand__cert {
+  position: absolute;
+  left: u(-89);
+  top: u(29);
+  width: u(116);
+  height: auto;
+  z-index: 3;
+  box-shadow: 0 u(10) u(24) rgba(0, 0, 0, 0.45);
+}
+
+.anand__play {
+  position: absolute;
+  left: u(283);
+  top: u(103);
+  width: u(68);
+  height: u(68);
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  background: rgba(7, 16, 37, 0.15);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 3;
+  color: inherit;
+  transition: transform 0.2s ease, color $theme-transition, border-color $theme-transition;
+
+  &:hover { transform: scale(1.05); }
+  &:focus-visible { outline: 2px solid $accent; outline-offset: 3px; }
+
+  svg {
+    width: u(18);
+    height: u(20);
+    margin-left: u(3);
+  }
+}
+
+.anand__champ {
+  position: absolute;
+  left: u(349);
+  top: 0;
+  width: u(343);
+  height: u(278);
+  z-index: 2;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: right bottom;
+    @include mask(linear-gradient(to bottom, #000 82%, transparent));
+  }
+}
+
+// Crown + championship years: gold outline with a grey wash rising from the
+// bottom of each glyph.
+.anand__years {
+  position: absolute;
+  left: u(621);
+  top: u(33);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  // Each row clips its inner span so the reveal slides up out of a mask.
+  li {
+    overflow: hidden;
+  }
+
+  .anand__years-reveal {
+    display: block;
+    font-family: var(--font-open-sans), sans-serif;
+    font-size: u(23);
+    font-weight: 800;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1px $gold;
+    background: linear-gradient(180deg, transparent 40%, rgba(150, 150, 150, 0.75) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+}
+
+.anand__years .anand__crown .anand__years-reveal {
+  line-height: 0;
+
+  img {
+    width: u(26);
+    height: auto;
+    margin-bottom: u(4);
+  }
+}
+
+// ---------- Cards slider ----------
+// Runs to the section's right edge and fades in from the left.
+.anand__slider {
+  display: flex;
+  gap: u(29);
+  margin-top: u(5);
+  margin-left: u(-116);
+  padding: u(22) 0 u(6) u(116);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: u(116);
+  scrollbar-width: none;
+  @include mask(linear-gradient(90deg, transparent u(100), #000 u(330)));
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+.anand__item {
+  position: relative;
+  flex: 0 0 u(230);
+  height: u(306);
+  padding: 0 u(16) u(24);
+  border-radius: u(14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--anand-border);
+  transition: border-color $theme-transition;
+  text-align: center;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+
+  &:last-child { margin-right: u(116); }
+
+  h3 {
+    position: relative;
+    font-size: u(17.5);
+    font-weight: 500;
+    line-height: 1.3;
+    margin-bottom: u(14);
+  }
+
+  p {
+    position: relative;
+    font-size: u(11);
+    line-height: 1.6;
+    color: var(--anand-muted);
+    transition: color $theme-transition;
+    min-height: u(54);
+  }
+}
+
+.anand__slider .anand__item:first-child {
+  margin-left: 120px;
+}
+
+// Photo breaks out above the card and fades into it at the bottom.
+.anand__item-img {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: u(-20);
+  height: u(190);
+  overflow: hidden;
+  border-radius: u(14) u(14) 0 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    @include mask(linear-gradient(to bottom, #000 72%, transparent));
+  }
+}
+
+// Slider progress bar — mobile only; driven by the slider's scroll position
+// where scroll-driven animations are supported.
+.anand__progress { display: none; }
+
+@keyframes anand-progress {
+  from { left: 0; }
+  to { left: 72%; }
+}
+
+// =====================================================
+// TABLET (768px – 1023px)
+// =====================================================
+@media (max-width: 1023px) {
+  // Stop scaling: every u() value below this point is plain pixels.
+  .anand,
+  .anand__deco,
+  .anand__inner { --u: 1px; }
+
+  .anand { padding: 40px 0 90px; }
+  .anand__inner { padding: 0 32px; }
+  .anand__title { margin-left: 24px; font-size: 84px; }
+  .anand__feature { margin: -10px auto 0; }
+
+  .anand__checker { width: 300px; height: 400px; }
+  .anand__cube--2 { left: 12px; top: 250px; width: 28px; }
+  .anand__cube--3 { left: auto; right: 8px; top: 230px; width: 24px; }
+  .anand__cube--4 { left: auto; right: 14px; top: 470px; width: 30px; }
+
+  .anand__slider {
+    margin-left: -32px;
+    margin-right: -32px;
+    padding: 22px 32px 6px;
+    gap: 22px;
+    scroll-padding-left: 32px;
+    @include mask(linear-gradient(90deg, transparent 0, #000 40px, #000 calc(100% - 40px), transparent));
+  }
+  .anand__item { flex-basis: 240px; }
+}
+
+// =====================================================
+// MOBILE (≤ 767px)
+// =====================================================
+@media (max-width: 767px) {
+  .anand { padding: 32px 0 72px; }
+  .anand__inner { padding: 0 20px; }
+
+  .anand__line {
+    &:nth-child(1) { left: 12px; }
+    &:nth-child(2) { left: 28px; }
+    &:nth-child(3) { right: 28px; }
+    &:nth-child(4) { right: 12px; }
+  }
+
+  .anand__checker { top: 0; width: 260px; height: 340px; background-size: 44px 44px; }
+
+  .anand__cube--1 { left: auto; right: 22px; top: 24px; width: 20px; }
+  .anand__cube--2 { left: auto; right: 60px; top: 130px; width: 26px; }
+  .anand__cube--3 { display: none; }
+  .anand__cube--4 { display: none; }
+
+  .anand__eyebrow {
+    font-size: 16px;
+    line-height: 24px;
+    padding-left: 12px;
+    margin-left: -18px;
+  }
+  .anand__eyebrow-box { width: 20px; height: 20px; }
+  .anand__title {
+    margin: 14px 0 0;
+    font-size: clamp(52px, 15vw, 72px);
+    -webkit-text-stroke-width: 1.2px;
+  }
+
+  // Card on the left with the certificate inside it; GM Anand overlaps its
+  // right side and bleeds off the screen edge, years run down the far right.
+  .anand__feature {
+    width: 100%;
+    height: auto;
+    margin: 40px 0 0;
+    padding-bottom: 40px;
+  }
+
+  .anand__card {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 76%;
+    height: auto;
+    padding: 20px 20px 22px;
+    border-radius: 22px;
+  }
+
+  .anand__cert {
+    position: static;
+    display: block;
+    width: min(165px, 100%);
+    margin-bottom: 14px;
+  }
+
+  // Copy sits above the portrait where the two overlap.
+  .anand__card-copy {
+    position: relative;
+    z-index: 3;
+  }
+
+  .anand__card-title {
+    max-width: 175px;
+    font-size: 21px;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .anand__card-text {
+    max-width: 175px;
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .anand__play {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 54px;
+    height: 54px;
+    margin-top: 20px;
+    border: 2px solid $orange;
+    background: rgba(7, 16, 37, 0.35);
+
+    svg { width: 16px; height: 18px; fill: #fff; }
+
+    &::after {
+      content: "Watch Video";
+      position: absolute;
+      left: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%);
+      white-space: nowrap;
+      font-size: 15px;
+    }
+  }
+
+  .anand__champ {
+    left: auto;
+    top: auto;
+    right: -50px;
+    bottom: 0;
+    width: calc(100% - 50px);
+    max-width: 440px;
+    height: auto;
+    aspect-ratio: 1224 / 1004;
+
+    img { object-position: right bottom; }
+  }
+
+  .anand__years {
+    left: auto;
+    right: -10px;
+    top: 190px;
+
+    li { font-size: 14px; line-height: 1.35; }
+  }
+
+  .anand__years .anand__crown img { width: 20px; }
+
+  .anand__slider {
+  margin: 24px -20px 0;
+  padding: 22px 20px 6px;
+  gap: 16px;
+  scroll-padding-left: 20px;
+  scroll-timeline: --anand-slider x;
+
+  @include mask(
+    linear-gradient(90deg, #000 calc(100% - 60px), transparent)
+  );
+
+  .anand__item {
+    &:first-child {
+      margin-left: 10px;
+    }
+  }
+}
+
+  .anand__item {
+    flex-basis: min(64vw, 270px);
+    height: 330px;
+    padding: 0 18px 26px;
+    border-radius: 18px;
+
+    h3 { font-size: 19px; margin-bottom: 10px; }
+    p { font-size: 14px; min-height: 0; }
+  }
+
+  .anand__item-img { height: 210px; border-radius: 18px 18px 0 0; }
+
+  .anand__inner { timeline-scope: --anand-slider; }
+
+  .anand__progress {
+    display: block;
+    position: relative;
+    height: 3px;
+    margin: 24px -10px 0;
+    background: rgba(255, 255, 255, 0.12);
+
+    span {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 28%;
+      height: 100%;
+      background: $gold;
+    }
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .anand__progress span {
+      animation: anand-progress linear both;
+      animation-timeline: --anand-slider;
+    }
+  }
+}
+
+@media (max-width: 374px) {
+  .anand__years { top: 170px; }
+  .anand__years li { font-size: 12px; }
+  .anand__card { width: 80%; }
+  .anand__card-title { font-size: 19px; }
+  .anand__card-text { font-size: 14px; }
+}
