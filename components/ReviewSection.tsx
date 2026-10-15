@@ -205,6 +205,21 @@ export default function ReviewSection() {
           <span className="review__diamond" aria-hidden="true" />
         </div>
 
+        {/* Mobile only: the flags run as a horizontal strip under the title. */}
+        <div className="review__flags-row" aria-hidden="true">
+          <div className="review__flags-row-track">
+            {[0, 1].map((group) => (
+              <div className="review__flags-row-group" key={group}>
+                {FLAG_LOOP.map((flag, i) => (
+                  <span className="review__flag" key={`${flag.code}-${i}`}>
+                    <Flag country={flag.code} label={flag.label} width={90} />
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className={`review__carousel${atEnd ? " is-end" : ""}`}>
           <div ref={trackRef} className="review__track" tabIndex={0} aria-label="Reviews">
             {REVIEWS.map((review) => {

@@ -472,8 +472,33 @@ $cobalt: #3d78de;
   to { transform: translateY(-50%); }
 }
 
+// Horizontal flag strip, mobile only. Same seamless two-group loop as the
+// vertical marquee, sliding sideways.
+.review__flags-row { display: none; }
+
+.review__flags-row-track {
+  display: flex;
+  width: max-content;
+  animation: review-flags-row-scroll 40s linear infinite;
+  will-change: transform;
+}
+
+.review__flags-row-group {
+  --flag-gap: 8px;
+
+  display: flex;
+  gap: var(--flag-gap);
+  padding-right: var(--flag-gap);
+}
+
+@keyframes review-flags-row-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .review__flags-track { animation: none; }
+  .review__flags-track,
+  .review__flags-row-track { animation: none; }
 }
 
 // ---------- Responsive ----------
@@ -495,14 +520,34 @@ $cobalt: #3d78de;
   }
   .review__inner { padding-right: 0; }
   .review__flags { display: none; }
-  .review__title { margin-bottom: 36px; }
-  .review__earth { display: none; }
+  .review__title { margin-bottom: 24px; }
+  // Globe sits top-right behind the title, fading out before the flags.
+  .review__earth {
+    top: -70px;
+    right: -8px;
+    width: 46cqw;
+  }
   .review__cube { display: none; }
   .review__diamond { display: none; }
-  .review__card { width: clamp(240px, 78vw, 340px); }
+
+  // Full-bleed strip: break out of the inner column to the section edges.
+  .review__flags-row {
+    display: block;
+    overflow: hidden;
+    margin: 0 calc((100cqw - var(--w)) / -2) 48px;
+    // Soft fade on both ends so flags drift in and out of view.
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  }
+  .review__flags-row .review__flag {
+    width: 64px;
+    border-radius: 8px;
+  }
+
+  .review__card { width: clamp(260px, 76cqw, 392px); }
   .review__nav {
     position: static;
-    justify-content: center;
-    margin-top: 28px;
+    justify-content: flex-end;
+    margin-top: 20px;
   }
 }
