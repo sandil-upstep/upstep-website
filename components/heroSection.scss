@@ -18,6 +18,14 @@ $desktop-gutter: clamp(2.5rem, 4vw, 5rem);
   height: 100%;
   object-fit: cover;
 
+  // Native fullscreen (mobile): show the whole frame, unmasked.
+  &:fullscreen,
+  &.is-masked:fullscreen {
+    object-fit: contain;
+    clip-path: none;
+    -webkit-clip-path: none;
+  }
+
   // Desktop and stacked layouts each get their own tilted mask.
   &.is-masked {
     clip-path: url(#videoClipMobile);

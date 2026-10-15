@@ -108,44 +108,50 @@ export default function WhatWeOfferSection() {
   // split into N equal bands of SCROLL_PER_SLIDE viewports, one per slide, so
   // the last slide gets a full band on the laptop screen before the pin
   // releases. A section taller than the viewport pins by its bottom edge so
-  // the whole carousel stays in view.
+  // the whole carousel stays in view. Mobile skips the pin and is driven by
+  // swipes and the arrows alone.
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
 
-    const fitsViewport = () => section.offsetHeight <= window.innerHeight;
-    const trigger = ScrollTrigger.create({
-      trigger: section,
-      start: () => (fitsViewport() ? "top top" : "bottom bottom"),
-      end: () => `+=${N * window.innerHeight * SCROLL_PER_SLIDE}`,
-      pin: true,
-      // ScrollTrigger skips pin spacing when the parent is flex (the page
-      // column is), which would let the next section scroll up over this one.
-      pinSpacing: true,
-      anticipatePin: 1,
-      invalidateOnRefresh: true,
-      onUpdate: (self) => {
-        const next = Math.min(N - 1, Math.floor(self.progress * N));
-        if (next !== targetRef.current) setTarget(next);
-      },
-    });
-    triggerRef.current = trigger;
+    const mm = gsap.matchMedia();
+    mm.add("(min-width: 768px)", () => {
+      const fitsViewport = () => section.offsetHeight <= window.innerHeight;
+      const trigger = ScrollTrigger.create({
+        trigger: section,
+        start: () => (fitsViewport() ? "top top" : "bottom bottom"),
+        end: () => `+=${N * window.innerHeight * SCROLL_PER_SLIDE}`,
+        pin: true,
+        // ScrollTrigger skips pin spacing when the parent is flex (the page
+        // column is), which would let the next section scroll up over this one.
+        pinSpacing: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          const next = Math.min(N - 1, Math.floor(self.progress * N));
+          if (next !== targetRef.current) setTarget(next);
+        },
+      });
+      triggerRef.current = trigger;
 
-    // Sections above (e.g. the Anand pin) change height after mount; re-measure
-    // so the pin starts in the right place.
-    let frame = 0;
-    const observer = new ResizeObserver(() => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => ScrollTrigger.refresh());
-    });
-    observer.observe(document.body);
+      // Sections above (e.g. the Anand pin) change height after mount; re-measure
+      // so the pin starts in the right place.
+      let frame = 0;
+      const observer = new ResizeObserver(() => {
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(() => ScrollTrigger.refresh());
+      });
+      observer.observe(document.body);
 
-    return () => {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-      trigger.kill();
-      triggerRef.current = null;
-    };
+      return () => {
+        cancelAnimationFrame(frame);
+        observer.disconnect();
+        trigger.kill();
+        triggerRef.current = null;
+      };
+    });
+
+    return () => mm.revert();
   }, [setTarget]);
 
   // The screen's perspective matrix works in image pixels; expose the laptop's

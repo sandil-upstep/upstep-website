@@ -6,6 +6,8 @@
 // Sizes are taken from the 1920px design and expressed in cqw (1cqw = 19.2px
 // at that width) so the whole section scales with the viewport.
 
+@use "outlineTitle" as *;
+
 $ink: #111111;
 $text: #222222;
 $line: #efeae7;
@@ -126,12 +128,11 @@ $cobalt: #3d78de;
   margin: 0;
   font-family: var(--font-open-sans), system-ui, sans-serif;
   font-weight: 800;
-  font-size: clamp(64px, 9.1cqw, 175px);
   line-height: 0.88;
-  letter-spacing: -0.005em;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 2.5px $outline;
+  -webkit-text-stroke: 2px $outline;
+  @include outline-title-size;
 }
 
 // ---------- Requirements ----------
@@ -236,10 +237,19 @@ $cobalt: #3d78de;
   column-gap: 0.4cqw;
   padding: clamp(20px, 1.8cqw, 34px) clamp(14px, 1.2cqw, 24px) clamp(22px, 1.6cqw, 32px) clamp(8px, 0.5cqw, 10px);
   border-radius: var(--radius);
-  background: linear-gradient(129.75deg, rgba(255, 255, 255, 0.2) 16.54%, rgba(153, 153, 153, 0.08) 77.83%);
-  box-shadow: 0 10px 30px rgba(17, 17, 17, 0.04);
-  background: #99999966;
-
+  // Frosted glass: milky white-to-grey tint over a heavy blur of whatever sits
+  // behind (the board, the dashed trail), with a bright rim and a soft shadow.
+  background: linear-gradient(129.75deg, rgba(172, 168, 168, 0.15) 16.54%, rgba(172, 168, 168, 0.15) 16.54%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  backdrop-filter: blur(24px) saturate(140%);
+  // box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.9),
+  //   0 12px 32px rgba(17, 17, 17, 0.06);
+   border: 1px solid;
+  border-image: linear-gradient(
+    129.75deg,
+    rgba(255, 255, 255, 0.2) 16.54%,
+    rgba(153, 153, 153, 0.08) 77.83%
+  ) 1;
   &:nth-child(2),
   &:nth-child(3) { margin-top: 6.3cqw; }
   // Tighter number column and right padding so "Free 30-Minute" holds one line.
@@ -366,7 +376,6 @@ $cobalt: #3d78de;
 @media (max-width: 767.98px) {
   // Lines pinned 12px / 28px in from each edge, as in the other sections.
   .book-demo { --off: 16px; --w: calc(100cqw - 56px); padding: 64px 0 56px; }
-  .book-demo__title { -webkit-text-stroke-width: 2px; }
   .book-demo__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .book-demo__photo { margin-top: 28px; }
   .book-demo__steps { margin-top: 20px; }

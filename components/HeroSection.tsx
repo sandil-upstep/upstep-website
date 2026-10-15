@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useEffectEvent, useRef, useState, type CSSProperties } from "react";
 import "./heroSection.scss";
 import InteractivePersonalizedText from "./InteractivePersonalizedText";
 import Button from "./common/Button";
@@ -176,6 +176,9 @@ function setScrollLocked(locked: boolean) {
   root.style.overflow = locked ? "hidden" : "";
   root.style.scrollbarGutter = locked ? "stable" : "";
 }
+
+// iOS Safari's video-only fullscreen API, missing from the DOM typings.
+type FullscreenVideo = HTMLVideoElement & { webkitEnterFullscreen?: () => void };
 
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -410,11 +413,33 @@ export default function HeroSection() {
       ? { rect: clipRectRef.current, attrs: CLIP_RECT }
       : { rect: mobileClipRectRef.current, attrs: MOBILE_CLIP_RECT };
 
-  const handlePlayClick = () => {
+  // Below lg, play in the browser's own fullscreen player instead of the
+  // expand animation. iOS Safari only supports fullscreen on the video itself,
+  // via webkitEnterFullscreen. Resolves false if fullscreen isn't available.
+  const enterNativeFullscreen = async (video: FullscreenVideo) => {
+    video.muted = false;
+    video.controls = true;
+    try {
+      if (video.requestFullscreen) await video.requestFullscreen({ navigationUI: "hide" });
+      else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+      else throw new Error("Fullscreen unsupported");
+      await video.play();
+      return true;
+    } catch {
+      video.muted = true;
+      video.controls = false;
+      return false;
+    }
+  };
+
+  const handlePlayClick = async () => {
     const video = videoRef.current;
+    if (!video) return;
+    if (!window.matchMedia(DESKTOP_QUERY).matches && (await enterNativeFullscreen(video))) return;
+
     const clipRect = getActiveClip().rect;
     const layer = videoLayerRef.current;
-    if (!video || !clipRect || !layer) return;
+    if (!clipRect || !layer) return;
 
     setIsPlaying(true);
     setScrollLocked(true);
@@ -530,6 +555,35 @@ export default function HeroSection() {
       },
     });
   };
+
+  // Leaving native fullscreen drops back to the muted, masked hero loop.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const onExit = () => {
+      if (document.fullscreenElement === video) return;
+      video.muted = true;
+      video.controls = false;
+      video.play().catch(() => {});
+    };
+    document.addEventListener("fullscreenchange", onExit);
+    video.addEventListener("webkitendfullscreen", onExit);
+    return () => {
+      document.removeEventListener("fullscreenchange", onExit);
+      video.removeEventListener("webkitendfullscreen", onExit);
+    };
+  }, []);
+
+  // Escape closes the expanded video, same as the close button.
+  const onEscape = useEffectEvent(handleCloseClick);
+  useEffect(() => {
+    if (!isPlaying) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.repeat) onEscape();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isPlaying]);
 
   return (
     <>

@@ -7,6 +7,8 @@
 // Sizes are taken from the 1920px design and expressed in cqw (1cqw = 19.2px
 // at that width) so the whole section scales with the viewport.
 
+@use "outlineTitle" as *;
+
 $ink: #111111;
 $text: #222222;
 $line: #efeae7;
@@ -75,43 +77,96 @@ $cobalt: #3d78de;
 }
 
 // The second line runs past the inner grid line almost to the outer one,
-// exactly as in the design. The box itself has to reach that far too:
-// RevealTitle's line masks are as wide as the title and clip anything past it.
+// exactly as in the design, and stays on one line at every width (the shared
+// title size is chosen so "around the world" fits). The box itself has to
+// reach that far too: RevealTitle's line masks are as wide as the title and
+// clip anything past it.
 .review__title {
   position: relative;
   z-index: 2;
   margin: 0 calc(-1 * var(--off)) clamp(32px, 2.5cqw, 48px) 0;
   font-weight: 800;
-  font-size: clamp(56px, 8.3cqw, 200px);
   line-height: 0.95;
-  letter-spacing: -0.005em;
   white-space: nowrap;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  // Same stroke as .wwo__title / .structured__title: 2.5px at 1920, scaling
-  // down with the section to a 1.5px floor.
-  -webkit-text-stroke: max(1.5px, 0.13cqw) $outline;
+  -webkit-text-stroke: 2px $outline;
+  @include outline-title-size;
 }
 
+// The heart tucks into the "L", but only visually: SplitText starts a new line
+// when an element sits lower than the previous one AND starts left of its
+// right edge, so a negative margin here broke "L" onto its own line. The box
+// stays clear of the "L" and the image inside is shifted over with a
+// transform, which SplitText's measurements of this box don't see.
 .review__heart {
   display: inline-block;
   width: 0.68em;
   height: 0.68em;
-  margin: 0 0.01em -0.08em;
-  vertical-align: baseline;
+  // Negative right margin closes the gap the shifted image leaves before
+  // "ve"; that's safe because "ve" sits higher than the heart.
+  margin: 0 -0.2em -.08em 0;
+  margin-right: -25px;
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform: translateX(-0.08em);
+  }
 }
 
 .review__earth {
   position: absolute;
   z-index: 1;
+  padding:10px;
   top: -2.2cqw;
   right: 0;
   width: clamp(160px, 23.4cqw, 450px);
-  height: auto;
+  aspect-ratio: 1 / 1;
   pointer-events: none;
+  opacity: 0.5;
   // The globe sits behind the title and melts into the page before the cards.
-  -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 82%);
-  mask-image: linear-gradient(to bottom, #000 45%, transparent 82%);
+  // The mask sits on the wrapper, not the image, so the fade line stays put
+  // while the globe floats through it (and the glow fades with it).
+  // An ellipse anchored near the top, so the sides wash out along with the
+  // bottom and only the upper cap stays crisp.
+  -webkit-mask-image: radial-gradient(ellipse 65% 48% at 50% 15%, #000 50%, transparent 95%);
+  mask-image: radial-gradient(ellipse 65% 48% at 50% 15%, #000 50%, transparent 95%);
+
+  // Soft atmosphere glow breathing behind the globe.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 4%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(80, 160, 255, 0.45) 55%, rgba(80, 160, 255, 0) 72%);
+    filter: blur(18px);
+    animation: review-earth-glow 6s ease-in-out infinite;
+  }
+}
+
+// Gentle float with a slow tilt, so the globe feels alive without a real spin.
+.review__earth-img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: review-earth-float 9s ease-in-out infinite;
+}
+
+@keyframes review-earth-float {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-4%) rotate(3deg); }
+}
+
+@keyframes review-earth-glow {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review__earth::before,
+  .review__earth-img { animation: none; }
 }
 
 // Small cube tucked against the foot of the "L".
@@ -426,10 +481,6 @@ $cobalt: #3d78de;
 // they move into a narrow strip and the content steps in to clear it.
 // Grid lines stay proportional down to 768px like the other sections, so the
 // flags keep the outer gutter; below that the lines pin 12px / 28px in.
-@media (max-width: 1024px) {
-  .review__title { white-space: normal; margin-right: 0; }
-}
-
 @media (max-width: 767.98px) {
   .review {
     --off: 16px;

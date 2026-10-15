@@ -55,7 +55,7 @@ const STEPS: Step[] = [
   {
     id: "rook",
     dark: false,
-    h: 0.84,
+    h: 0.758,
     yaw: 0,
     props: ["medal", "map"],
     title: "4. Advanced Level",
@@ -103,7 +103,7 @@ const MODEL_SRC: Record<Step["id"], string> = {
   pawn: "/models/pawn.glb",
   knight: "/models/knight.glb",
   bishop: "/models/bishop.glb",
-  rook: "/models/rook.glb",
+  rook: "/models/rook-90.glb",
   queen: "/models/queen.glb",
   king: "/models/king.glb",
 };
@@ -242,11 +242,22 @@ export default function ScientificallyStructuredSection() {
     overlay.add(new THREE.HemisphereLight(0xffffff, 0xaab6cc, 0.5));
     const ortho = new THREE.OrthographicCamera(0, 1, 0, -1, -500, 500);
     const cubeGeo = new RoundedBoxGeometry(1, 1, 1, 3, 0.1);
-    const cubeDefs = [
-      { x: 1625, y: 195, s: 34, c: 0x2c5bb0, r: [0.5, 0.7, 0.2] as const, soft: false },
-      { x: 200, y: 452, s: 46, c: 0x8fb7ef, r: [0.3, -0.6, 0.1] as const, soft: true },
-      { x: 1012, y: 826, s: 50, c: 0x3a6cc0, r: [0.9, 0.8, 0.4] as const, soft: true },
-      { x: 1577, y: 1006, s: 38, c: 0xe8d6b5, r: [0.6, 0.5, 0.3] as const, soft: false },
+    // x/y/s are design px on the 1920 frame. `m` places a cube on phones as
+    // [x, y, size] fractions of the stage (x, size × width, y × height);
+    // cubes without one are hidden there, as in the mobile design.
+    const cubeDefs: {
+      x: number;
+      y: number;
+      s: number;
+      c: number;
+      r: readonly [number, number, number];
+      soft: boolean;
+      m?: readonly [number, number, number];
+    }[] = [
+      { x: 1625, y: 195, s: 34, c: 0x2c5bb0, r: [0.5, 0.7, 0.2], soft: false },
+      { x: 200, y: 452, s: 46, c: 0x8fb7ef, r: [0.3, -0.6, 0.1], soft: true },
+      { x: 1012, y: 826, s: 50, c: 0x3a6cc0, r: [0.9, 0.8, 0.4], soft: true, m: [0.07, 0.67, 0.06] },
+      { x: 1577, y: 1006, s: 38, c: 0xe8d6b5, r: [0.6, 0.5, 0.3], soft: false, m: [0.67, 0.83, 0.05] },
     ];
     const cubes = cubeDefs.map((d) => {
       const mat = new THREE.MeshStandardMaterial({
@@ -640,23 +651,31 @@ export default function ScientificallyStructuredSection() {
     };
     document.addEventListener("wheel", onWheel, { capture: true, passive: false });
 
+    // ---- Swipe: left = next level, right = previous ----
+    // Scoped to the section. Its `touch-action: pan-y` keeps vertical page
+    // scrolling native while leaving horizontal drags to us, so the browser
+    // doesn't cancel the pointer mid-swipe. A drag that turns into a vertical
+    // scroll fires pointercancel and is dropped.
     let swipe: [number, number] | null = null;
     const onPointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement;
-      if (!target.closest?.("a, button")) swipe = [e.clientX, e.clientY];
+      if (!e.isPrimary || target.closest?.("a, button")) return;
+      swipe = [e.clientX, e.clientY];
     };
     const onPointerUp = (e: PointerEvent) => {
       if (!swipe) return;
       const dx = e.clientX - swipe[0];
       const dy = e.clientY - swipe[1];
       swipe = null;
-      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4) {
         queue = [];
         stepDir(dx < 0 ? 1 : -1);
       }
     };
-    addEventListener("pointerdown", onPointerDown);
-    addEventListener("pointerup", onPointerUp);
+    const onPointerCancel = () => (swipe = null);
+    section.addEventListener("pointerdown", onPointerDown);
+    section.addEventListener("pointerup", onPointerUp);
+    section.addEventListener("pointercancel", onPointerCancel);
 
     const parallax = new THREE.Vector2();
     const parallaxT = new THREE.Vector2();
@@ -709,7 +728,7 @@ export default function ScientificallyStructuredSection() {
       if (mobile) {
         sx = W * 0.5;
         sy = H * 0.6;
-        pxPerUnit = Math.min(W * 0.14, H * 0.1);
+        pxPerUnit = Math.min(W * 0.22, H * 0.15);
       } else {
         const u = Math.min(W / 100, H / 62.66);
         frame = { u, left: (W - 100 * u) / 2, top: Math.max(0, (H - 62.66 * u) / 2) };
@@ -728,8 +747,16 @@ export default function ScientificallyStructuredSection() {
       ortho.updateProjectionMatrix();
       cubes.forEach((c) => {
         const d = c.userData;
-        c.visible = !mobile;
-        if (mobile) return;
+        if (mobile) {
+          c.visible = !!d.m;
+          if (!d.m) return;
+          const [mx, my, ms] = d.m;
+          d.base = new THREE.Vector3(W * mx, -(H * my), 0);
+          c.position.copy(d.base);
+          c.scale.setScalar(W * ms);
+          return;
+        }
+        c.visible = true;
         const k = frame.u / 19.2;
         d.base = new THREE.Vector3(frame.left + d.x * k, -(frame.top + d.y * k), 0);
         c.position.copy(d.base);
@@ -882,7 +909,7 @@ export default function ScientificallyStructuredSection() {
         (ring.material as THREE.MeshBasicMaterial).opacity = 0.55 * (1 - ringT);
       }
 
-      if (!reduceMotion && !mobile) {
+      if (!reduceMotion) {
         cubes.forEach((c, i) => {
           const base = (c.userData as { base: THREE.Vector3 | null }).base;
           if (!base) return;
@@ -920,8 +947,9 @@ export default function ScientificallyStructuredSection() {
       mobileMQ.removeEventListener("change", layout);
       removeEventListener("keydown", onKeyDown);
       document.removeEventListener("wheel", onWheel, { capture: true });
-      removeEventListener("pointerdown", onPointerDown);
-      removeEventListener("pointerup", onPointerUp);
+      section.removeEventListener("pointerdown", onPointerDown);
+      section.removeEventListener("pointerup", onPointerUp);
+      section.removeEventListener("pointercancel", onPointerCancel);
       removeEventListener("pointermove", onPointerMove);
       prevBtn.removeEventListener("click", onPrev);
       nextBtn.removeEventListener("click", onNext);
@@ -959,7 +987,7 @@ export default function ScientificallyStructuredSection() {
         A Curriculum For Growing Minds
       </Eyebrow>
       <RevealTitle className="structured__title">
-        Scientifically
+        Scientifically&nbsp;
         <br />
         Structured
       </RevealTitle>
@@ -983,7 +1011,7 @@ export default function ScientificallyStructuredSection() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={ONE_ON_ONE_SRC} alt="" />
               <span className="structured__feature-label">
-                <b>One-on-one</b>
+                <b>One-on-one</b>{" "}
                 <br />
                 chess classes
               </span>
@@ -994,7 +1022,7 @@ export default function ScientificallyStructuredSection() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={GROUP_SRC} alt="" />
               <span className="structured__feature-label">
-                <b>Group</b> chess
+                <b>Group</b> chess{" "}
                 <br />
                 classes
               </span>

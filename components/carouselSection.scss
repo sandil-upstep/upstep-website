@@ -1,16 +1,11 @@
-// "Carousel" — centred headline over a three-up coverflow: the active card
-// faces the viewer, its neighbours swing outwards on the Y axis so their outer
-// edges come forward and land on the outer grid lines. Grid lines and the
+// "Carousel" — centred headline over a looping strip of video cards, after
+// the T.RICKS Menu + Slider: three cards span the outer grid lines, the next
+// pair peeks in at the screen edges, and page-coloured arcs cut into the top
+// and bottom so the row reads as the inside of a cylinder. Grid lines and the
 // prev/next circles match ReviewSection so the page keeps one visual rhythm.
 //
 // Sizes are taken from the 1920px design and expressed in cqw (1cqw = 19.2px
 // at that width) so the whole section scales with the viewport.
-//
-// Coverflow geometry (at 1920): cards are 574×500. A side card is rotated
-// 52° about its centre and pushed forward so its inner edge stays at z = 0
-// (same height as the active card) while its outer edge projects to 576px
-// tall and sits on the outer grid line. That works out to a 3434px
-// perspective, a 491px centre offset and a 226px translateZ.
 
 $ink: #0b1324;
 $line: #efeae7;
@@ -23,17 +18,12 @@ $cobalt: #3d78de;
   --w: 69.18cqw;
   --arrow: clamp(56px, 6.25cqw, 120px);
 
-  // Coverflow geometry, see header comment.
-  --card-w: 29.9cqw;
+  // Three cards and two gaps fill the outer grid lines (--w + 2 × --off).
+  --gap: 1cqw;
+  --card-w: calc((var(--w) + 2 * var(--off) - 2 * var(--gap)) / 3);
   --card-h: 26cqw;
-  --stage-h: 30cqw;
-  --perspective: 178.9cqw;
-  --side-x: 25.6cqw;
-  --side-z: 11.8cqw;
-  --side-rot: 52deg;
-  // Extra horizontal travel for the off-screen cards, so slides glide in from
-  // the edges rather than popping in.
-  --far-x: 30cqw;
+  // Depth of the arcs at their centre; the ends are a third of this.
+  --wave: 4.2cqw;
 
   position: relative;
   container-type: inline-size;
@@ -66,11 +56,10 @@ $cobalt: #3d78de;
 }
 
 // ---------- Headline ----------
-// Sits in the notch between the two side cards' raised outer corners.
 .carousel__title {
   position: relative;
   z-index: 3;
-  margin: 0 0 calc(-1 * clamp(4px, 1cqw, 20px));
+  margin: 0 0 clamp(24px, 2cqw, 40px);
   text-align: center;
   font-weight: 800;
   font-size: clamp(36px, 4.4cqw, 84px);
@@ -80,14 +69,12 @@ $cobalt: #3d78de;
 }
 
 // ---------- Stage ----------
-// The stage spans outer grid line to outer grid line; every card is stacked
-// at its centre and moved into place with transforms driven by --off.
+// The stage runs edge to edge so the peeking cards reach the viewport sides;
+// every card is stacked at its centre and slid into place by --off.
 .carousel__stage {
   position: relative;
-  margin: 0 calc(-1 * var(--off));
-  height: var(--stage-h);
-  perspective: var(--perspective);
-  perspective-origin: 50% 50%;
+  margin: 0 calc((var(--w) - 100cqw) / 2);
+  height: var(--card-h);
   touch-action: pan-y;
   user-select: none;
 
@@ -95,37 +82,72 @@ $cobalt: #3d78de;
 }
 
 .carousel__card {
-  // --side: -1 / 0 / 1, --dist: 0 / 1 / 2 (clamped). Off-screen cards
-  // (dist 2) keep the side-card pose, travel further out and fade.
-  --near: min(var(--dist), 1);
-
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 0;
   width: var(--card-w);
   height: var(--card-h);
-  margin: calc(var(--card-h) / -2) 0 0 calc(var(--card-w) / -2);
-  border-radius: clamp(10px, 1cqw, 20px);
+  margin-left: calc(var(--card-w) / -2);
   background: $card;
-  display: grid;
-  place-items: center;
-  z-index: calc(3 - var(--dist));
-  opacity: clamp(0, 2 - var(--dist), 1);
-  transform: translateX(calc(var(--side) * (var(--side-x) + (var(--dist) - 1) * var(--far-x))))
-    translateZ(calc(var(--near) * var(--side-z)))
-    rotateY(calc(var(--side) * var(--side-rot) * -1));
-  transition: transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.5s ease;
+  overflow: hidden;
+  transform: translateX(calc(var(--off) * (var(--card-w) + var(--gap))));
+  // Splide's default easing, as on the reference slider.
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
   cursor: pointer;
-  backface-visibility: hidden;
 
   &.is-active { cursor: default; }
-  &[aria-hidden="true"] { pointer-events: none; }
 }
 
-.carousel__card-label {
-  font-weight: 600;
-  font-size: clamp(14px, 1.05cqw, 20px);
-  color: rgba($cobalt, 0.55);
+// The arcs sit above the cards and swallow their straight top/bottom edges.
+.carousel__wave {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  width: 100%;
+  height: var(--wave);
+  fill: #ffffff;
+  pointer-events: none;
+}
+
+.carousel__wave--top { top: -1px; }
+.carousel__wave--bottom { bottom: -1px; transform: rotate(180deg); }
+
+// The videos are cut at the card's 574×500, so cover only trims rounding.
+.carousel__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+// Play/pause and mute, bottom-right of the active card, lifted clear of the
+// bottom arc.
+.carousel__controls {
+  position: absolute;
+  right: clamp(10px, 0.9cqw, 18px);
+  bottom: calc(var(--wave) + clamp(6px, 0.6cqw, 12px));
+  display: flex;
+  gap: clamp(6px, 0.5cqw, 10px);
+}
+
+.carousel__control {
+  width: clamp(36px, 2.5cqw, 48px);
+  height: clamp(36px, 2.5cqw, 48px);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: #ffffff;
+  background: rgba(11, 19, 36, 0.45);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: background-color 0.2s;
+
+  svg { width: 50%; height: 50%; }
+
+  &:hover { background: rgba(11, 19, 36, 0.65); }
+  &:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; }
 }
 
 // ---------- Decorative cubes ----------
@@ -135,19 +157,19 @@ $cobalt: #3d78de;
   pointer-events: none;
 }
 
-// Cream cube tucked behind the right card's raised corner.
+// Cream cube perched on the top arc above the right card.
 .carousel__cube--right {
-  z-index: 0;
-  right: 3.2cqw;
+  z-index: 5;
+  right: 12cqw;
   top: -2.6cqw;
   width: clamp(36px, 4.2cqw, 80px);
   transform: rotate(8deg);
 }
 
-// Blue cube resting on the left card's outer edge.
+// Blue cube on the left card's outer edge.
 .carousel__cube--left {
   z-index: 5;
-  left: -1.8cqw;
+  left: 9.2cqw;
   top: 7.9cqw;
   width: clamp(24px, 3cqw, 58px);
   transform: rotate(18deg);
@@ -160,7 +182,7 @@ $cobalt: #3d78de;
   display: flex;
   justify-content: center;
   gap: clamp(12px, 1.3cqw, 25px);
-  margin-top: 0;
+  margin-top: clamp(20px, 1.6cqw, 32px);
 }
 
 .carousel__arrow {
@@ -197,20 +219,16 @@ $cobalt: #3d78de;
 }
 
 // ---------- Responsive ----------
-// On phones the active card takes most of the width and the neighbours just
-// peek in, tilted, from the screen edges.
+// On phones one card fills the middle and its neighbours peek in from the
+// screen edges, as on the reference slider.
 @media (max-width: 767.98px) {
   .carousel {
     --off: 16px;
     --w: calc(100cqw - 56px);
-    --card-w: 70cqw;
-    --card-h: 80cqw;
-    --stage-h: 92cqw;
-    --perspective: 300cqw;
-    --side-x: 58cqw;
-    --side-z: 10cqw;
-    --side-rot: 45deg;
-    --far-x: 40cqw;
+    --gap: 3cqw;
+    --card-w: 76cqw;
+    --card-h: 70cqw;
+    --wave: 6cqw;
     padding: 80px 0 70px;
   }
   .carousel__title { margin-bottom: 24px; }

@@ -5,6 +5,8 @@
 // same convention WhatWeOfferSection uses. Desktop reproduces the design
 // exactly; phones/short tablets stack the stage above a scrolling copy block.
 
+@use "outlineTitle" as *;
+
 $ink: #111111;
 $guide: #efeae7; // same grid-line colour as the other light sections
 $outline: #b4b4b4;
@@ -24,6 +26,9 @@ $btn-bg: #ffffff;
   background: #ffffff;
   color: $ink;
   container-type: inline-size;
+  // Horizontal swipes step through the levels (handled in JS); vertical
+  // drags still scroll the page.
+  touch-action: pan-y;
 }
 
 .structured__stage {
@@ -114,12 +119,15 @@ $btn-bg: #ffffff;
 .structured__title {
   position: absolute;
   z-index: 2;
+  // The reveal masks clip anything past the box, so the box sizes to the text.
+  width: max-content;
   margin: 0;
   font-family: var(--font-open-sans), sans-serif;
   font-weight: 800;
-  letter-spacing: -0.005em;
   color: transparent;
+  padding-right:10px;
   -webkit-text-stroke: 2px $outline;
+  @include outline-title-size;
 
   span,
   br {
@@ -372,14 +380,11 @@ $btn-bg: #ffffff;
     top: u(5.9);
   }
 
-  // Same type as .wwo__title, sized to the design (171px / 155px line at 1920).
+  // Size and stroke come from outline-title-size, shared with .wwo__title.
   .structured__title {
     left: u(15.17);
     top: u(8.3);
-    font-size: u(8.9);
     line-height: u(8.07);
-    letter-spacing: -0.03em;
-    -webkit-text-stroke-width: max(1.5px, #{u(0.13)});
   }
 
   .structured__ticks {
@@ -449,7 +454,7 @@ $btn-bg: #ffffff;
 
   .structured__stage {
     position: relative;
-    height: 64vh;
+    height: 70vh;
   }
 
   .structured__eyebrow {
@@ -467,22 +472,36 @@ $btn-bg: #ffffff;
     position: absolute;
     left: 22px;
     top: 56px;
-    font-size: min(13.2vw, 10vh);
+    // Too long for one line here, so let it wrap inside the column.
+    width: auto;
+    right: 22px;
     line-height: 0.9;
-    -webkit-text-stroke-width: 1.5px;
   }
 
-  .structured__ticks { display: none; }
+  // Level ticks run down the left gutter (outside the first grid line),
+  // level with the copy block that follows the 70vh stage.
+  .structured__ticks {
+    left: 0;
+    top: calc(70vh + 26px);
+  }
+
+  .structured__ticks button {
+    height: 12px;
+    width: 16px;
+
+    &::after { width: 9px; }
+    &[aria-current="step"]::after { width: 15px; height: 2px; }
+  }
 
   .structured__copy {
     position: relative;
     left: 0;
     top: 0;
     width: auto;
-    padding: 24px 24px 40px;
+    padding: 24px 20px 40px 22px;
   }
 
-  .structured__level-title { font-size: clamp(1.4rem, 5.6vw, 2rem); }
+  .structured__level-title { font-size: clamp(1.25rem, 4.6vw, 1.75rem); }
   .structured__level-desc {
     font-size: 1rem;
     line-height: 1.4;
@@ -491,11 +510,15 @@ $btn-bg: #ffffff;
     max-width: 60ch;
   }
 
+  // Full-width button, label centred, as in the design.
   .structured__cta {
+    display: flex;
+    justify-content: center;
+    width: 100%;
     margin-top: 22px;
-    height: 52px;
+    height: 60px;
     padding: 0 24px;
-    font-size: 1rem;
+    font-size: 1.125rem;
     border-radius: 8px;
 
     rect { stroke-width: 1.2px; }
@@ -510,6 +533,9 @@ $btn-bg: #ffffff;
     img { width: 56px; }
   }
 
+  // Labels sit on one line beside the icon.
+  .structured__feature-label br { display: none; }
+
   .structured__arrows {
     gap: 12px;
     margin-top: 28px;
@@ -520,7 +546,7 @@ $btn-bg: #ffffff;
   .structured__status {
     right: auto;
     left: 50%;
-    top: 32vh;
+    top: 35vh;
     transform: translate(-50%, -50%);
   }
 }

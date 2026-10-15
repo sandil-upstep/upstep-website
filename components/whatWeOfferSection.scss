@@ -10,6 +10,7 @@
 // and changing slots animates between them.
 
 @use "sass:map";
+@use "outlineTitle" as *;
 
 $white: #ffffff;
 $floor: #e4e4e4;
@@ -208,7 +209,7 @@ $card-2: (
   font-weight: 800;
   color: transparent;
   -webkit-text-stroke: 2px $outline;
-  letter-spacing: -0.005em;
+  @include outline-title-size;
 }
 
 // ---------- Carousel ----------
@@ -410,10 +411,7 @@ $card-2: (
   .wwo__title {
     left: u(294);
     top: u(104);
-    font-size: u(163);
     line-height: u(160);
-    letter-spacing: -0.03em;
-    -webkit-text-stroke-width: max(1.5px, #{u(2.5)});
   }
 
   // The track covers the stage as a click-through layer; slides opt back in.
@@ -489,7 +487,6 @@ $card-2: (
   .wwo__title {
     order: 2;
     margin: 22px 0 0 var(--indent);
-    font-size: clamp(64px, 13.2vw, 150px);
     line-height: 0.9;
   }
 
@@ -582,11 +579,7 @@ $card-2: (
   .wwo__eyebrow { font-size: 16px; line-height: 24px; padding-left: 12px; }
   .wwo__box { width: 20px; height: 20px; }
 
-  .wwo__title {
-    margin-top: 16px;
-    font-size: clamp(48px, 15.6vw, 120px);
-    -webkit-text-stroke-width: 1.5px;
-  }
+  .wwo__title { margin-top: 16px; }
 
   .wwo__nav {
     gap: 14px;

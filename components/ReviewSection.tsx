@@ -184,19 +184,16 @@ export default function ReviewSection() {
           </Eyebrow>
           <RevealTitle className="review__title" id="review-title">
             L
-            <Image src="/images/reviews/heart.svg" alt="" width={48} height={48} className="review__heart" aria-hidden="true" />
+            <span className="review__heart" aria-hidden="true">
+              <Image src="/images/reviews/heart.svg" alt="" width={48} height={48} />
+            </span>
             ve from
             <br />
             around the world
           </RevealTitle>
-          <Image
-            src="/images/reviews/earth.png"
-            alt=""
-            width={447}
-            height={447}
-            className="review__earth"
-            aria-hidden="true"
-          />
+          <span className="review__earth" aria-hidden="true">
+            <Image src="/images/earth-full.png" alt="" width={447} height={447} className="review__earth-img" />
+          </span>
           <Image
             src="/images/cubes/cube-21.png"
             alt=""

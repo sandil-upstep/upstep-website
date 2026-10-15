@@ -1,0 +1,23 @@
+// Shared size and stroke for the big outlined section headlines
+// (.wwo__title, .structured__title, .stories__title, .review__title,
+// .book-demo__title) so every section's title reads at the same scale.
+//
+// 163px type with a 2.5px stroke on the 1920px design, scaling with the
+// viewport (vw, not cqw, so every section resolves to the exact same size);
+// the stroke never drops below 2px. Phones get 10vw, the largest size that
+// keeps the longest line ("around the world", ~8.6em) inside the column down
+// to 320px, with a 1.5px stroke.
+//
+// Sections still own position and line-height — don't set font-size,
+// letter-spacing or -webkit-text-stroke-width on these titles anywhere else.
+
+@mixin outline-title-size {
+  font-size: calc(100vw * 163 / 1920);
+  letter-spacing: -0.03em;
+  -webkit-text-stroke-width: max(2px, calc(100vw * 2.5 / 1920));
+
+  @media (max-width: 767.98px) {
+    font-size: 10vw;
+    -webkit-text-stroke-width: 1.5px;
+  }
+}

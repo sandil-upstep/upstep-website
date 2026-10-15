@@ -5,26 +5,34 @@ import Image from "next/image";
 import RevealTitle from "./RevealTitle";
 import "./carouselSection.scss";
 
-type Slide = {
-  id: string;
-  label: string;
+type Video = {
+  src: string;
+  name: string;
 };
 
-// TODO: replace with the real slide content once the design for the card
-// interiors lands — the design only shows empty blue panels.
-const SLIDES: Slide[] = Array.from({ length: 6 }, (_, i) => ({
+// Everything in public/videos. Add new testimonials here.
+const VIDEOS: Video[] = [
+  { src: "/videos/Ishaan Agnihotri Testimonial (574x500).mp4", name: "Ishaan Agnihotri" },
+  { src: "/videos/Terrance lee Testimonial (574x500).mp4", name: "Terrance Lee" },
+  { src: "/videos/Nirvaan Shah Testimonial (574x500).mp4", name: "Nirvaan Shah" },
+  { src: "/videos/Aaryamaan MOM_AUS New Edit (574x500).mp4", name: "Aaryamaan" },
+];
+
+// The strip shows the active card, one neighbour each side and a peek of the
+// next pair, so it needs a hidden card beyond those to wrap round off screen.
+// Short lists are repeated until there are enough cards.
+const MIN_SLIDES = 7;
+const SLIDES = Array.from({ length: Math.ceil(MIN_SLIDES / VIDEOS.length) * VIDEOS.length }, (_, i) => ({
+  ...VIDEOS[i % VIDEOS.length],
   id: `slide-${i}`,
-  label: `Slide ${i + 1}`,
+  num: (i % VIDEOS.length) + 1,
 }));
 
 // Swipe distance (px) needed to change slide on touch / drag.
 const SWIPE_THRESHOLD = 40;
 
-// Time (ms) each slide stays up before autoplay advances.
-const AUTOPLAY_DELAY = 4000;
-
 // Signed distance from the active slide, wrapped so the carousel loops:
-// with 6 slides the offsets run -3..2, and only -1/0/1 are on screen.
+// with 8 slides the offsets run -4..3, and only -2..2 are on screen.
 function offsetOf(index: number, active: number, count: number) {
   let off = (index - active) % count;
   if (off < -Math.floor(count / 2)) off += count;
@@ -34,19 +42,58 @@ function offsetOf(index: number, active: number, count: number) {
 
 export default function CarouselSection() {
   const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const [playing, setPlaying] = useState(true);
+  const [muted, setMuted] = useState(true);
+  const [inView, setInView] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const videos = useRef<(HTMLVideoElement | null)[]>([]);
   const dragStart = useRef<number | null>(null);
+  const prevActive = useRef(active);
   const count = SLIDES.length;
 
-  const go = (dir: 1 | -1) => setActive((a) => (a + dir + count) % count);
+  const go = (steps: number) => setActive((a) => (((a + steps) % count) + count) % count);
 
-  // Autoplay. Keyed on `active` so any manual navigation restarts the full
-  // delay; paused while hovered / focused and skipped for reduced motion.
+  // How far every card moved on the last step. A card whose offset changed by
+  // anything else wrapped round the loop and must jump, not slide across.
+  const step = offsetOf(prevActive.current, active, count);
   useEffect(() => {
-    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = window.setTimeout(() => setActive((a) => (a + 1) % count), AUTOPLAY_DELAY);
-    return () => window.clearTimeout(id);
-  }, [active, paused, count]);
+    prevActive.current = active;
+  }, [active]);
+
+  // Autoplay: the active video plays (muted, so browsers allow it) and the
+  // carousel moves on when it ends. Reduced motion starts paused.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) setPlaying(false);
+  }, []);
+
+  // Only play while the section is on screen.
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.25 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  // Play the active video, pause the rest and rewind the ones that left the
+  // centre so each starts from the top next time round.
+  useEffect(() => {
+    videos.current.forEach((v, i) => {
+      if (!v) return;
+      if (i === active && inView && playing) {
+        v.play().catch(() => setPlaying(false));
+      } else {
+        v.pause();
+        if (i !== active) v.currentTime = 0;
+      }
+    });
+  }, [active, inView, playing]);
+
+  // React doesn't reliably reflect `muted` after the first render, so set the
+  // property directly.
+  useEffect(() => {
+    videos.current.forEach((v) => v && (v.muted = muted));
+  }, [muted]);
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === "ArrowLeft") go(-1);
@@ -65,7 +112,7 @@ export default function CarouselSection() {
   };
 
   return (
-    <section className="carousel" aria-labelledby="carousel-title">
+    <section ref={sectionRef} className="carousel" aria-labelledby="carousel-title">
       <div className="carousel__lines" aria-hidden="true">
         <span />
         <span />
@@ -82,18 +129,12 @@ export default function CarouselSection() {
           className="carousel__stage"
           role="region"
           aria-roledescription="carousel"
-          aria-label="Highlights"
+          aria-label="Video testimonials"
           tabIndex={0}
           onKeyDown={onKeyDown}
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
           onPointerCancel={() => (dragStart.current = null)}
-          onPointerEnter={() => setPaused(true)}
-          onPointerLeave={() => setPaused(false)}
-          // Only keyboard focus pauses — a click/tap also focuses the stage,
-          // and that shouldn't stop autoplay until the user clicks elsewhere.
-          onFocus={(e) => e.currentTarget.matches(":focus-visible") && setPaused(true)}
-          onBlur={() => setPaused(false)}
         >
           <Image
             src="/images/cubes/cube-21.png"
@@ -112,32 +153,96 @@ export default function CarouselSection() {
             aria-hidden="true"
           />
 
+          {/* Page-coloured arcs over the top and bottom edges: the row reads as
+              the inside of a cylinder, with the middle cards cut shortest. */}
+          {(["top", "bottom"] as const).map((edge) => (
+            <svg
+              key={edge}
+              className={`carousel__wave carousel__wave--${edge}`}
+              viewBox="0 0 804 50.167"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <path d="M804,0v16.671c0,0-204.974,33.496-401.995,33.496C204.974,50.167,0,16.671,0,16.671V0H804z" />
+            </svg>
+          ))}
+
           {SLIDES.map((slide, i) => {
             const off = offsetOf(i, active, count);
-            const visible = Math.abs(off) <= 1;
+            const wrapped = off - offsetOf(i, prevActive.current, count) !== step;
+            const visible = Math.abs(off) <= 2;
+            const isActive = off === 0;
             return (
               <article
                 key={slide.id}
-                className={`carousel__card${off === 0 ? " is-active" : ""}`}
-                style={{ "--off": off, "--side": Math.sign(off), "--dist": Math.min(Math.abs(off), 2) } as CSSProperties}
+                className={`carousel__card${isActive ? " is-active" : ""}`}
+                style={{ "--off": off, transition: wrapped ? "none" : undefined } as CSSProperties}
                 aria-roledescription="slide"
-                aria-label={`${i + 1} of ${count}`}
-                aria-hidden={!visible}
-                onClick={() => off !== 0 && visible && go(off as 1 | -1)}
+                aria-label={`${slide.name}, ${slide.num} of ${VIDEOS.length}`}
+                aria-hidden={Math.abs(off) > 1}
+                onClick={() => !isActive && visible && go(off)}
               >
-                <span className="carousel__card-label">{slide.label}</span>
+                <video
+                  ref={(el) => {
+                    videos.current[i] = el;
+                  }}
+                  className="carousel__video"
+                  src={encodeURI(slide.src)}
+                  muted
+                  playsInline
+                  // Side cards only need their first frame; hidden ones nothing.
+                  preload={isActive ? "auto" : visible ? "metadata" : "none"}
+                  onEnded={() => isActive && go(1)}
+                />
+
+                {isActive && (
+                  <div className="carousel__controls">
+                    <button
+                      type="button"
+                      className="carousel__control"
+                      aria-label={playing ? "Pause video" : "Play video"}
+                      onClick={() => setPlaying((p) => !p)}
+                    >
+                      {playing ? (
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <rect x="6" y="5" width="4" height="14" rx="1" />
+                          <rect x="14" y="5" width="4" height="14" rx="1" />
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" />
+                        </svg>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      className="carousel__control"
+                      aria-label={muted ? "Unmute video" : "Mute video"}
+                      onClick={() => setMuted((m) => !m)}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" />
+                        {muted ? (
+                          <path d="M16 9.5l5 5M21 9.5l-5 5" />
+                        ) : (
+                          <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />
+                        )}
+                      </svg>
+                    </button>
+                  </div>
+                )}
               </article>
             );
           })}
         </div>
 
         <div className="carousel__nav">
-          <button type="button" className="carousel__arrow carousel__arrow--prev" aria-label="Previous slide" onClick={() => go(-1)}>
+          <button type="button" className="carousel__arrow carousel__arrow--prev" aria-label="Previous video" onClick={() => go(-1)}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden="true">
               <path d="M15 5l-7 7 7 7" />
             </svg>
           </button>
-          <button type="button" className="carousel__arrow carousel__arrow--next" aria-label="Next slide" onClick={() => go(1)}>
+          <button type="button" className="carousel__arrow carousel__arrow--next" aria-label="Next video" onClick={() => go(1)}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden="true">
               <path d="M9 5l7 7-7 7" />
             </svg>
