@@ -55,6 +55,10 @@ const SCROLL_PER_SLIDE = 0.5;
 // transition ($dur in whatWeOfferSection.scss).
 const STEP_MS = 750;
 
+// Mobile has no scroll pin, so the slides advance on their own while the
+// section is in view.
+const AUTOPLAY_MS = 4000;
+
 // Where a slide sits relative to the active one: "0" is the laptop screen,
 // "-2".."3" are the faded cards around it, "out-l"/"out-r" wait off-stage.
 // (Desktop shows -2..2, the mobile deck shows 1..3.)
@@ -72,6 +76,7 @@ const ytEmbed = (id: string) =>
 export default function WhatWeOfferSection() {
   const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [autoplay, setAutoplay] = useState(false);
   const swipeX = useRef<number | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -155,6 +160,45 @@ export default function WhatWeOfferSection() {
 
     return () => mm.revert();
   }, [setTarget]);
+
+  // Autoplay on mobile (below the pin breakpoint) while the section is on
+  // screen, unless the user prefers reduced motion.
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const mobile = window.matchMedia("(max-width: 767.98px)");
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let inView = false;
+    const update = () => setAutoplay(inView && mobile.matches && !reduced.matches);
+    const observer = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      update();
+    }, { threshold: 0.4 });
+    observer.observe(section);
+    mobile.addEventListener("change", update);
+    reduced.addEventListener("change", update);
+    return () => {
+      observer.disconnect();
+      mobile.removeEventListener("change", update);
+      reduced.removeEventListener("change", update);
+    };
+  }, []);
+
+  // Each slide change (auto or by the user) restarts the countdown; a playing
+  // video holds it. After the last slide it wraps straight back to the first,
+  // which the circular slots animate as a single step.
+  useEffect(() => {
+    if (!autoplay || playing) return;
+    const timer = window.setTimeout(() => {
+      if (shownRef.current < N - 1) {
+        setTarget(shownRef.current + 1);
+      } else {
+        targetRef.current = shownRef.current = 0;
+        setActive(0);
+      }
+    }, AUTOPLAY_MS);
+    return () => clearTimeout(timer);
+  }, [autoplay, playing, active, setTarget]);
 
   // The screen's perspective matrix works in image pixels; expose the laptop's
   // rendered scale as --k (a plain number CSS can't derive from lengths).

@@ -86,7 +86,7 @@ export default function RevealTitle({
           // masks when scrolling up past it again.
           scrollTrigger: {
             trigger: title,
-            start: "top 85%",
+            start: "top 50%",
             toggleActions: "play none none reverse",
           },
         });

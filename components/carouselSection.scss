@@ -1,8 +1,7 @@
-// "Carousel" — centred headline over a looping strip of video cards, after
-// the T.RICKS Menu + Slider: three cards span the outer grid lines, the next
-// pair peeks in at the screen edges, and page-coloured arcs cut into the top
-// and bottom so the row reads as the inside of a cylinder. Grid lines and the
-// prev/next circles match ReviewSection so the page keeps one visual rhythm.
+// "Carousel" — centred headline over a marquee of video cards drifting left in
+// an endless loop, after the T.RICKS Menu + Slider: page-coloured arcs cut
+// into the top and bottom so the row reads as the inside of a cylinder. Grid
+// lines match ReviewSection so the page keeps one visual rhythm.
 //
 // Sizes are taken from the 1920px design and expressed in cqw (1cqw = 19.2px
 // at that width) so the whole section scales with the viewport.
@@ -10,13 +9,10 @@
 $ink: #0b1324;
 $line: #efeae7;
 $card: #b9d9fd;
-$orange: #f8661a;
-$cobalt: #3d78de;
 
 .carousel {
   --off: 4.64cqw;
   --w: 69.18cqw;
-  --arrow: clamp(56px, 6.25cqw, 120px);
 
   // Three cards and two gaps fill the outer grid lines (--w + 2 × --off).
   --gap: 1cqw;
@@ -69,33 +65,49 @@ $cobalt: #3d78de;
 }
 
 // ---------- Stage ----------
-// The stage runs edge to edge so the peeking cards reach the viewport sides;
-// every card is stacked at its centre and slid into place by --off.
+// The stage runs edge to edge so the cards reach the viewport sides.
 .carousel__stage {
   position: relative;
   margin: 0 calc((var(--w) - 100cqw) / 2);
   height: var(--card-h);
-  touch-action: pan-y;
-  user-select: none;
+}
 
-  &:focus-visible { outline: 2px solid $cobalt; outline-offset: 8px; border-radius: 16px; }
+.carousel__viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+// Two identical sets of cards; sliding by one set (-50%) lands exactly where
+// the loop started. Each card carries its gap as a right margin so both
+// halves are the same width.
+.carousel__track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  animation: carousel-marquee var(--duration, 30s) linear infinite;
+
+  &.is-paused { animation-play-state: paused; }
+}
+
+// Hold still while someone points at or tabs into a card.
+@media (hover: hover) {
+  .carousel__stage:hover .carousel__track { animation-play-state: paused; }
+}
+.carousel__stage:focus-within .carousel__track { animation-play-state: paused; }
+
+@keyframes carousel-marquee {
+  to { transform: translateX(-50%); }
 }
 
 .carousel__card {
-  position: absolute;
-  left: 50%;
-  top: 0;
+  position: relative;
+  flex: none;
   width: var(--card-w);
   height: var(--card-h);
-  margin-left: calc(var(--card-w) / -2);
+  margin-right: var(--gap);
   background: $card;
   overflow: hidden;
-  transform: translateX(calc(var(--off) * (var(--card-w) + var(--gap))));
-  // Splide's default easing, as on the reference slider.
-  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-  cursor: pointer;
-
-  &.is-active { cursor: default; }
 }
 
 // The arcs sit above the cards and swallow their straight top/bottom edges.
@@ -121,8 +133,7 @@ $cobalt: #3d78de;
   pointer-events: none;
 }
 
-// Play/pause and mute, bottom-right of the active card, lifted clear of the
-// bottom arc.
+// Sound toggle, bottom-right of each card, lifted clear of the bottom arc.
 .carousel__controls {
   position: absolute;
   right: clamp(10px, 0.9cqw, 18px);
@@ -175,52 +186,14 @@ $cobalt: #3d78de;
   transform: rotate(18deg);
 }
 
-// ---------- Prev / next ----------
-.carousel__nav {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  justify-content: center;
-  gap: clamp(12px, 1.3cqw, 25px);
-  margin-top: clamp(20px, 1.6cqw, 32px);
-}
-
-.carousel__arrow {
-  width: var(--arrow);
-  height: var(--arrow);
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  background: #ffffff;
-  transition: background-color 0.2s, color 0.2s;
-
-  svg { width: 34%; height: 34%; }
-
-  &:focus-visible { outline: 2px solid $cobalt; outline-offset: 3px; }
-}
-
-.carousel__arrow--prev {
-  border: 1.5px solid #111111;
-  color: #111111;
-
-  &:hover { background: #f4f4f4; }
-}
-
-.carousel__arrow--next {
-  border: 1.5px solid $orange;
-  color: $orange;
-
-  &:hover { background: #fff3ec; }
-}
-
+// No drifting for reduced motion: the row scrolls sideways by hand instead.
 @media (prefers-reduced-motion: reduce) {
-  .carousel__card { transition: none; }
+  .carousel__viewport { overflow-x: auto; }
+  .carousel__track { animation: none; }
 }
 
 // ---------- Responsive ----------
-// On phones one card fills the middle and its neighbours peek in from the
-// screen edges, as on the reference slider.
+// On phones the cards are wider, so about one and a half are on screen.
 @media (max-width: 767.98px) {
   .carousel {
     --off: 16px;
@@ -233,5 +206,4 @@ $cobalt: #3d78de;
   }
   .carousel__title { margin-bottom: 24px; }
   .carousel__cube { display: none; }
-  .carousel__nav { margin-top: 28px; }
 }

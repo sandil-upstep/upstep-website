@@ -1,0 +1,92 @@
+$btn-orange-light: #ff7a2b;
+$btn-orange: #f8661a;
+$btn-orange-dark: #ec5a0f;
+
+// Full-viewport veil shown only while scrolling back to the top. Uses
+// backdrop-filter on a fixed layer instead of `filter` on the page itself,
+// since a filter on an ancestor would break the fixed/sticky pinned sections.
+.scroll-top-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  pointer-events: none;
+  opacity: 0;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(10px) saturate(1.3);
+  -webkit-backdrop-filter: blur(10px) saturate(1.3);
+  transition: opacity 0.35s ease;
+
+  &--active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.scroll-top-btn {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1101;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(110deg, $btn-orange-light 0%, $btn-orange 45%, $btn-orange-dark 100%);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow:
+    0 10px 30px -6px rgba($btn-orange, 0.45),
+    0 4px 12px -4px rgba($btn-orange-dark, 0.35);
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(16px) scale(0.9);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease,
+    visibility 0s linear 0.3s,
+    box-shadow 0.2s ease;
+
+  &--visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s ease,
+      visibility 0s,
+      box-shadow 0.2s ease;
+  }
+
+  &--visible:hover {
+    transform: translateY(-3px) scale(1);
+    box-shadow:
+      0 14px 34px -6px rgba($btn-orange, 0.55),
+      0 6px 14px -4px rgba($btn-orange-dark, 0.4);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $btn-orange-dark;
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 767px) {
+    right: 16px;
+    bottom: 16px;
+    width: 46px;
+    height: 46px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: opacity 0.2s ease, visibility 0s;
+    transform: none;
+
+    &--visible,
+    &--visible:hover {
+      transform: none;
+    }
+  }
+}

@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Geist_Mono, Open_Sans } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import SmoothScroll from "@/components/SmoothScroll";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SmoothScroll />
         <Header />
         {children}
+        <ScrollToTop />
       </body>
     </html>
   );
