@@ -301,7 +301,8 @@ $btn-bg: #ffffff;
 }
 
 .structured__arrows {
-  display: flex;
+  // Hidden for now — levels still change by wheel, keyboard and swipe.
+  display: none;
 
   button {
     min-width: 44px;

@@ -28,6 +28,9 @@ const SLIDES = Array.from({ length: Math.ceil(MIN_SLIDES / VIDEOS.length) * VIDE
   num: (i % VIDEOS.length) + 1,
 }));
 
+// How long each slide stays in the centre before the carousel moves on.
+const AUTOPLAY_MS = 5000;
+
 // Swipe distance (px) needed to change slide on touch / drag.
 const SWIPE_THRESHOLD = 40;
 
@@ -45,6 +48,7 @@ export default function CarouselSection() {
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(true);
   const [inView, setInView] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const videos = useRef<(HTMLVideoElement | null)[]>([]);
   const dragStart = useRef<number | null>(null);
@@ -61,10 +65,14 @@ export default function CarouselSection() {
   }, [active]);
 
   // Autoplay: the active video plays (muted, so browsers allow it) and the
-  // carousel moves on when it ends. Reduced motion starts paused.
+  // carousel moves on every AUTOPLAY_MS, or sooner if the video ends. It holds
+  // while hovered or unmuted, since someone is watching. Keyed on `active` so
+  // a manual step restarts the countdown.
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) setPlaying(false);
-  }, []);
+    if (!inView || !playing || !muted || hovered) return;
+    const id = setTimeout(() => setActive((a) => (a + 1) % count), AUTOPLAY_MS);
+    return () => clearTimeout(id);
+  }, [active, inView, playing, muted, hovered, count]);
 
   // Only play while the section is on screen.
   useEffect(() => {
@@ -81,7 +89,9 @@ export default function CarouselSection() {
     videos.current.forEach((v, i) => {
       if (!v) return;
       if (i === active && inView && playing) {
-        v.play().catch(() => setPlaying(false));
+        // An AbortError only means a pause or slide change cut this play()
+        // short; give up on autoplay only if the browser actually blocked it.
+        v.play().catch((err: DOMException) => err.name === "NotAllowedError" && setPlaying(false));
       } else {
         v.pause();
         if (i !== active) v.currentTime = 0;
@@ -135,6 +145,8 @@ export default function CarouselSection() {
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
           onPointerCancel={() => (dragStart.current = null)}
+          onPointerEnter={(e) => e.pointerType === "mouse" && setHovered(true)}
+          onPointerLeave={() => setHovered(false)}
         >
           <Image
             src="/images/cubes/cube-21.png"

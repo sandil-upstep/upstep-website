@@ -376,10 +376,10 @@ export default function HeroSection() {
         // so it unfolds slowly rather than snapping flat.
         end: "+=5%",
         pin: true,
-        pinType: "transform",
+        // Transform pinning on touch-only devices (phones, tablets), fixed elsewhere.
+        pinType: ScrollTrigger.isTouch === 1 ? "transform" : "fixed",
         anticipatePin: 1,
         animation: straighten,
-        
         // A gentle catch-up on top of SmoothScroll softens the motion further.
         scrub: 1.2,
         invalidateOnRefresh: true,

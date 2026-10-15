@@ -122,7 +122,8 @@ export default function WhatWeOfferSection() {
         start: () => (fitsViewport() ? "top top" : "bottom bottom"),
         end: () => `+=${N * window.innerHeight * SCROLL_PER_SLIDE}`,
         pin: true,
-        pinType: "transform",
+        // Transform pinning on touch-only devices (phones, tablets), fixed elsewhere.
+        pinType: ScrollTrigger.isTouch === 1 ? "transform" : "fixed",
         // ScrollTrigger skips pin spacing when the parent is flex (the page
         // column is), which would let the next section scroll up over this one.
         pinSpacing: true,

@@ -20,14 +20,32 @@ export default function AnandSliderPin({ children, markers = false }: { children
 
     let distance = 0;
     let stickTop = 0;
+    const items = Array.from(slider.children) as HTMLElement[];
+    // Mobile progress bar: its thumb is 28% of the track and travels to 72%,
+    // i.e. 72 / 28 of its own width.
+    const thumb = section.querySelector<HTMLElement>(".anand__progress span");
+    const THUMB_TRAVEL = (72 / 28) * 100;
 
+    // Slides the cards with a transform rather than slider.scrollLeft: the
+    // slider is masked, so scrolling it repaints the whole strip every frame,
+    // while a transform only moves the cards' composited layers.
     const sync = () => {
       if (distance <= 0) return;
-      const progress = (stickTop - wrap.getBoundingClientRect().top) / distance;
-      slider.scrollLeft = Math.min(1, Math.max(0, progress)) * distance;
+      const progress = Math.min(1, Math.max(0, (stickTop - wrap.getBoundingClientRect().top) / distance));
+      const x = `translate3d(${(-progress * distance).toFixed(2)}px, 0, 0)`;
+      for (const item of items) item.style.transform = x;
+      if (thumb) thumb.style.transform = `translate3d(${(progress * THUMB_TRAVEL).toFixed(2)}%, 0, 0)`;
+    };
+
+    const reset = () => {
+      for (const item of items) item.style.transform = "";
+      if (thumb) thumb.style.transform = "";
     };
 
     const measure = () => {
+      // Measure the slider at rest, without the cards' offset.
+      reset();
+      slider.scrollLeft = 0;
       distance = Math.max(0, slider.scrollWidth - slider.clientWidth);
       const active = distance > 1;
       wrap.classList.toggle("anand-pin--active", active);
@@ -44,17 +62,29 @@ export default function AnandSliderPin({ children, markers = false }: { children
       sync();
     };
 
+    // Mobile browsers resize the viewport's height as the address bar shows and
+    // hides mid-scroll; re-measuring then changes the wrapper height and sticky
+    // offset under the finger and the page jumps. Only a width change re-measures.
+    let lastWidth = window.innerWidth;
+    const onResize = () => {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
+      measure();
+    };
+
+    // Watch the section only: the slider's size doesn't change on its own, and
+    // the cards' transforms don't trigger it.
     const observer = new ResizeObserver(measure);
     observer.observe(section);
-    observer.observe(slider);
-    window.addEventListener("resize", measure);
+    window.addEventListener("resize", onResize);
     window.addEventListener("scroll", sync, { passive: true });
     measure();
 
     return () => {
       observer.disconnect();
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", sync);
+      reset();
       wrap.classList.remove("anand-pin--active");
       wrap.style.height = "";
     };
@@ -66,15 +96,17 @@ export default function AnandSliderPin({ children, markers = false }: { children
   // it keeps moving while the section is pinned.
   useEffect(() => {
     const wrap = wrapRef.current;
-    const section = wrap?.firstElementChild as HTMLElement | null;
-    if (!wrap || !section) return;
+    const checker = wrap?.querySelector<HTMLElement>(".anand__checker");
+    if (!wrap || !checker) return;
 
     let frame = 0;
+    // Set on the checkerboard itself: on the section, the inherited property
+    // would restyle every element inside it on each scroll frame.
     const update = () => {
       frame = 0;
       const rect = wrap.getBoundingClientRect();
       const progress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
-      section.style.setProperty("--anand-scroll", Math.min(1, Math.max(0, progress)).toFixed(4));
+      checker.style.setProperty("--anand-scroll", Math.min(1, Math.max(0, progress)).toFixed(4));
     };
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(update);
