@@ -774,7 +774,7 @@ export default function ScientificallyStructuredSection() {
     const clock = new THREE.Clock();
     const tmp = new THREE.Vector3();
 
-    renderer.setAnimationLoop(() => {
+    const tick = () => {
       const dt = Math.min(clock.getDelta(), 0.05);
       const time = clock.elapsedTime;
 
@@ -938,10 +938,26 @@ export default function ScientificallyStructuredSection() {
       renderer.render(scene, camera);
       renderer.clearDepth();
       renderer.render(overlay, ortho);
-    });
+    };
+
+    // Only render while the section is near the viewport. A WebGL frame every
+    // tick competes with page scrolling on phones even when the board is far
+    // off screen. The clock is reset on resume so the first delta isn't the
+    // whole time it was hidden.
+    const visibility = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          clock.getDelta();
+          renderer.setAnimationLoop(tick);
+        } else renderer.setAnimationLoop(null);
+      },
+      { rootMargin: "200px 0px" }
+    );
+    visibility.observe(section);
 
     return () => {
       cancelled = true;
+      visibility.disconnect();
       renderer.setAnimationLoop(null);
       removeEventListener("resize", onResize);
       mobileMQ.removeEventListener("change", layout);

@@ -122,6 +122,7 @@ export default function WhatWeOfferSection() {
         start: () => (fitsViewport() ? "top top" : "bottom bottom"),
         end: () => `+=${N * window.innerHeight * SCROLL_PER_SLIDE}`,
         pin: true,
+        pinType: "transform",
         // ScrollTrigger skips pin spacing when the parent is flex (the page
         // column is), which would let the next section scroll up over this one.
         pinSpacing: true,

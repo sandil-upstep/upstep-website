@@ -376,8 +376,10 @@ export default function HeroSection() {
         // so it unfolds slowly rather than snapping flat.
         end: "+=5%",
         pin: true,
+        pinType: "transform",
         anticipatePin: 1,
         animation: straighten,
+        
         // A gentle catch-up on top of SmoothScroll softens the motion further.
         scrub: 1.2,
         invalidateOnRefresh: true,
