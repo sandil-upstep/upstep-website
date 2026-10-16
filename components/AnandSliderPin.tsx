@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
+import { onScrollFrame } from "./SmoothScroll";
 
 // Pins the Anand section while vertical scrolling drives its card slider
 // sideways, releasing once the last card is fully in view. The section sticks
@@ -77,13 +78,13 @@ export default function AnandSliderPin({ children, markers = false }: { children
     const observer = new ResizeObserver(measure);
     observer.observe(section);
     window.addEventListener("resize", onResize);
-    window.addEventListener("scroll", sync, { passive: true });
+    const offScroll = onScrollFrame(sync);
     measure();
 
     return () => {
       observer.disconnect();
       window.removeEventListener("resize", onResize);
-      window.removeEventListener("scroll", sync);
+      offScroll();
       reset();
       wrap.classList.remove("anand-pin--active");
       wrap.style.height = "";
@@ -99,27 +100,21 @@ export default function AnandSliderPin({ children, markers = false }: { children
     const checker = wrap?.querySelector<HTMLElement>(".anand__checker");
     if (!wrap || !checker) return;
 
-    let frame = 0;
     // Set on the checkerboard itself: on the section, the inherited property
     // would restyle every element inside it on each scroll frame.
     const update = () => {
-      frame = 0;
       const rect = wrap.getBoundingClientRect();
       const progress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
       checker.style.setProperty("--anand-scroll", Math.min(1, Math.max(0, progress)).toFixed(4));
     };
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(update);
-    };
 
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
+    const offScroll = onScrollFrame(update);
+    window.addEventListener("resize", update);
     update();
 
     return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
+      offScroll();
+      window.removeEventListener("resize", update);
     };
   }, []);
 

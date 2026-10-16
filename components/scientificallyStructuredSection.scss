@@ -20,15 +20,22 @@ $btn-bg: #ffffff;
   @return calc(var(--u) * #{$n});
 }
 
+// The section is the scroll track; everything visible lives in the cover,
+// which sticks while the page scroll steps through the levels (desktop).
+// No overflow clipping on the section itself: that would break the sticky.
 .structured {
   position: relative;
-  overflow: hidden;
   background: #ffffff;
   color: $ink;
   container-type: inline-size;
   // Horizontal swipes step through the levels (handled in JS); vertical
   // drags still scroll the page.
   touch-action: pan-y;
+}
+
+.structured__cover {
+  position: relative;
+  overflow: hidden;
 }
 
 .structured__stage {
@@ -301,7 +308,7 @@ $btn-bg: #ffffff;
 }
 
 .structured__arrows {
-  // Hidden for now — levels still change by wheel, keyboard and swipe.
+  // Hidden for now — levels still change by scroll, keyboard and swipe.
   display: none;
 
   button {
@@ -366,8 +373,21 @@ $btn-bg: #ffffff;
 // DESKTOP / TABLET LANDSCAPE ≥ 820px — exact 1920 × 1203 frame
 // =========================================================
 @media (min-width: 820px) {
+  // Scroll distance per level change while the cover is pinned.
+  $level-scroll: 70vh;
+
   .structured {
     --u: calc(100cqw / 100);
+    // The frame plus one stretch of scroll for each of the five level changes.
+    height: calc(#{u(62.66)} + #{$level-scroll * 5});
+  }
+
+  // Sticks with its top on the viewport's top, or — when the frame is taller
+  // than the viewport — its bottom on the viewport's bottom, so the whole
+  // copy panel stays in view while pinned. Matches `pin()` in the component.
+  .structured__cover {
+    position: sticky;
+    top: min(0px, calc(100vh - #{u(62.66)}));
     height: u(62.66);
   }
 

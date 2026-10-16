@@ -343,12 +343,14 @@ export default function HeroSection() {
     };
   }, [isPlaying]);
 
-  // Pin the rating-card row once it reaches the middle of the viewport, stagger
-  // the cards in on mount, and straighten the staggered row while pinned.
-  // The stagger-in moves the inner card while the straightening moves its
-  // outer wrapper, so the two tweens never fight over the same transform.
-  // Pin and straightening are desktop-only: below lg the cards sit in normal flow
-  // under the stacked hero.
+  // Stagger the rating cards in on mount, then straighten the staggered row
+  // once its top reaches the middle of the viewport (and undo it on the way
+  // back up). The straightening plays on its own clock rather than being tied
+  // to the scroll, and the row isn't pinned, so it scrolls like the rest of
+  // the page. The stagger-in moves the inner card while the straightening
+  // moves its outer wrapper, so the two tweens never fight over the same
+  // transform. Straightening is desktop-only: below lg the cards sit in
+  // normal flow under the stacked hero.
   useEffect(() => {
     const row = ratingRowRef.current;
     const wrappers = cardWrapperRefs.current.filter((el): el is HTMLDivElement => el !== null);
@@ -357,33 +359,23 @@ export default function HeroSection() {
 
     const mm = gsap.matchMedia(row);
     mm.add(DESKTOP_QUERY, () => {
-      // While pinned, drop each card down to the last one's level so the row
-      // settles into one straight line — the first card travels furthest, the
-      // last not at all. Measured from the live layout (the stagger is a vw
-      // clamp), and re-measured on refresh so resizes stay aligned.
+      // Drop each card down to the last one's level so the row settles into
+      // one straight line — the first card travels furthest, the last not at
+      // all. Measured from the live layout (the stagger is a vw clamp), and
+      // re-measured on refresh so resizes stay aligned.
       const lastWrapper = wrappers[wrappers.length - 1];
-      const straighten = gsap.to(wrappers, {
+      gsap.to(wrappers, {
         y: (_index: number, wrapper: HTMLDivElement) =>
           lastWrapper.offsetTop - wrapper.offsetTop,
-        ease: "none",
+        duration: 0.9,
+        ease: "power2.inOut",
         force3D: true,
-      });
-
-      ScrollTrigger.create({
-        trigger: row,
-        start: "top 50%",
-        // Spread the straightening over most of a screen's worth of scrolling
-        // so it unfolds slowly rather than snapping flat.
-        end: "+=5%",
-        pin: true,
-        // Transform pinning on touch-only devices (phones, tablets), fixed elsewhere.
-        pinType: ScrollTrigger.isTouch === 1 ? "transform" : "fixed",
-        anticipatePin: 1,
-        animation: straighten,
-        // A gentle catch-up on top of SmoothScroll softens the motion further.
-        scrub: 1.2,
-        invalidateOnRefresh: true,
-        // markers: true
+        scrollTrigger: {
+          trigger: row,
+          start: "top 50%",
+          toggleActions: "play none none reverse",
+          invalidateOnRefresh: true,
+        },
       });
     });
 

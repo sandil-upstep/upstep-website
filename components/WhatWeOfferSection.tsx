@@ -7,6 +7,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Eyebrow from "./Eyebrow";
 import RevealTitle from "./RevealTitle";
+import { getLenis, onScrollFrame } from "./SmoothScroll";
 import "./whatWeOfferSection.scss";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -39,10 +40,10 @@ const SLIDES: Slide[] = [
   { kind: "image", src: "/images/anand-cards-img.png", title: "Puzzles and practice cards" },
   { kind: "youtube", videoId: "R6MlUcmOul8", title: "Weekly tournaments" },
   { kind: "image", src: "/images/player2.png", title: "Personalised progress tracking" },
-  { kind: "youtube", videoId: "WhWc3b3KhnY", title: "Game analysis sessions" },
-  { kind: "image", src: "/images/player.png", title: "Small batches, personal attention" },
-  { kind: "youtube", videoId: "YE7VzlLtp-4", title: "Parent progress reports" },
-  { kind: "image", src: "/images/certificate.png", title: "Level completion certificates" },
+  // { kind: "youtube", videoId: "WhWc3b3KhnY", title: "Game analysis sessions" },
+  // { kind: "image", src: "/images/player.png", title: "Small batches, personal attention" },
+  // { kind: "youtube", videoId: "YE7VzlLtp-4", title: "Parent progress reports" },
+  // { kind: "image", src: "/images/certificate.png", title: "Level completion certificates" },
 ];
 
 const N = SLIDES.length;
@@ -80,12 +81,20 @@ export default function WhatWeOfferSection() {
   const swipeX = useRef<number | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<ScrollTrigger | null>(null);
+  const pinRef = useRef<HTMLDivElement>(null);
+  // Page scroll where the pin holds the section, while it's active.
+  const rangeRef = useRef<{ start: number; end: number } | null>(null);
   // Scroll and clicks set the target; the shown slide walks to it one step
   // per STEP_MS, so a long scroll or rapid clicks never skip slides.
   const targetRef = useRef(0);
   const shownRef = useRef(0);
   const stepTimer = useRef<number | null>(null);
+  // True while goTo's scroll to a slide's spot is still under way.
+  const seekingRef = useRef(false);
+  const seekTimer = useRef<number | null>(null);
+  // The slide the page scroll is heading to; it runs ahead of the target
+  // while goTo's scroll is still on its way to the slide's band.
+  const headingRef = useRef(0);
 
   const setTarget = useCallback((i: number) => {
     targetRef.current = i;
@@ -94,12 +103,19 @@ export default function WhatWeOfferSection() {
       if (shownRef.current === target) return;
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       shownRef.current = reduced ? target : shownRef.current + Math.sign(target - shownRef.current);
+      // Rapid scrolling: the more slides still waiting behind this step, the
+      // faster it plays (up to ~2.8×), so the carousel keeps up with the page.
+      // (The heading only tracks the scroll on desktop, where the pin runs.)
+      const heading = rangeRef.current ? headingRef.current : target;
+      const pending = Math.max(Math.abs(target - shownRef.current), Math.abs(heading - shownRef.current));
+      const ms = Math.round(STEP_MS / (1 + Math.min(pending, 3) * 0.6));
+      trackRef.current?.style.setProperty("--wwo-dur", `${ms}ms`);
       setActive(shownRef.current);
       setPlaying(false);
       stepTimer.current = window.setTimeout(() => {
         stepTimer.current = null;
         chase();
-      }, reduced ? 0 : STEP_MS);
+      }, reduced ? 0 : ms);
     };
     // A running chase picks up the new target on its next step.
     if (stepTimer.current === null) chase();
@@ -115,50 +131,77 @@ export default function WhatWeOfferSection() {
   // releases. A section taller than the viewport pins by its bottom edge so
   // the whole carousel stays in view. Mobile skips the pin and is driven by
   // swipes and the arrows alone.
+  // The pin is CSS `position: sticky` inside a taller wrapper (as in
+  // AnandSliderPin), not a ScrollTrigger pin: switching a section this big
+  // to `position: fixed` and back re-lays and repaints it on the very frame
+  // it enters and leaves, which shows as a jolt. Sticky is held by the
+  // browser's compositor, so there is no switch at all.
   useEffect(() => {
+    const wrap = pinRef.current;
     const section = sectionRef.current;
-    if (!section) return;
+    if (!wrap || !section) return;
+    const desktop = window.matchMedia("(min-width: 768px)");
 
-    const mm = gsap.matchMedia();
-    mm.add("(min-width: 768px)", () => {
-      const fitsViewport = () => section.offsetHeight <= window.innerHeight;
-      const trigger = ScrollTrigger.create({
-        trigger: section,
-        start: () => (fitsViewport() ? "top top" : "bottom bottom"),
-        end: () => `+=${N * window.innerHeight * SCROLL_PER_SLIDE}`,
-        pin: true,
-        // Transform pinning on touch-only devices (phones, tablets), fixed elsewhere.
-        pinType: ScrollTrigger.isTouch === 1 ? "transform" : "fixed",
-        // ScrollTrigger skips pin spacing when the parent is flex (the page
-        // column is), which would let the next section scroll up over this one.
-        pinSpacing: true,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-        onUpdate: (self) => {
-          const next = Math.min(N - 1, Math.floor(self.progress * N));
-          if (next !== targetRef.current) setTarget(next);
-        },
+    let distance = 0;
+    let stickTop = 0;
+
+    const sync = () => {
+      if (distance <= 0) return;
+      const progress = Math.min(1, Math.max(0, (stickTop - wrap.getBoundingClientRect().top) / distance));
+      const next = Math.min(N - 1, Math.floor(progress * N));
+      // Scrollbar drags and the like move the page without a seek.
+      if (!seekingRef.current) headingRef.current = next;
+      if (next !== targetRef.current) setTarget(next);
+    };
+
+    const measure = () => {
+      const active = desktop.matches;
+      wrap.classList.toggle("wwo-pin--active", active);
+      if (!active) {
+        distance = 0;
+        rangeRef.current = null;
+        wrap.style.height = "";
+        return;
+      }
+      distance = N * window.innerHeight * SCROLL_PER_SLIDE;
+      stickTop = Math.min(0, window.innerHeight - section.offsetHeight);
+      wrap.style.setProperty("--pin-top", `${stickTop}px`);
+      // Extra height is the scroll the pin holds the section for.
+      wrap.style.height = `${section.offsetHeight + distance}px`;
+      const start = wrap.getBoundingClientRect().top + window.scrollY - stickTop;
+      rangeRef.current = { start, end: start + distance };
+      sync();
+    };
+
+    // The wrapper's new height moves every section below it, so let the other
+    // ScrollTriggers (reveals further down) re-measure too. Sections above
+    // (e.g. the Anand pin) also change height after mount, hence the body.
+    let frame = 0;
+    const remeasure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        measure();
+        ScrollTrigger.refresh();
       });
-      triggerRef.current = trigger;
+    };
+    const observer = new ResizeObserver(remeasure);
+    observer.observe(section);
+    observer.observe(document.body);
+    window.addEventListener("resize", remeasure);
+    desktop.addEventListener("change", remeasure);
+    const offScroll = onScrollFrame(sync);
+    measure();
 
-      // Sections above (e.g. the Anand pin) change height after mount; re-measure
-      // so the pin starts in the right place.
-      let frame = 0;
-      const observer = new ResizeObserver(() => {
-        cancelAnimationFrame(frame);
-        frame = requestAnimationFrame(() => ScrollTrigger.refresh());
-      });
-      observer.observe(document.body);
-
-      return () => {
-        cancelAnimationFrame(frame);
-        observer.disconnect();
-        trigger.kill();
-        triggerRef.current = null;
-      };
-    });
-
-    return () => mm.revert();
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", remeasure);
+      desktop.removeEventListener("change", remeasure);
+      offScroll();
+      wrap.classList.remove("wwo-pin--active");
+      wrap.style.height = "";
+      rangeRef.current = null;
+    };
   }, [setTarget]);
 
   // Autoplay on mobile (below the pin breakpoint) while the section is on
@@ -215,19 +258,113 @@ export default function WhatWeOfferSection() {
 
   // Buttons, keys, swipes and card clicks scroll the page to the slide's spot
   // inside the pin; the scroll handler then targets it.
-  const goTo = (i: number) => {
+  const goTo = useCallback((i: number) => {
     const index = Math.min(N - 1, Math.max(0, i));
-    const trigger = triggerRef.current;
-    if (!trigger) {
+    headingRef.current = index;
+    const range = rangeRef.current;
+    if (!range) {
       setTarget(index);
       return;
     }
     // Aim for the middle of the slide's band so rounding can't land in a neighbour.
-    const top = trigger.start + ((trigger.end - trigger.start) * (index + 0.5)) / N;
-    window.scrollTo({ top: Math.round(top), behavior: "smooth" });
-  };
-  // Steps count from the target, so each click queues exactly one more slide.
-  const step = (dir: -1 | 1) => goTo(targetRef.current + dir);
+    const top = Math.round(range.start + ((range.end - range.start) * (index + 0.5)) / N);
+    // The timer also covers a Lenis scroll that's interrupted (e.g. by the
+    // scrollbar) and never completes, so the wheel can't stay locked.
+    seekingRef.current = true;
+    if (seekTimer.current !== null) clearTimeout(seekTimer.current);
+    seekTimer.current = window.setTimeout(() => (seekingRef.current = false), 1200);
+    // Through Lenis when it's running: a native smooth scroll fights its
+    // inertia, and the next wheel tick snaps back to where Lenis thought it was.
+    const lenis = getLenis();
+    if (lenis) lenis.scrollTo(top, { duration: 0.9, force: true, onComplete: () => (seekingRef.current = false) });
+    else window.scrollTo({ top, behavior: "smooth" });
+  }, [setTarget]);
+
+  // ---- Wheel: one gesture = one slide ----
+  // Inside the pin the wheel never scrolls by its own amount: each gesture
+  // moves exactly one slide, and the rest of it (a trackpad's momentum tail
+  // included) is swallowed. A new gesture counts as soon as the wheel has
+  // been quiet briefly, or a trackpad push rises out of the previous tail,
+  // even while the last slide change is still playing: the steps queue up
+  // and play faster (see setTarget), so rapid scrolling speeds the carousel
+  // along instead of being ignored. A gesture that would carry the page into
+  // the pin from above or below stops on the first/last slide instead of
+  // skipping through. Past the last slide (or before the first) the page
+  // scrolls on as usual. Runs in the capture phase on document, ahead of
+  // Lenis's window listener. Desktop only: mobile has no pin.
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const WHEEL_QUIET = 200;
+    let wheelLock = false;
+    let lastWheel = 0;
+    let lastMag = 0;
+    let lastStep = 0;
+
+    const onWheel = (e: WheelEvent) => {
+      const range = rangeRef.current;
+      if (!range || e.ctrlKey || e.defaultPrevented) return;
+      const now = performance.now();
+      const mag = Math.abs(e.deltaY);
+      const rising = mag >= 20 && mag > lastMag * 1.5;
+      lastMag = mag;
+      const swallow = () => {
+        e.preventDefault();
+        e.stopPropagation();
+        lastWheel = now;
+      };
+      if (wheelLock) {
+        // A lock must never outlive the section being on screen.
+        const r = section.getBoundingClientRect();
+        const offScreen = r.bottom < 0 || r.top > window.innerHeight;
+        const fresh = now - lastWheel > WHEEL_QUIET || (rising && now - lastStep > 250);
+        if (offScreen || fresh) wheelLock = false;
+        else {
+          // Swallow the rest of the gesture wherever the page is: a fast
+          // gesture entering the pin would otherwise reach Lenis, cancel the
+          // snap and carry the page past the section.
+          swallow();
+          return;
+        }
+      }
+      if (!e.deltaY) return;
+      // Where the page is heading, counting Lenis's pending inertia.
+      const from = getLenis()?.targetScroll ?? window.scrollY;
+      const inside = from >= range.start - 1 && from <= range.end + 1;
+      if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) {
+        // A sideways-leaning swipe would otherwise nudge the page a few
+        // pixels inside the pin without changing slide.
+        if (inside) swallow();
+        return;
+      }
+      const dir = e.deltaY > 0 ? 1 : -1;
+      const to = from + e.deltaY;
+      let slide: number | null = null;
+      if (from < range.start - 1) {
+        if (to >= range.start) slide = 0;
+      } else if (from > range.end + 1) {
+        if (to <= range.end) slide = N - 1;
+      } else {
+        // From the slide the page is heading to, so quick gestures add up.
+        const next = headingRef.current + dir;
+        if (next >= 0 && next < N) slide = next;
+      }
+      if (slide === null) return;
+      swallow();
+      wheelLock = true;
+      lastStep = now;
+      goTo(slide);
+    };
+
+    document.addEventListener("wheel", onWheel, { capture: true, passive: false });
+    return () => {
+      document.removeEventListener("wheel", onWheel, { capture: true });
+      if (seekTimer.current !== null) clearTimeout(seekTimer.current);
+    };
+  }, [goTo]);
+  // Steps count from where the page is heading (desktop) or the target, so
+  // each click queues exactly one more slide.
+  const step = (dir: -1 | 1) => goTo((rangeRef.current ? headingRef.current : targetRef.current) + dir);
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
@@ -246,6 +383,7 @@ export default function WhatWeOfferSection() {
   };
 
   return (
+    <div ref={pinRef} className="wwo-pin">
     <section
       ref={sectionRef}
       className={`wwo ${openSans.variable}`}
@@ -394,5 +532,6 @@ export default function WhatWeOfferSection() {
         </div>
       </div>
     </section>
+    </div>
   );
 }

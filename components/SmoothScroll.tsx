@@ -13,6 +13,18 @@ gsap.registerPlugin(ScrollTrigger);
 let instance: Lenis | null = null;
 export const getLenis = () => instance;
 
+// Runs `callback` on every scroll. Under Lenis it fires inside Lenis' own frame,
+// right after the scroll position moves, so scroll-linked styles land on the
+// same frame as the scroll (a window "scroll" listener only hears about it a
+// frame later, which shows as a shudder at the edges of a pin). Without Lenis
+// it falls back to the window event. Returns an unsubscribe function.
+export const onScrollFrame = (callback: () => void) => {
+  const lenis = instance;
+  if (lenis) return lenis.on("scroll", callback);
+  window.addEventListener("scroll", callback, { passive: true });
+  return () => window.removeEventListener("scroll", callback);
+};
+
 // Eases wheel and trackpad scrolling with inertia. Lenis still moves the native
 // window scroll, so sticky pins and plain scroll listeners keep working; it is
 // driven from GSAP's ticker so ScrollTrigger updates on the same frame. Touch

@@ -7,7 +7,7 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import Eyebrow from "./Eyebrow";
 import RevealTitle from "./RevealTitle";
-import { getLenis } from "./SmoothScroll";
+import { getLenis, onScrollFrame } from "./SmoothScroll";
 import "./scientificallyStructuredSection.scss";
 
 // A chess piece per curriculum level, growing from pawn to king. Each level
@@ -131,6 +131,7 @@ const SWAP_B = 0.44;
 
 export default function ScientificallyStructuredSection() {
   const sectionRef = useRef<HTMLElement>(null);
+  const coverRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef<HTMLParagraphElement>(null);
   const ticksRef = useRef<HTMLOListElement>(null);
@@ -143,6 +144,7 @@ export default function ScientificallyStructuredSection() {
 
   useEffect(() => {
     const section = sectionRef.current;
+    const cover = coverRef.current;
     const stage = stageRef.current;
     const statusEl = statusRef.current;
     const ticksEl = ticksRef.current;
@@ -152,7 +154,7 @@ export default function ScientificallyStructuredSection() {
     const prevBtn = prevRef.current;
     const nextBtn = nextRef.current;
     const srEl = srRef.current;
-    if (!section || !stage || !statusEl || !ticksEl || !titleEl || !descEl || !swapEl || !prevBtn || !nextBtn || !srEl) {
+    if (!section || !cover || !stage || !statusEl || !ticksEl || !titleEl || !descEl || !swapEl || !prevBtn || !nextBtn || !srEl) {
       return;
     }
 
@@ -470,7 +472,10 @@ export default function ScientificallyStructuredSection() {
       const b = document.createElement("button");
       b.type = "button";
       b.setAttribute("aria-label", s.title);
-      b.addEventListener("click", () => goTo(i));
+      b.addEventListener("click", () => {
+        if (scrollBound()) scrollToLevel(i);
+        else goTo(i);
+      });
       li.appendChild(b);
       ticksEl.appendChild(li);
       tickButtons.push(b);
@@ -525,15 +530,25 @@ export default function ScientificallyStructuredSection() {
       propSets[0].target = 1;
       if (reduceMotion) propSets[0].v = 1;
       updateUI(0, true);
+      // The page may already be scrolled partway through the levels.
+      syncScroll();
     }
 
     function stepDir(dir: 1 | -1) {
-      if (!isReady || anim) return;
-      const to = cur + dir;
-      if (to >= 0 && to < STEPS.length) startJump(cur, to);
+      if (!isReady) return;
+      // Step from where the scroll is heading, so rapid presses add up.
+      const to = (scrollBound() ? target : cur) + dir;
+      if (to < 0 || to >= STEPS.length) return;
+      if (scrollBound()) scrollToLevel(to);
+      else if (!anim) startJump(cur, to);
     }
     function goTo(i: number) {
-      if (!isReady || i === cur) return;
+      if (!isReady) return;
+      if (i === cur) {
+        // Scrolled back to the level already landing: drop any queued hops.
+        queue = [];
+        return;
+      }
       queue = [];
       const dir = i > cur ? 1 : -1;
       for (let k = cur + dir; dir > 0 ? k <= i : k >= i; k += dir) queue.push(k);
@@ -586,6 +601,9 @@ export default function ScientificallyStructuredSection() {
     const onKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target?.closest && target.closest("input, textarea")) return;
+      // On desktop the arrows only act while the section is pinned, so they
+      // don't drag the page here from elsewhere.
+      if (scrollBound() && !pinned()) return;
       if (e.key === "ArrowRight") {
         queue = [];
         stepDir(1);
@@ -597,57 +615,129 @@ export default function ScientificallyStructuredSection() {
     };
     addEventListener("keydown", onKeyDown);
 
-    // ---- Wheel: one gesture = one level ----
-    // While the section sits centred in the viewport, the wheel steps through
-    // the levels instead of scrolling the page. A gesture of any length (a
-    // trackpad's momentum tail included) moves exactly one level: the wheel
-    // stays locked until the jump has finished and the wheel has gone quiet.
-    // At the first/last level the page scrolls on as usual. The listener runs
-    // in the capture phase on document, ahead of Lenis's window listener.
-    let wheelLock = false;
-    let aligning = false;
-    let lastWheel = 0;
-    const WHEEL_QUIET = 200;
-    const alignedY = () => {
-      const r = section.getBoundingClientRect();
-      return scrollY + r.top + (r.height - innerHeight) / 2;
+    // ---- Scroll: the page scroll picks the level ----
+    // On desktop the section is a tall track and the cover sticks inside it
+    // (bottom on the viewport's bottom when it's taller than the viewport). The
+    // distance scrolled while pinned is split into one equal stretch per
+    // level. Ticks, arrows, keys and swipes scroll the page to their level's
+    // stretch, so the scroll position stays the single source of truth.
+    // Phones keep the stacked layout and step by swipe.
+    // Page y where the pin starts (y0) and ends (y1).
+    const pin = () => {
+      const coverH = cover.offsetHeight;
+      const stickTop = Math.min(0, innerHeight - coverH);
+      const distance = section.offsetHeight - coverH;
+      const y0 = scrollY + section.getBoundingClientRect().top - stickTop;
+      return { distance, y0, y1: y0 + distance };
     };
-    const inBand = () => {
-      const r = section.getBoundingClientRect();
-      return Math.abs(r.top + r.height / 2 - innerHeight / 2) < innerHeight * 0.3;
+    const scrollBound = () => !mobile && section.offsetHeight - cover.offsetHeight > 1;
+    const pinned = () => {
+      const { y0, y1 } = pin();
+      return scrollY >= y0 - 1 && scrollY <= y1 + 1;
     };
-    const align = () => {
-      const y = alignedY();
+    const scrollLevel = () => {
+      const { distance, y0 } = pin();
+      const p = clamp01((scrollY - y0) / distance);
+      return Math.min(STEPS.length - 1, Math.floor(p * STEPS.length));
+    };
+    let seeking = false;
+    let seekTimer: number | null = null;
+    // The level the page scroll is heading to; it runs ahead of `cur` while
+    // hops are still playing out.
+    let target = 0;
+    const scrollToLevel = (i: number) => {
+      target = i;
+      const { distance, y0 } = pin();
+      const y = y0 + ((i + 0.5) / STEPS.length) * distance;
       const lenis = getLenis();
-      aligning = true;
-      if (lenis) lenis.scrollTo(y, { duration: 0.7, force: true, onComplete: () => (aligning = false) });
-      else {
-        scrollTo({ top: y, behavior: reduceMotion ? "auto" : "smooth" });
-        window.setTimeout(() => (aligning = false), reduceMotion ? 0 : 700);
-      }
+      seeking = true;
+      // The timer also covers a Lenis scroll that's interrupted (e.g. by the
+      // scrollbar) and never completes, so the wheel can't stay locked.
+      if (seekTimer !== null) clearTimeout(seekTimer);
+      seekTimer = window.setTimeout(() => (seeking = false), lenis ? 1200 : reduceMotion ? 0 : 900);
+      if (lenis) lenis.scrollTo(y, { duration: 0.9, force: true, onComplete: () => (seeking = false) });
+      else scrollTo({ top: y, behavior: reduceMotion ? "auto" : "smooth" });
     };
+    const syncScroll = () => {
+      if (!isReady || !scrollBound()) return;
+      const level = scrollLevel();
+      // Scrollbar drags, keys and the like move the page without a seek.
+      if (!seeking) target = level;
+      goTo(level);
+    };
+    const offScroll = onScrollFrame(syncScroll);
+
+    // ---- Wheel: one gesture = one level ----
+    // Inside the pin the wheel never scrolls by its own amount: each gesture
+    // moves exactly one level, and the rest of it (a trackpad's momentum tail
+    // included) is swallowed. A new gesture counts as soon as the wheel has
+    // been quiet briefly, or a trackpad push rises out of the previous tail,
+    // even while the last hop is still playing: the hops queue up and play
+    // faster (see the frame loop), so rapid scrolling speeds the piece along
+    // instead of being ignored. A gesture that would carry the page into the
+    // pin from above or below stops on the first/last level instead of
+    // skipping through. Past the last level (or before the first) the page
+    // scrolls on as usual. Runs in the capture phase on document, ahead of
+    // Lenis's window listener.
+    let wheelLock = false;
+    let lastWheel = 0;
+    let lastMag = 0;
+    let lastStep = 0;
+    const WHEEL_QUIET = 200;
     const onWheel = (e: WheelEvent) => {
-      if (mobile || !isReady || e.ctrlKey) return;
-      if (wheelLock) {
+      // defaultPrevented: another section's wheel handler already claimed it.
+      if (!isReady || e.ctrlKey || e.defaultPrevented || !scrollBound()) return;
+      const now = performance.now();
+      const mag = Math.abs(e.deltaY);
+      const rising = mag >= 20 && mag > lastMag * 1.5;
+      lastMag = mag;
+      const swallow = () => {
         e.preventDefault();
         e.stopPropagation();
-        lastWheel = performance.now();
+        lastWheel = now;
+      };
+      const { y0, y1 } = pin();
+      if (wheelLock) {
+        // A lock left behind must never freeze the page.
+        const r = section.getBoundingClientRect();
+        const offScreen = r.bottom < 0 || r.top > innerHeight;
+        const fresh = now - lastWheel > WHEEL_QUIET || (rising && now - lastStep > 250);
+        if (offScreen || fresh) wheelLock = false;
+        else {
+          // Swallow the rest of the gesture wherever the page is: a fast
+          // gesture entering the pin would otherwise reach Lenis, cancel the
+          // snap and carry the page past the section.
+          swallow();
+          return;
+        }
+      }
+      if (!e.deltaY) return;
+      // Where the page is heading, counting Lenis's pending inertia.
+      const from = getLenis()?.targetScroll ?? scrollY;
+      const inside = from >= y0 - 1 && from <= y1 + 1;
+      if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) {
+        // A sideways-leaning swipe would otherwise nudge the page a few
+        // pixels inside the pin without changing level.
+        if (inside) swallow();
         return;
       }
-      if (!e.deltaY || Math.abs(e.deltaY) < Math.abs(e.deltaX) || !inBand()) return;
       const dir = e.deltaY > 0 ? 1 : -1;
-      const canStep = dir > 0 ? cur < STEPS.length - 1 : cur > 0;
-      if (!canStep) return;
-      e.preventDefault();
-      e.stopPropagation();
-      wheelLock = true;
-      lastWheel = performance.now();
-      // Entering the section only lines it up; the next gesture changes level.
-      if (Math.abs(scrollY - alignedY()) > 4) align();
-      else {
-        queue = [];
-        stepDir(dir);
+      const to = from + e.deltaY;
+      let level: number | null = null;
+      if (from < y0 - 1) {
+        if (to >= y0) level = 0;
+      } else if (from > y1 + 1) {
+        if (to <= y1) level = STEPS.length - 1;
+      } else {
+        // From the level the page is heading to, so quick gestures add up.
+        const next = target + dir;
+        if (next >= 0 && next < STEPS.length) level = next;
       }
+      if (level === null) return;
+      swallow();
+      wheelLock = true;
+      lastStep = now;
+      scrollToLevel(level);
     };
     document.addEventListener("wheel", onWheel, { capture: true, passive: false });
 
@@ -778,15 +868,17 @@ export default function ScientificallyStructuredSection() {
       const dt = Math.min(clock.getDelta(), 0.05);
       const time = clock.elapsedTime;
 
-      if (wheelLock && !anim && !aligning && performance.now() - lastWheel > WHEEL_QUIET) wheelLock = false;
-
       if (intro < 1 && isReady) {
         intro = Math.min(1, intro + dt / 0.9);
         forms[0].scale.setScalar(Math.max(0.001, backOut(intro)));
       }
 
       if (anim) {
-        anim.t = Math.min(1, anim.t + dt / anim.dur);
+        // Rapid scrolling: the more levels still waiting behind this hop, the
+        // faster it plays (up to ~2.8×), so the piece keeps up with the page.
+        const pending = Math.max(queue.length, scrollBound() ? Math.abs(target - anim.to) : 0);
+        const speed = 1 + Math.min(pending, 3) * 0.6;
+        anim.t = Math.min(1, anim.t + (dt * speed) / anim.dur);
         const p = anim.t;
         const u = clamp01((p - LAUNCH) / (LAND - LAUNCH));
         const e = easeInOut(u);
@@ -962,7 +1054,9 @@ export default function ScientificallyStructuredSection() {
       removeEventListener("resize", onResize);
       mobileMQ.removeEventListener("change", layout);
       removeEventListener("keydown", onKeyDown);
+      offScroll();
       document.removeEventListener("wheel", onWheel, { capture: true });
+      if (seekTimer !== null) clearTimeout(seekTimer);
       section.removeEventListener("pointerdown", onPointerDown);
       section.removeEventListener("pointerup", onPointerUp);
       section.removeEventListener("pointercancel", onPointerCancel);
@@ -988,76 +1082,80 @@ export default function ScientificallyStructuredSection() {
 
   return (
     <section ref={sectionRef} className="structured" aria-label="Chess curriculum levels">
-      <div ref={stageRef} className="structured__stage" aria-hidden="true" />
-      <p ref={statusRef} className="structured__status" role="status">
-        Setting up the board…
-      </p>
+      <div ref={coverRef} className="structured__cover">
+        <div ref={stageRef} className="structured__stage" aria-hidden="true" />
+        <p ref={statusRef} className="structured__status" role="status">
+          Setting up the board…
+        </p>
 
-      <div className="structured__guides" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-        <span />
-      </div>
-      <Eyebrow className="structured__eyebrow" boxClassName="structured__box">
-        A Curriculum For Growing Minds
-      </Eyebrow>
-      <RevealTitle className="structured__title">
-        Scientifically&nbsp;
-        <br />
-        Structured
-      </RevealTitle>
-      <ol ref={ticksRef} className="structured__ticks" aria-label="Levels" />
+        <div className="structured__guides" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+          <span />
+        </div>
+        <Eyebrow className="structured__eyebrow" boxClassName="structured__box">
+          A Curriculum For Growing Minds
+        </Eyebrow>
+        <RevealTitle className="structured__title">
+          Scientifically&nbsp;
+          <br />
+          Structured
+        </RevealTitle>
+        <ol ref={ticksRef} className="structured__ticks" aria-label="Levels" />
 
-      <div className="structured__copy">
-        <div ref={swapRef} className="structured__swap" aria-live="polite">
-          <h3 ref={titleRef} className="structured__level-title" />
-          <p ref={descRef} className="structured__level-desc" />
-        </div>
-        {/* TODO: replace placeholder hrefs with the real course/class pages */}
-        <a className="structured__cta" href="/chess-courses">
-          <svg aria-hidden="true">
-            <rect x="0" y="0" width="100%" height="100%" rx="9" ry="9" pathLength={100} />
-          </svg>
-          Explore Chess Courses
-        </a>
-        <ul className="structured__features">
-          <li>
-            <a href="/chess-courses/one-on-one">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={ONE_ON_ONE_SRC} alt="" />
-              <span className="structured__feature-label">
-                <b>One-on-one</b>{" "}
-                <br />
-                chess classes
-              </span>
-            </a>
-          </li>
-          <li>
-            <a href="/chess-courses/group">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={GROUP_SRC} alt="" />
-              <span className="structured__feature-label">
-                <b>Group</b> chess{" "}
-                <br />
-                classes
-              </span>
-            </a>
-          </li>
-        </ul>
-        <div className="structured__arrows">
-          <button type="button" className="structured__prev" ref={prevRef} aria-label="Previous level" disabled>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 5l-7 7 7 7" />
+        <div className="structured__copy">
+          <div ref={swapRef} className="structured__swap" aria-live="polite">
+            <h3 ref={titleRef} className="structured__level-title" />
+            <p ref={descRef} className="structured__level-desc" />
+          </div>
+          {/* TODO: replace placeholder hrefs with the real course/class pages */}
+          <a className="structured__cta" href="/chess-courses">
+            <svg aria-hidden="true">
+              <rect x="0" y="0" width="100%" height="100%" rx="9" ry="9" pathLength={100} />
             </svg>
-          </button>
-          <button type="button" className="structured__next" ref={nextRef} aria-label="Next level" disabled>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+            Explore Chess Courses
+          </a>
+          <ul className="structured__features">
+            <li>
+              <a href="/chess-courses/one-on-one">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={ONE_ON_ONE_SRC} alt="" />
+                <span className="structured__feature-label">
+                  <b>One-on-one</b>{" "}
+                  <br />
+                  chess classes
+                </span>
+              </a>
+            </li>
+            <li>
+              <a href="/chess-courses/group">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={GROUP_SRC} alt="" />
+                <span className="structured__feature-label">
+                  <b>Group</b> chess{" "}
+                  <br />
+                  classes
+                </span>
+              </a>
+            </li>
+          </ul>
+          <div className="structured__arrows">
+            <button type="button" className="structured__prev" ref={prevRef} aria-label="Previous level" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 5l-7 7 7 7" />
+              </svg>
+            </button>
+            <button type="button" className="structured__next" ref={nextRef} aria-label="Next level" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+          <p ref={srRef} className="structured__sr" aria-live="polite" />
         </div>
-        <p ref={srRef} className="structured__sr" aria-live="polite" />
+
+
       </div>
     </section>
   );

@@ -137,6 +137,14 @@ $card-2: (
   container-type: inline-size;
 }
 
+// Scroll pin (WhatWeOfferSection sets the wrapper's height and --pin-top):
+// the section sticks with its top on the viewport's top, or its bottom on
+// the viewport's bottom if it's taller, while the wrapper scrolls past.
+.wwo-pin--active > .wwo {
+  position: sticky;
+  top: var(--pin-top, 0px);
+}
+
 .wwo__stage { position: relative; }
 
 .wwo__gl {
@@ -228,7 +236,8 @@ $card-2: (
   // Thin dark edge that follows the clipped polygon, like the design's stroke.
   filter: drop-shadow(0 0 0.6px rgba(17, 17, 17, 0.9));
   transition-property: left, top, width, height, opacity, transform;
-  transition-duration: $dur;
+  // --wwo-dur shortens while rapid scrolling queues up slides (set from JS).
+  transition-duration: var(--wwo-dur, #{$dur});
   transition-timing-function: $ease;
   background: $white;
   // Behind the laptop: its bezel frames the slide through the see-through screen.
@@ -247,14 +256,14 @@ $card-2: (
   overflow: hidden;
   background: $white;
   clip-path: var(--poly);
-  transition: clip-path $dur $ease;
+  transition: clip-path var(--wwo-dur, #{$dur}) $ease;
   // Caption + play button scale with the slide itself.
   container-type: inline-size;
   
   img {
     object-fit: cover;
     opacity: var(--fade, 1);
-    transition: opacity $dur $ease;
+    transition: opacity var(--wwo-dur, #{$dur}) $ease;
   }
 
   iframe {
