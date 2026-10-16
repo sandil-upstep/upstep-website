@@ -1,0 +1,584 @@
+// "Why Chess Is Important" — the king from the staircase above falls into
+// this section, a ring spins up around it, then the insight cards stagger in.
+// Desktop: a 1897 × 940 design frame scaled to the section width and anchored
+// to its bottom, so the king is cropped by the section edge as in the design.
+// Phones: stacked layout, the info window opens as a bottom sheet.
+
+$bg: #050b1b;
+$guide: rgba(255, 255, 255, 0.06);
+$outline: #2b3550;
+$cobalt: #3d78de;
+$edge: rgba(233, 211, 164, 0.75);
+$ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+$ease-move: cubic-bezier(0.65, 0, 0.25, 1);
+
+.why {
+  position: relative;
+  // Clip sideways only: the king is free to hang over the next section.
+  overflow-x: clip;
+  overflow-y: visible;
+  z-index: 2;
+  background: $bg;
+  color: #ffffff;
+  font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
+}
+
+.why__guides {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  span {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 1px;
+    background: $guide;
+  }
+  span:nth-child(1) { left: 10.77%; }
+  span:nth-child(2) { left: 15.41%; }
+  span:nth-child(3) { right: 15.41%; }
+  span:nth-child(4) { right: 10.77%; }
+}
+
+.why__frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1897px;
+  height: 940px;
+  transform-origin: 0 0;
+}
+
+.why__eyebrow {
+  position: absolute;
+  left: 205px;
+  top: 92px;
+  margin: 0;
+  padding-left: 15px;
+  font-family: var(--font-open-sans), Arial, sans-serif;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  transition: opacity 0.5s, transform 0.6s $ease-out;
+}
+
+.why__box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #3274cd;
+}
+
+.why__title {
+  position: absolute;
+  left: 282px;
+  top: 130px;
+  margin: 0;
+  font-family: var(--font-open-sans), sans-serif;
+  font-weight: 800;
+  font-size: 164px;
+  line-height: 156px;
+  letter-spacing: -0.03em;
+  color: transparent;
+  -webkit-text-stroke: 2.5px $outline;
+  white-space: nowrap;
+  transition: opacity 0.5s, transform 0.6s $ease-out;
+
+  span { display: block; }
+}
+
+.why__headline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 34px;
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 84px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  opacity: 0;
+  transform: translateY(24px);
+  pointer-events: none;
+  transition: opacity 0.45s, transform 0.6s $ease-out;
+}
+
+.why__headline em,
+.why-card__headline em {
+  font-style: normal;
+  background: linear-gradient(180deg, #ffd166 0%, #e79a1e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.why.is-open .why__eyebrow,
+.why.is-open .why__title {
+  opacity: 0;
+  transform: translateY(-18px);
+}
+.why.is-open .why__headline {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.25s;
+}
+.why__headline.is-swapping,
+.why-card.is-swapping .why-card__body,
+.why-card.is-swapping .why-card__icon {
+  opacity: 0;
+  transform: translateY(8px);
+  transition-duration: 0.18s;
+  transition-delay: 0s;
+}
+
+// Checkerboard floor (open state)
+.why__floor {
+  position: absolute;
+  left: -200px;
+  right: -200px;
+  bottom: 0;
+  height: 520px;
+  opacity: 0;
+  transition: opacity 0.9s;
+  pointer-events: none;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to top, #000 25%, transparent 92%);
+  mask-image: linear-gradient(to top, #000 25%, transparent 92%);
+}
+.why__floor-grid {
+  position: absolute;
+  left: 50%;
+  top: 40px;
+  width: 2600px;
+  height: 2600px;
+  margin-left: -1300px;
+  background: repeating-conic-gradient(rgba(34, 50, 90, 0.4) 0 25%, transparent 0 50%) 0 0 / 300px 300px;
+  transform: perspective(900px) rotateX(66deg) rotateZ(45deg);
+  transform-origin: 50% 0;
+}
+.why.is-open .why__floor { opacity: 1; }
+
+// Floating cubes
+.why-cube {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100px;
+  height: 100px;
+  transform-origin: 0 0;
+  transition: transform 1s $ease-move, opacity 0.6s;
+  pointer-events: none;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    animation: why-bob 7s ease-in-out infinite;
+    animation-delay: var(--d, 0s);
+  }
+}
+
+// King + ring
+.why__hero {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.why__king {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  width: 486px;
+  height: 728px;
+  transform-origin: 0 0;
+  transition: transform 1s $ease-move;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform-origin: 50% 97.8%;
+  }
+  img.is-landing {
+    animation: why-land 0.65s cubic-bezier(0.3, 0.7, 0.4, 1);
+  }
+}
+.why__ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  width: 446px;
+  height: 448px;
+  transform-origin: 0 0;
+  transition: transform 1s $ease-move;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    animation: why-spin 16s linear infinite;
+  }
+}
+.why__ring-in {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transform: scale(0.55) rotate(-70deg);
+  transition: opacity 0.35s, transform 0.5s cubic-bezier(0.55, 0, 0.75, 0);
+}
+.why.is-revealed .why__ring-in {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.5s 0.15s, transform 1s 0.15s cubic-bezier(0.22, 1.25, 0.36, 1);
+}
+
+// Insight items
+.why__items {
+  position: absolute;
+  inset: 0;
+}
+.why-item {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  width: 152px;
+  height: 118px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  transform-origin: 0 0;
+  transition: transform 1s $ease-move, opacity 0.5s;
+  -webkit-tap-highlight-color: transparent;
+}
+.why-item__reveal {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transform: translateY(22px) scale(0.6);
+  transition: opacity 0.25s, transform 0.3s;
+}
+.why.is-revealed .why-item__reveal {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.5s, transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition-delay: calc(0.75s + var(--i) * 0.11s);
+}
+.why-item__bob {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: why-bob 6s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.9s);
+}
+.why-item__card {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 9px;
+  background: linear-gradient(160deg, rgba(44, 54, 78, 0.78), rgba(24, 31, 49, 0.78));
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+  filter: blur(var(--blur, 0px));
+  transition: filter 0.9s, transform 0.35s $ease-out, box-shadow 0.35s;
+
+  img {
+    display: block;
+    width: auto;
+    height: 82%;
+    max-width: 84%;
+    object-fit: contain;
+  }
+}
+// Hairline frame that brightens at the corners, as in the design
+.why-item__card::before,
+.why-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background:
+    linear-gradient(135deg, $edge 0 9%, rgba(255, 255, 255, 0.07) 20% 80%, $edge 91%),
+    linear-gradient(45deg, $edge 0 9%, transparent 20% 80%, $edge 91%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.why-item:hover .why-item__card,
+.why-item:focus-visible .why-item__card {
+  filter: blur(0);
+  transform: translateY(-5px) scale(1.06);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(233, 211, 164, 0.35);
+}
+.why-item:focus-visible { outline: none; }
+.why-item:focus-visible .why-item__card { outline: 2px solid $cobalt; outline-offset: 4px; }
+.why.is-open .why-item.is-selected {
+  opacity: 0;
+  pointer-events: none;
+}
+
+// Info window
+.why-card {
+  position: absolute;
+  left: 1088px;
+  top: 152px;
+  z-index: 6;
+  width: 662px;
+  min-height: 248px;
+  padding: 22px 40px 28px 152px;
+  border-radius: 10px;
+  background: linear-gradient(160deg, rgba(42, 52, 76, 0.82), rgba(22, 29, 47, 0.86));
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translateY(22px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 0.4s, transform 0.6s $ease-out;
+
+  h3 {
+    margin: 0 0 12px;
+    font-size: 30px;
+    line-height: 1.25;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  p {
+    margin: 0;
+    font-size: 18px;
+    line-height: 27px;
+    color: #c7cfde;
+  }
+  p + p { margin-top: 26px; }
+  .why-card__highlight {
+    font-weight: 700;
+    color: #ffffff;
+  }
+}
+.why.is-open .why-card {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition-delay: 0.35s;
+}
+.why-card__icon {
+  position: absolute;
+  left: 14px;
+  top: 12px;
+  width: 122px;
+  height: 122px;
+  object-fit: contain;
+  transition: opacity 0.35s, transform 0.45s $ease-out;
+}
+.why-card__body { transition: opacity 0.35s, transform 0.45s $ease-out; }
+.why-card__headline { display: none; }
+.why-card__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  color: #b9c3d6;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+
+  &:hover { background: rgba(255, 255, 255, 0.12); color: #ffffff; }
+  &:focus-visible { outline: 2px solid $cobalt; outline-offset: 2px; }
+  svg { width: 16px; height: 16px; }
+}
+.why__backdrop { display: none; }
+
+// The king while it falls from the staircase into this section
+.why-faller {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 40;
+  width: 486px;
+  height: 728px;
+  transform-origin: 0 0;
+  pointer-events: none;
+  will-change: transform;
+  display: none;
+}
+
+@keyframes why-spin { to { transform: rotate(360deg); } }
+@keyframes why-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+@keyframes why-land {
+  0% { transform: scale(1.07, 0.88); }
+  35% { transform: scale(0.97, 1.05); }
+  65% { transform: scale(1.015, 0.985); }
+  100% { transform: none; }
+}
+
+@media (min-width: 820px) {
+  // The section sticks for $why-travel of extra scroll after the landing,
+  // while the king moves to the centre and the first window opens.
+  $why-travel: 90vh;
+  .why-pin {
+    position: relative;
+    z-index: 2;
+    height: calc(max(100vh, 49.55vw) + #{$why-travel});
+  }
+  .why {
+    position: sticky;
+    top: 0;
+    height: max(100vh, 49.55vw);
+  }
+  // Positions follow the scroll exactly while scrubbing.
+  .why.is-scrubbing {
+    .why__king, .why__ring { transition: none; }
+    .why-item { transition: opacity 0.5s; }
+    .why-cube { transition: opacity 0.6s; }
+  }
+}
+
+@media (max-width: 819.98px) {
+  .why { padding: 64px 20px 48px; }
+  .why__guides {
+    span:nth-child(1) { left: 12px; }
+    span:nth-child(2) { left: 28px; }
+    span:nth-child(3) { right: 28px; }
+    span:nth-child(4) { right: 12px; }
+  }
+  .why__frame {
+    position: relative;
+    width: auto;
+    height: auto;
+    transform: none !important;
+  }
+  .why__eyebrow,
+  .why__title,
+  .why.is-open .why__eyebrow,
+  .why.is-open .why__title {
+    position: relative;
+    left: auto;
+    top: auto;
+    opacity: 1;
+    transform: none;
+  }
+  .why__eyebrow { font-size: 16px; padding-left: 14px; margin-left: 14px; }
+  .why__box { width: 20px; height: 20px; }
+  .why__title {
+    margin: 10px 0 0 14px;
+    font-size: 12.4vw;
+    line-height: 1.02;
+    -webkit-text-stroke-width: 1.5px;
+    white-space: normal;
+  }
+  .why__headline, .why__floor, .why-cube { display: none; }
+  .why__hero {
+    position: relative;
+    inset: auto;
+    height: 92vw;
+    max-height: 560px;
+    margin-top: 8px;
+  }
+  .why__king, .why__ring, .why-item { transform: none !important; }
+  .why__king {
+    left: calc(50% - 30vw);
+    top: auto;
+    bottom: -14vw;
+    width: 60vw;
+    height: 90vw;
+  }
+  .why__ring {
+    left: calc(50% - 23vw);
+    top: 10vw;
+    width: 46vw;
+    height: 46vw;
+  }
+  .why__items {
+    position: relative;
+    inset: auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .why-item {
+    position: relative;
+    width: auto;
+    height: auto;
+    aspect-ratio: 1.29;
+  }
+  .why-item__card { filter: none; }
+  .why.is-open .why-item.is-selected { opacity: 1; }
+  .why-card {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    top: auto;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    z-index: 61;
+    width: auto;
+    min-height: 0;
+    max-height: 78vh;
+    overflow-y: auto;
+    padding: 22px 22px 24px;
+    transform: translateY(110%);
+    opacity: 1;
+
+    h3 { font-size: 20px; margin-bottom: 8px; }
+    p { font-size: 15px; line-height: 23px; }
+    p + p { margin-top: 14px; }
+  }
+  .why.is-open .why-card { transform: none; transition-delay: 0s; }
+  .why-card__icon {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 84px;
+    height: 84px;
+    margin: -4px 0 4px -6px;
+  }
+  .why-card__headline {
+    display: block;
+    margin: 0 0 8px;
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .why__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(3, 7, 18, 0.62);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s;
+  }
+  .why.is-open .why__backdrop { opacity: 1; pointer-events: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .why__ring img, .why-item__bob, .why-cube svg { animation: none; }
+  .why.is-revealed .why-item__reveal { transition-delay: 0s; }
+  .why__king img.is-landing { animation: none; }
+}

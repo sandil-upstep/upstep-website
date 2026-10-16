@@ -7,7 +7,8 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import Eyebrow from "./Eyebrow";
 import RevealTitle from "./RevealTitle";
-import { getLenis, onScrollFrame } from "./SmoothScroll";
+import { getLenis, onFrame, onScrollFrame } from "./SmoothScroll";
+import { staircase } from "./staircaseBridge";
 import "./scientificallyStructuredSection.scss";
 
 // A chess piece per curriculum level, growing from pawn to king. Each level
@@ -122,10 +123,7 @@ const KING_H = 2.75;
 const TILE = 1.85;
 const TILE_H = 0.3;
 const STEP_VEC = new THREE.Vector3(2.35, 0.62, -1.0);
-const JUMP_TIME = 1.45;
 const PROP_PAD = 0.12;
-const LAUNCH = 0.16;
-const LAND = 0.74;
 const SWAP_A = 0.3;
 const SWAP_B = 0.44;
 
@@ -228,11 +226,15 @@ export default function ScientificallyStructuredSection() {
     const blackMat = fadingMaterial(0x2a2f3b, 0.36);
     const tileGeo = new RoundedBoxGeometry(TILE, TILE_H, TILE, 4, 0.05);
     const tileTop = (i: number) => STEP_VEC.clone().multiplyScalar(i);
-    STEPS.forEach((s, i) => {
+    type TileState = { baseY: number; y: number; v: number; press: number };
+    const tiles = STEPS.map((s, i) => {
       const m = new THREE.Mesh(tileGeo, i % 2 ? blackMat : whiteMat);
       m.position.copy(tileTop(i)).add(new THREE.Vector3(0, -TILE_H / 2, 0));
       m.receiveShadow = true;
+      // Press spring: y = how far the tile is pushed down, v = its speed.
+      m.userData = { baseY: m.position.y, y: 0, v: 0, press: 0 } satisfies TileState;
       scene.add(m);
+      return m;
     });
 
     // ---- Screen-fixed floating cubes, drawn in an overlay pass ----
@@ -347,6 +349,7 @@ export default function ScientificallyStructuredSection() {
       img.src = src;
       return { sharp, soft };
     }
+    type PropData = { slot: (typeof PROP_SLOTS)[number]; w: number; h: number; bob: number };
     const propSets = STEPS.map((s) => {
       const sprites = s.props.map((name, k) => {
         const tx = propTextures(ASSETS[name].src);
@@ -371,7 +374,7 @@ export default function ScientificallyStructuredSection() {
           w: (asp >= 1 ? slot.size : slot.size * asp) * padK,
           h: (asp >= 1 ? slot.size / asp : slot.size) * padK,
           bob: Math.random() * 6,
-        };
+        } satisfies PropData;
         sp.visible = false;
         sp.renderOrder = 2;
         scene.add(sp);
@@ -386,13 +389,14 @@ export default function ScientificallyStructuredSection() {
     // ---- Burst particles & landing ripple ----
     const burstGeo = new RoundedBoxGeometry(1, 1, 1, 2, 0.15);
     const burstColors = [0x3d78de, 0x8fb7ef, 0xffffff, 0xe8d6b5];
-    const particles: THREE.Mesh[] = [];
+    type Particle = { v: THREE.Vector3; spin: THREE.Vector3; life: number; max: number; size: number };
+    const particles: THREE.Mesh<RoundedBoxGeometry, THREE.MeshStandardMaterial>[] = [];
     for (let i = 0; i < 26; i++) {
       const mat = new THREE.MeshStandardMaterial({ color: burstColors[i % 4], roughness: 0.3, transparent: true, opacity: 0 });
       mat.color.convertSRGBToLinear();
       const m = new THREE.Mesh(burstGeo, mat);
       m.visible = false;
-      m.userData = { v: new THREE.Vector3(), spin: new THREE.Vector3(), life: 0, max: 1, size: 0.1 };
+      m.userData = { v: new THREE.Vector3(), spin: new THREE.Vector3(), life: 0, max: 1, size: 0.1 } satisfies Particle;
       scene.add(m);
       particles.push(m);
     }
@@ -437,34 +441,30 @@ export default function ScientificallyStructuredSection() {
           body.add(wrap);
           forms[i] = wrap;
           loadedCount++;
-          statusEl!.textContent = `Setting up the board… ${loadedCount} of 6`;
+          statusEl.textContent = `Setting up the board… ${loadedCount} of 6`;
           if (loadedCount === STEPS.length) ready();
         },
         undefined,
         (err) => {
           console.error(err);
-          statusEl!.textContent = `The ${s.id} model could not be read. Reload the page to try again.`;
+          statusEl.textContent = `The ${s.id} model could not be loaded. Reload the page to try again.`;
         }
       );
     });
 
     // ---- State & UI ----
-    let cur = 0;
-    let anim: null | {
-      from: number;
-      to: number;
-      t: number;
-      dir: number;
-      p0: THREE.Vector3;
-      p1: THREE.Vector3;
-      swapped: boolean;
-      landed: boolean;
-      hc: number;
-      dur: number;
-    } = null;
+    // The piece's place on the staircase is one number: 2.0 = standing on
+    // level 3, 2.5 = mid-air between levels 3 and 4. On desktop it comes
+    // straight from the page scroll every frame, so nothing is queued or left
+    // playing: scroll back and the hop plays backwards, scroll fast and the
+    // piece keeps up. On phones the buttons and swipes set it instead.
+    let cur = 0; // level shown in the copy panel
     let isReady = false;
     let intro = 1;
-    let queue: number[] = [];
+    let sTarget = 0; // where the input says the piece is
+    let sDisp = 0; // where it's drawn: follows sTarget, catching up faster the further behind it is
+    let lastContact = 0; // tile the piece stood on last frame (-1 = in the air)
+    let kingHidden = false; // the next section has taken the king (it's falling there)
 
     const tickButtons: HTMLButtonElement[] = [];
     STEPS.forEach((s, i) => {
@@ -511,107 +511,64 @@ export default function ScientificallyStructuredSection() {
       srEl!.textContent = `Level ${i + 1} of ${STEPS.length}: ${STEPS[i].title}`;
     }
 
-    function showForm(i: number) {
-      forms.forEach((f, k) => {
-        f.visible = k === i;
-        f.scale.setScalar(1);
-      });
-    }
-
     function ready() {
       isReady = true;
       statusEl!.classList.add("done");
-      actor.position.copy(tileTop(0));
-      showForm(0);
-      if (!reduceMotion) {
-        forms[0].scale.setScalar(0.001);
-        intro = 0;
-      }
-      propSets[0].target = 1;
-      if (reduceMotion) propSets[0].v = 1;
-      updateUI(0, true);
+      if (!reduceMotion) intro = 0;
       // The page may already be scrolled partway through the levels.
-      syncScroll();
+      sTarget = sDisp = scrollBound() ? scrollPos() : 0;
+      cur = Math.round(sDisp);
+      target = cur;
+      lastContact = cur;
+      propSets[cur].target = 1;
+      if (reduceMotion) propSets[cur].v = 1;
+      updateUI(cur, true);
     }
 
-    function stepDir(dir: 1 | -1) {
+    function stepDir(dir: number) {
       if (!isReady) return;
-      // Step from where the scroll is heading, so rapid presses add up.
-      const to = (scrollBound() ? target : cur) + dir;
+      // Step from where the input is heading, so rapid presses add up.
+      const to = (scrollBound() ? target : Math.round(sTarget)) + dir;
       if (to < 0 || to >= STEPS.length) return;
       if (scrollBound()) scrollToLevel(to);
-      else if (!anim) startJump(cur, to);
+      else goTo(to);
     }
+
     function goTo(i: number) {
       if (!isReady) return;
-      if (i === cur) {
-        // Scrolled back to the level already landing: drop any queued hops.
-        queue = [];
-        return;
-      }
-      queue = [];
-      const dir = i > cur ? 1 : -1;
-      for (let k = cur + dir; dir > 0 ? k <= i : k >= i; k += dir) queue.push(k);
-      if (!anim) startJump(cur, queue.shift()!);
+      sTarget = Math.max(0, Math.min(STEPS.length - 1, i));
     }
 
-    function startJump(from: number, to: number) {
-      propSets[from].target = 0;
-      if (reduceMotion) {
-        propSets[from].v = 0;
-        propSets[to].target = 1;
-        propSets[to].v = 1;
-        cur = to;
-        actor.position.copy(tileTop(to));
-        showForm(to);
-        updateUI(to);
-        if (queue.length) startJump(cur, queue.shift()!);
-        return;
-      }
-      forms[from].visible = true;
-      forms[to].visible = true;
-      forms[to].scale.setScalar(0.001);
-      anim = {
-        from,
-        to,
-        t: 0,
-        dir: to > from ? 1 : -1,
-        p0: tileTop(from),
-        p1: tileTop(to),
-        swapped: false,
-        landed: false,
-        hc: (forms[from].userData.height + forms[to].userData.height) * 0.25,
-        dur: queue.length ? JUMP_TIME * 0.8 : JUMP_TIME,
-      };
-      cur = to;
-      updateUI(to);
-    }
-
-    const onPrev = () => {
-      queue = [];
-      stepDir(-1);
-    };
-    const onNext = () => {
-      queue = [];
-      stepDir(1);
-    };
+    const onPrev = () => stepDir(-1);
+    const onNext = () => stepDir(1);
     prevBtn.addEventListener("click", onPrev);
     nextBtn.addEventListener("click", onNext);
 
+    // Up/Down arrows inside the pin: one press = one level (a slow, eased
+    // hop) instead of the browser's fast native key scroll. Holding the key
+    // repeats at a calm pace. Past the first/last level the page scrolls on
+    // natively.
+    const KEY_REPEAT_MS = 700;
+    let lastKeyStep = 0;
     const onKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.closest && target.closest("input, textarea")) return;
+      const el = e.target as HTMLElement | null;
+      if (el?.closest && el.closest("input, textarea, select, [contenteditable]")) return;
       // On desktop the arrows only act while the section is pinned, so they
       // don't drag the page here from elsewhere.
       if (scrollBound() && !pinned()) return;
-      if (e.key === "ArrowRight") {
-        queue = [];
-        stepDir(1);
+      if ((e.key === "ArrowDown" || e.key === "ArrowUp") && scrollBound() && isReady && !e.altKey && !e.metaKey && !e.ctrlKey) {
+        const dir = e.key === "ArrowDown" ? 1 : -1;
+        const next = target + dir;
+        if (next < 0 || next >= STEPS.length) return;
+        e.preventDefault();
+        const now = performance.now();
+        if (e.repeat && now - lastKeyStep < KEY_REPEAT_MS) return;
+        lastKeyStep = now;
+        scrollToLevel(next);
+        return;
       }
-      if (e.key === "ArrowLeft") {
-        queue = [];
-        stepDir(-1);
-      }
+      if (e.key === "ArrowRight") stepDir(1);
+      if (e.key === "ArrowLeft") stepDir(-1);
     };
     addEventListener("keydown", onKeyDown);
 
@@ -622,6 +579,7 @@ export default function ScientificallyStructuredSection() {
     // level. Ticks, arrows, keys and swipes scroll the page to their level's
     // stretch, so the scroll position stays the single source of truth.
     // Phones keep the stacked layout and step by swipe.
+
     // Page y where the pin starts (y0) and ends (y1).
     const pin = () => {
       const coverH = cover.offsetHeight;
@@ -640,6 +598,18 @@ export default function ScientificallyStructuredSection() {
       const p = clamp01((scrollY - y0) / distance);
       return Math.min(STEPS.length - 1, Math.floor(p * STEPS.length));
     };
+    // Each level's stretch of scroll: the piece stands still for HOLD of it on
+    // either side of the middle and hops across the rest, in step with the scroll.
+    const HOLD = 0.2;
+    const scrollPos = () => {
+      const { distance, y0 } = pin();
+      const x = clamp01((scrollY - y0) / distance) * STEPS.length - 0.5;
+      if (x <= 0) return 0;
+      if (x >= STEPS.length - 1) return STEPS.length - 1;
+      const k = Math.floor(x);
+      return k + clamp01((x - k - HOLD) / (1 - 2 * HOLD));
+    };
+
     let seeking = false;
     let seekTimer: number | null = null;
     // The level the page scroll is heading to; it runs ahead of `cur` while
@@ -658,12 +628,22 @@ export default function ScientificallyStructuredSection() {
       if (lenis) lenis.scrollTo(y, { duration: 0.9, force: true, onComplete: () => (seeking = false) });
       else scrollTo({ top: y, behavior: reduceMotion ? "auto" : "smooth" });
     };
+
+    // When keys or the scrollbar leave the page resting mid-hop, finish the
+    // hop to the nearest level so the piece never hangs in the air.
+    let snapTimer: number | null = null;
     const syncScroll = () => {
       if (!isReady || !scrollBound()) return;
-      const level = scrollLevel();
       // Scrollbar drags, keys and the like move the page without a seek.
-      if (!seeking) target = level;
-      goTo(level);
+      if (!seeking) target = scrollLevel();
+      if (snapTimer !== null) clearTimeout(snapTimer);
+      snapTimer = window.setTimeout(() => {
+        snapTimer = null;
+        if (!isReady || !scrollBound() || seeking || !pinned()) return;
+        const s = scrollPos();
+        const frac = s - Math.floor(s);
+        if (frac > 0.002 && frac < 0.998) scrollToLevel(Math.round(s));
+      }, 180);
     };
     const offScroll = onScrollFrame(syncScroll);
 
@@ -672,8 +652,8 @@ export default function ScientificallyStructuredSection() {
     // moves exactly one level, and the rest of it (a trackpad's momentum tail
     // included) is swallowed. A new gesture counts as soon as the wheel has
     // been quiet briefly, or a trackpad push rises out of the previous tail,
-    // even while the last hop is still playing: the hops queue up and play
-    // faster (see the frame loop), so rapid scrolling speeds the piece along
+    // even while the last hop is still playing: the scroll target simply moves
+    // on and the piece follows the scroll, so rapid scrolling speeds it along
     // instead of being ignored. A gesture that would carry the page into the
     // pin from above or below stops on the first/last level instead of
     // skipping through. Past the last level (or before the first) the page
@@ -697,6 +677,7 @@ export default function ScientificallyStructuredSection() {
         lastWheel = now;
       };
       const { y0, y1 } = pin();
+
       if (wheelLock) {
         // A lock left behind must never freeze the page.
         const r = section.getBoundingClientRect();
@@ -712,6 +693,7 @@ export default function ScientificallyStructuredSection() {
         }
       }
       if (!e.deltaY) return;
+
       // Where the page is heading, counting Lenis's pending inertia.
       const from = getLenis()?.targetScroll ?? scrollY;
       const inside = from >= y0 - 1 && from <= y1 + 1;
@@ -748,8 +730,8 @@ export default function ScientificallyStructuredSection() {
     // scroll fires pointercancel and is dropped.
     let swipe: [number, number] | null = null;
     const onPointerDown = (e: PointerEvent) => {
-      const target = e.target as HTMLElement;
-      if (!e.isPrimary || target.closest?.("a, button")) return;
+      const t = e.target as HTMLElement;
+      if (!e.isPrimary || t.closest?.("a, button")) return;
       swipe = [e.clientX, e.clientY];
     };
     const onPointerUp = (e: PointerEvent) => {
@@ -757,10 +739,7 @@ export default function ScientificallyStructuredSection() {
       const dx = e.clientX - swipe[0];
       const dy = e.clientY - swipe[1];
       swipe = null;
-      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-        queue = [];
-        stepDir(dx < 0 ? 1 : -1);
-      }
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4) stepDir(dx < 0 ? 1 : -1);
     };
     const onPointerCancel = () => (swipe = null);
     section.addEventListener("pointerdown", onPointerDown);
@@ -800,7 +779,6 @@ export default function ScientificallyStructuredSection() {
     const camDir = new THREE.Vector3(-0.42, 0.36, 1).normalize();
     const camFlat = new THREE.Vector3(camDir.x, 0, camDir.z).normalize();
     let camDist = 14;
-    let framed = false;
     let W = 1;
     let H = 1;
     let frame = { left: 0, top: 0, u: 1 };
@@ -829,14 +807,13 @@ export default function ScientificallyStructuredSection() {
       camDist = H / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * pxPerUnit);
       camera.setViewOffset(W, H, W / 2 - sx, H / 2 - sy, W, H);
       camera.updateProjectionMatrix();
-
       ortho.left = 0;
       ortho.right = W;
       ortho.top = 0;
       ortho.bottom = -H;
       ortho.updateProjectionMatrix();
       cubes.forEach((c) => {
-        const d = c.userData;
+        const d = c.userData as (typeof cubeDefs)[number] & { base: THREE.Vector3 | null };
         if (mobile) {
           c.visible = !!d.m;
           if (!d.m) return;
@@ -856,10 +833,93 @@ export default function ScientificallyStructuredSection() {
     const onResize = () => layout();
     addEventListener("resize", onResize);
     mobileMQ.addEventListener("change", layout);
-
     const resizeObserver = new ResizeObserver(() => layout());
     resizeObserver.observe(stage);
     layout();
+
+    // ---- Pose: everything about the hop is a function of the position ----
+    const CROUCH = 0.2; // share of a hop spent crouching on take-off / squashing on landing
+    const PRESS = 0.1; // how far a tile sinks while the piece crouches on it
+    const SPRING_K = 340;
+    const SPRING_D = 15;
+    const bounce = { y: 0, v: 0 }; // the piece's own squash spring after a landing
+    const p0 = new THREE.Vector3();
+    const p1 = new THREE.Vector3();
+
+    function pose(s: number, dt: number) {
+      const n = STEPS.length;
+      const k = Math.min(n - 2, Math.floor(s));
+      const u = s - k; // 0 = on tile k, 1 = on tile k + 1
+      p0.copy(tileTop(k));
+      p1.copy(tileTop(k + 1));
+      const f = clamp01((u - CROUCH) / (1 - 2 * CROUCH));
+      const e = easeInOut(f);
+
+      // Crouch on take-off and squash on landing, both tied to the scroll.
+      const cIn = u < CROUCH ? Math.sin((u / CROUCH) * Math.PI) : 0;
+      const cOut = u > 1 - CROUCH ? Math.sin(((1 - u) / CROUCH) * Math.PI) : 0;
+      const contact = u < CROUCH ? k : u > 1 - CROUCH ? k + 1 : -1;
+
+      // Landing: the tile under the piece takes a kick and springs back,
+      // the piece squashes, and the ripple runs out.
+      if (contact !== -1 && contact !== lastContact && lastContact === -1) {
+        const t = tiles[contact].userData as TileState;
+        t.v -= reduceMotion ? 0 : 1.5;
+        bounce.v -= reduceMotion ? 0 : 1.6;
+        ring.position.copy(tileTop(contact)).add(new THREE.Vector3(0, 0.005, 0));
+        ringT = reduceMotion ? 1 : 0;
+      }
+      lastContact = contact;
+
+      // Tiles: the scrubbed press while the piece crouches on one, plus its spring.
+      tiles.forEach((tile, i) => {
+        const t = tile.userData as TileState;
+        t.v += (-SPRING_K * t.y - SPRING_D * t.v) * dt;
+        t.y += t.v * dt;
+        if (Math.abs(t.y) < 1e-4 && Math.abs(t.v) < 1e-3) t.y = t.v = 0;
+        t.press = (i === k ? cIn : 0) + (i === k + 1 ? cOut : 0);
+        tile.position.y = t.baseY + t.y - PRESS * t.press;
+      });
+      bounce.v += (-260 * bounce.y - 11 * bounce.v) * dt;
+      bounce.y += bounce.v * dt;
+
+      // Position: along the hop, riding the tiles down as they sink.
+      const sink = (i: number) => tiles[i].position.y - (tiles[i].userData as TileState).baseY;
+      const arc = 1.6 + Math.abs(p1.y - p0.y) * 0.5;
+      actor.position.lerpVectors(p0, p1, e);
+      actor.position.y += arc * 4 * e * (1 - e) + sink(k) * (1 - e) + sink(k + 1) * e;
+      focusTarget.lerpVectors(p0, p1, e);
+      focusTarget.y += 0.9;
+
+      // Squash & stretch.
+      let sy = 1 - 0.16 * cIn - 0.16 * cOut + 0.12 * Math.sin(f * Math.PI) * (1 - f * 0.5);
+      if (contact !== -1) sy += Math.max(-0.2, Math.min(0.2, bounce.y * 0.12));
+      body.scale.set(1 / Math.sqrt(sy), sy, 1 / Math.sqrt(sy));
+
+      // Form swap mid-air: the old piece shrinks away, the new one pops in.
+      const introS = intro < 1 ? Math.max(0.001, backOut(intro)) : 1;
+      const g = clamp01((u - SWAP_B) / 0.26);
+      forms.forEach((form, i) => {
+        let sc = 0;
+        if (i === k) sc = 1 - smooth(SWAP_A, SWAP_B, u);
+        else if (i === k + 1) sc = g > 0 ? backOut(g) : 0;
+        form.visible = sc > 0.002 && !(kingHidden && i === n - 1);
+        form.scale.setScalar(Math.max(0.001, sc * introS));
+      });
+
+      // Level shown in the copy panel and by the orbiting props.
+      const act = u >= 0.58 ? k + 1 : k;
+      if (act !== cur) {
+        propSets[cur].target = 0;
+        propSets[act].target = 1;
+        if (reduceMotion) {
+          propSets[cur].v = 0;
+          propSets[act].v = 1;
+        }
+        cur = act;
+        updateUI(cur);
+      }
+    }
 
     const clock = new THREE.Clock();
     const tmp = new THREE.Vector3();
@@ -868,56 +928,32 @@ export default function ScientificallyStructuredSection() {
       const dt = Math.min(clock.getDelta(), 0.05);
       const time = clock.elapsedTime;
 
-      if (intro < 1 && isReady) {
-        intro = Math.min(1, intro + dt / 0.9);
-        forms[0].scale.setScalar(Math.max(0.001, backOut(intro)));
+      if (isReady) {
+        if (intro < 1) intro = Math.min(1, intro + dt / 0.9);
+
+        // ---- Follow the input ----
+        const bound = scrollBound();
+        if (bound) sTarget = scrollPos();
+        const gap = sTarget - sDisp;
+        const far = Math.max(0, Math.abs(gap) - 1);
+        if (reduceMotion) sDisp = bound ? Math.round(sTarget) : sTarget;
+        else if (bound) {
+          // Smooth out the scroll's small steps, but never trail it: the
+          // further behind, the faster it catches up (a big jump zips
+          // through the levels in a fraction of a second).
+          const step = gap * (1 - Math.exp(-14 * dt));
+          const cap = (4 + far * 10) * dt;
+          sDisp += Math.max(-cap, Math.min(cap, step));
+        } else {
+          // Phones: a steady hop, sped up when more levels are waiting.
+          const cap = (1 / 1.1) * (1 + far * 2.5) * dt;
+          sDisp += Math.max(-cap, Math.min(cap, gap));
+        }
+        if (Math.abs(sTarget - sDisp) < 1e-4) sDisp = sTarget;
+        pose(sDisp, dt);
       }
 
-      if (anim) {
-        // Rapid scrolling: the more levels still waiting behind this hop, the
-        // faster it plays (up to ~2.8×), so the piece keeps up with the page.
-        const pending = Math.max(queue.length, scrollBound() ? Math.abs(target - anim.to) : 0);
-        const speed = 1 + Math.min(pending, 3) * 0.6;
-        anim.t = Math.min(1, anim.t + (dt * speed) / anim.dur);
-        const p = anim.t;
-        const u = clamp01((p - LAUNCH) / (LAND - LAUNCH));
-        const e = easeInOut(u);
-        const arc = 1.6 + Math.abs(anim.p1.y - anim.p0.y) * 0.5;
-        actor.position.lerpVectors(anim.p0, anim.p1, e);
-        actor.position.y += arc * 4 * e * (1 - e);
-
-        let sy = 1;
-        if (p < LAUNCH) sy = 1 - 0.16 * Math.sin((p / LAUNCH) * (Math.PI / 2));
-        else if (p < LAND) sy = 1 + 0.12 * Math.sin(u * Math.PI) * (1 - u * 0.5);
-        else {
-          const k = (p - LAND) / (1 - LAND);
-          sy = 1 - 0.14 * Math.sin(k * Math.PI * 2.2) * Math.pow(1 - k, 1.6);
-        }
-        body.scale.set(1 / Math.sqrt(sy), sy, 1 / Math.sqrt(sy));
-
-        forms[anim.from].scale.setScalar(Math.max(0.001, 1 - smooth(SWAP_A, SWAP_B, p)));
-        const g = clamp01((p - SWAP_B) / 0.26);
-        forms[anim.to].scale.setScalar(Math.max(0.001, g > 0 ? backOut(g) : 0.001));
-        if (!anim.swapped && p >= SWAP_B) {
-          anim.swapped = true;
-          forms[anim.from].visible = false;
-        }
-        if (p >= 0.58 && !propSets[anim.to].target) propSets[anim.to].target = 1;
-        if (!anim.landed && p >= LAND) {
-          anim.landed = true;
-          ring.position.copy(anim.p1).add(new THREE.Vector3(0, 0.005, 0));
-          ringT = 0;
-        }
-        if (p >= 1) {
-          body.scale.set(1, 1, 1);
-          actor.position.copy(anim.p1);
-          showForm(anim.to);
-          anim = null;
-          if (queue.length) startJump(cur, queue.shift()!);
-        }
-      }
-
-      const hMid = (forms[cur] ? forms[cur].userData.height : 1.5) * 0.55;
+      const hMid = (forms[cur] ? (forms[cur].userData.height as number) : 1.5) * 0.55;
       tmp.copy(actor.position).setY(actor.position.y + hMid);
       if (!orbitReady) {
         orbitCenter.copy(tmp);
@@ -932,10 +968,8 @@ export default function ScientificallyStructuredSection() {
           set.v = set.target ? Math.min(1, set.v + dt * speed) : Math.max(0, set.v - dt * speed);
         }
         set.sprites.forEach((sp, k) => {
-          const d = sp.userData as { slot: (typeof PROP_SLOTS)[number]; w: number; h: number; bob: number };
-          const local = set.target
-            ? clamp01((set.v - k * STAGGER) / (1 - STAGGER))
-            : clamp01(set.v / (1 - k * 0.12));
+          const d = sp.userData as PropData;
+          const local = set.target ? clamp01((set.v - k * STAGGER) / (1 - STAGGER)) : clamp01(set.v / (1 - k * 0.12));
           sp.visible = local > 0.001;
           if (!sp.visible) return;
           let scale: number;
@@ -971,7 +1005,7 @@ export default function ScientificallyStructuredSection() {
           const toward = (ox * camFlat.x + oz * camFlat.z) / R;
           const behind = smooth(0.3, -0.8, toward);
           scale *= 1 - 0.38 * behind;
-          (sp.material.userData as { blur?: { value: number } }).blur!.value = behind;
+          (sp.material.userData as { blur: { value: number } }).blur.value = behind;
           sp.scale.set(d.w * scale, d.h * scale, 1);
           sp.material.opacity = opacity * (1 - 0.18 * behind);
         });
@@ -979,7 +1013,7 @@ export default function ScientificallyStructuredSection() {
 
       particles.forEach((m) => {
         if (!m.visible) return;
-        const d = m.userData as { v: THREE.Vector3; spin: THREE.Vector3; life: number; max: number; size: number };
+        const d = m.userData as Particle;
         d.life += dt;
         const k = d.life / d.max;
         if (k >= 1) {
@@ -991,14 +1025,14 @@ export default function ScientificallyStructuredSection() {
         m.rotation.x += d.spin.x * dt;
         m.rotation.y += d.spin.y * dt;
         m.scale.setScalar(d.size * (1 - k * 0.6));
-        (m.material as THREE.MeshStandardMaterial).opacity = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
+        m.material.opacity = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
       });
 
       if (ringT < 1) {
         ringT = Math.min(1, ringT + dt / 0.7);
         const s = 0.6 + ringT * 0.75;
         ring.scale.set(s, s, s);
-        (ring.material as THREE.MeshBasicMaterial).opacity = 0.55 * (1 - ringT);
+        ring.material.opacity = 0.55 * (1 - ringT);
       }
 
       if (!reduceMotion) {
@@ -1010,13 +1044,10 @@ export default function ScientificallyStructuredSection() {
         });
       }
 
-      focusTarget.copy(actor.position).setY(actor.position.y + 0.9);
-      if (anim) focusTarget.y = THREE.MathUtils.lerp(anim.p0.y, anim.p1.y, easeInOut(clamp01(anim.t))) + 0.9;
-      if (!framed) {
-        focus.copy(focusTarget);
-        framed = true;
-      }
-      focus.lerp(focusTarget, 1 - Math.exp(-3.2 * dt));
+      // The camera follows the hop's ground path (no arc, no lag of its
+      // own): sDisp is already smooth, so a second smoothing would only
+      // make the board trail the scroll.
+      focus.copy(focusTarget);
       fadeUniforms.uFocus.value.copy(focus).setY(focus.y - 0.9);
       parallax.lerp(parallaxT, 1 - Math.exp(-3 * dt));
       camera.position.copy(focus).addScaledVector(camDir, camDist);
@@ -1035,22 +1066,51 @@ export default function ScientificallyStructuredSection() {
     // Only render while the section is near the viewport. A WebGL frame every
     // tick competes with page scrolling on phones even when the board is far
     // off screen. The clock is reset on resume so the first delta isn't the
-    // whole time it was hidden.
+    // whole time it was hidden. Frames run on the shared ticker, right after
+    // Lenis moves the scroll, so the board never lags the page by a frame.
+    let onScreen = false;
+    const offFrame = onFrame(() => {
+      if (onScreen) tick();
+    });
     const visibility = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          clock.getDelta();
-          renderer.setAnimationLoop(tick);
-        } else renderer.setAnimationLoop(null);
+        if (entry.isIntersecting && !onScreen) clock.getDelta();
+        onScreen = entry.isIntersecting;
       },
       { rootMargin: "200px 0px" }
     );
     visibility.observe(section);
 
+    // ---- Hand-off to the next section (WhyChessSection) ----
+    const kingA = new THREE.Vector3();
+    const kingB = new THREE.Vector3();
+    staircase.current = {
+      active: () => isReady && scrollBound(),
+      pinEnd: () => pin().y1,
+      kingRect: () => {
+        const king = forms[STEPS.length - 1];
+        if (!isReady || !king) return null;
+        const r = stage.getBoundingClientRect();
+        kingA.copy(actor.position).project(camera);
+        kingB.copy(actor.position).setY(actor.position.y + (king.userData.height as number)).project(camera);
+        const bottom = r.top + ((1 - kingA.y) / 2) * H;
+        const top = r.top + ((1 - kingB.y) / 2) * H;
+        return { cx: r.left + ((kingA.x + 1) / 2) * W, bottom, h: bottom - top };
+      },
+      setKingHidden: (on) => {
+        if (on === kingHidden) return;
+        kingHidden = on;
+        if (cur === STEPS.length - 1) propSets[cur].target = on ? 0 : 1;
+      },
+    };
+    const handle = staircase.current;
+
     return () => {
       cancelled = true;
+      if (staircase.current === handle) staircase.current = null;
       visibility.disconnect();
-      renderer.setAnimationLoop(null);
+      offFrame();
+      if (snapTimer !== null) clearTimeout(snapTimer);
       removeEventListener("resize", onResize);
       mobileMQ.removeEventListener("change", layout);
       removeEventListener("keydown", onKeyDown);

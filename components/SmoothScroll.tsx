@@ -25,6 +25,15 @@ export const onScrollFrame = (callback: () => void) => {
   return () => window.removeEventListener("scroll", callback);
 };
 
+// Runs `callback` once per animation frame on GSAP's ticker, after Lenis has
+// moved the scroll for that frame (Lenis' tick is added with priority), so
+// anything drawn from the scroll position (a WebGL scene, a fixed overlay)
+// never disagrees with the page by a frame. Returns an unsubscribe function.
+export const onFrame = (callback: () => void) => {
+  gsap.ticker.add(callback);
+  return () => gsap.ticker.remove(callback);
+};
+
 // Eases wheel and trackpad scrolling with inertia. Lenis still moves the native
 // window scroll, so sticky pins and plain scroll listeners keep working; it is
 // driven from GSAP's ticker so ScrollTrigger updates on the same frame. Touch
@@ -38,7 +47,7 @@ export default function SmoothScroll() {
     lenis.on("scroll", ScrollTrigger.update);
 
     const tick = (time: number) => lenis.raf(time * 1000);
-    gsap.ticker.add(tick);
+    gsap.ticker.add(tick, false, true);
     gsap.ticker.lagSmoothing(0);
 
     return () => {

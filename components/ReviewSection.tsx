@@ -7,10 +7,12 @@ import Eyebrow from "./Eyebrow";
 import RevealTitle from "./RevealTitle";
 import "./reviewSection.scss";
 
+// Variable font (no fixed weights): covers 400–700, and avoids the dynamic
+// `/l/font?…` file URLs Google returns for some static weight sets, which
+// Turbopack's next/font can't resolve.
 const openSans = Open_Sans({
   variable: "--font-open-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
 });
 
 type Review = {

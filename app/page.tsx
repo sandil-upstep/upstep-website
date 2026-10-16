@@ -8,6 +8,7 @@ import ReviewSection from "@/components/ReviewSection";
 import ScientificallyStructuredSection from "@/components/ScientificallyStructuredSection";
 import SuccessStoriesSection from "@/components/SuccessStoriesSection";
 import WhatWeOfferSection from "@/components/WhatWeOfferSection";
+import WhyChessSection from "@/components/WhyChessSection";
 import Image from "next/image";
 
 export default function Home() {
@@ -19,7 +20,7 @@ export default function Home() {
       <WhatWeOfferSection />
       <SuccessStoriesSection />
       <ScientificallyStructuredSection />
-      
+      <WhyChessSection />
       <ReviewSection />
       <CarouselSection />
       <BookDemoSection />
