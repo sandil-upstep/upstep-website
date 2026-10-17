@@ -4,17 +4,24 @@
 //
 // 163px type with a 2.5px stroke on the 1920px design, scaling with the
 // viewport (vw, not cqw, so every section resolves to the exact same size);
-// the stroke never drops below 2px. Phones get 10vw, the largest size that
-// keeps the longest line ("around the world", ~8.6em) inside the column down
-// to 320px, with a 1.5px stroke.
+// the stroke never drops below 2px. Like .structured__title, the size is also
+// capped by the viewport's height (13.55vh = 8.49 / 62.66 of it, the
+// Structured frame's cap), so on a short, wide screen every title shrinks
+// together instead of only the pinned sections'. Phones get 10vw, the largest
+// size that keeps the longest line ("around the world", ~8.6em) inside the
+// column down to 320px, with a 1.5px stroke.
 //
 // Sections still own position and line-height — don't set font-size,
-// letter-spacing or -webkit-text-stroke-width on these titles anywhere else.
+// letter-spacing or -webkit-text-stroke-width on these titles anywhere else
+// (the pinned sections only restate the same size on their own --u).
+
+$outline-title-vw: calc(100vw * 163 / 1920);
+$outline-title-vh: calc(100vh * 8.49 / 62.66);
 
 @mixin outline-title-size {
-  font-size: calc(100vw * 163 / 1920);
+  font-size: min(#{$outline-title-vw}, #{$outline-title-vh});
   letter-spacing: -0.03em;
-  -webkit-text-stroke-width: max(2px, calc(100vw * 2.5 / 1920));
+  -webkit-text-stroke-width: max(2px, min(calc(100vw * 2.5 / 1920), calc(100vh * 0.13 / 62.66)));
 
   @media (max-width: 767.98px) {
     font-size: 10vw;

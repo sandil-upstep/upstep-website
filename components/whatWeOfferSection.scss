@@ -28,6 +28,12 @@ $dur: 0.75s;
   @return calc(var(--u) * #{$n});
 }
 
+// 1g = 1px of the 1920px design across the section's full width, for what
+// stays on the shared page grid when --u is capped by the viewport height.
+@function g($n) {
+  @return calc(var(--g) * #{$n});
+}
+
 // 1m = 1px of the 440px mobile design (capped on tablets).
 @function m($n) {
   @return calc(var(--m) * #{$n});
@@ -113,7 +119,7 @@ $card-2: (
 );
 
 @mixin card($x, $y, $card, $opacity) {
-  @include slot(u($x), u($y), map.get($card, w), map.get($card, h), $poly-screen, $opacity);
+  @include slot(calc(var(--ox) + #{u($x)}), u($y), map.get($card, w), map.get($card, h), $poly-screen, $opacity);
   transform: scale(var(--k, 1)) map.get($card, m);
 }
 
@@ -143,6 +149,16 @@ $card-2: (
 .wwo-pin--active > .wwo {
   position: sticky;
   top: var(--pin-top, 0px);
+}
+
+// While pinned the scroll scrubs the slides: WhatWeOfferSection blends each
+// slide between the slots below (geometry, opacity, --fade and stacking) from
+// the scroll position, so the slot transitions are off. Mobile (no pin)
+// keeps them.
+.wwo-pin--active {
+  .wwo__slide,
+  .wwo__clip,
+  .wwo__clip img { transition: none; }
 }
 
 .wwo__stage { position: relative; }
@@ -394,48 +410,50 @@ $card-2: (
   $dy: 100;
 
   .wwo__stage {
-    --u: calc(100cqw / 1920);
+    // --g is 1 design px across the section's width. --u scales the whole
+    // composition and is capped so the stage never outgrows the viewport's
+    // height (a taller stage would pin by its bottom and cut off the title).
+    // When the cap kicks in, the scene is centred with --ox, while the grid
+    // lines, eyebrow and title stay on the section grid (--g) to line up with
+    // the neighbouring sections.
+    --g: calc(100cqw / 1920);
+    --u: min(var(--g), calc(100vh / #{1053 + $dy}));
+    --ox: calc((100cqw - var(--u) * 1920) / 2);
     // Cut-outs at 1 design px per image px, flush with the stage's right and
     // bottom edges: the boy is cut off by the image's bottom edge, which sits
     // on the bottom of the floor patch.
     --img: var(--u);
-    --fx: #{u(800)};
+    --fx: calc(var(--ox) + #{u(800)});
     --fy: #{u(215 + $dy)};
     height: u(1053 + $dy);
 
     > * { position: absolute; }
   }
 
-  .wwo__gl--1 { left: u(207); top: 0; height: u(700 + $dy); }
-  .wwo__gl--2 { left: u(295); top: 0; height: u(700 + $dy); }
+  .wwo__gl--1 { left: g(207); top: 0; height: u(700 + $dy); }
+  .wwo__gl--2 { left: g(295); top: 0; height: u(700 + $dy); }
   // Right pair mirrors the left one, matching the other sections' grid.
-  .wwo__gl--3 { left: u(1624); top: 0; height: u(240); }
-  .wwo__gl--4 { left: u(1713); top: 0; height: u(240); }
+  .wwo__gl--3 { left: g(1624); top: 0; height: u(240); }
+  .wwo__gl--4 { left: g(1713); top: 0; height: u(240); }
   .wwo__floor { left: 0; right: 0; top: u(700 + $dy); bottom: 0; }
-  .wwo__cube--1 { left: u(1592); top: u(98); width: u(60); }
-  .wwo__cube--2 { left: u(178); top: u(345 + $dy); width: u(72); }
+  .wwo__cube--1 { left: g(1592); top: u(98); width: u(60); }
+  .wwo__cube--2 { left: g(178); top: u(345 + $dy); width: u(72); }
 
-  .wwo__eyebrow { left: u(207); top: u(61); }
+  .wwo__eyebrow { left: g(207); top: u(61); }
 
+  // Sized with the composition (not the shared vw size) so a short viewport
+  // shrinks it along with the scene below it.
   .wwo__title {
-    left: u(294);
+    left: g(294);
     top: u(104);
+    font-size: u(163);
+    -webkit-text-stroke-width: max(2px, #{u(2.5)});
     line-height: u(160);
   }
 
   // The track covers the stage as a click-through layer; slides opt back in.
   .wwo__track { inset: 0; pointer-events: none; }
-  .wwo__slide {
-    pointer-events: auto;
-    // A slide leaving the screen keeps its under-the-laptop z-index until it
-    // has slid clear, so it never passes over the laptop; one arriving on the
-    // screen drops under it at once (slot 0 overrides the delay below).
-    transition-property: left, top, width, height, opacity, transform, z-index;
-    transition-duration: var(--wwo-dur, #{$dur}), var(--wwo-dur, #{$dur}), var(--wwo-dur, #{$dur}),
-      var(--wwo-dur, #{$dur}), var(--wwo-dur, #{$dur}), var(--wwo-dur, #{$dur}), 0s;
-    transition-delay: 0s, 0s, 0s, 0s, 0s, 0s, var(--wwo-dur, #{$dur});
-  }
-  .wwo__slide[data-slot="0"] { transition-delay: 0s; }
+  .wwo__slide { pointer-events: auto; }
 
   // Two previous slides on the left (the outer one cropped by the edge), active
   // on the laptop screen, next two on the right (the outer one cropped). Cards
@@ -449,7 +467,7 @@ $card-2: (
   .wwo__slide[data-slot="3"],
   .wwo__slide[data-slot="out-r"] { @include card(2130, 177 + $dy, $card-2, 0); }
 
-  .wwo__nav { left: u(638); top: u(817 + $dy); gap: u(30); }
+  .wwo__nav { left: calc(var(--ox) + #{u(638)}); top: u(817 + $dy); gap: u(30); }
   .wwo__nav button { width: u(140); height: u(140); }
 }
 

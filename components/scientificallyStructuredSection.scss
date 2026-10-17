@@ -20,6 +20,12 @@ $btn-bg: #ffffff;
   @return calc(var(--u) * #{$n});
 }
 
+// 1g = 1% of the section's full width, for what stays on the shared page grid
+// when --u is capped by the viewport height (desktop).
+@function g($n) {
+  @return calc(var(--g) * #{$n});
+}
+
 // The section is the scroll track; everything visible lives in the cover,
 // which sticks while the page scroll steps through the levels (desktop).
 // No overflow clipping on the section itself: that would break the sticky.
@@ -377,7 +383,13 @@ $btn-bg: #ffffff;
   $level-scroll: 110vh;
 
   .structured {
-    --u: calc(100cqw / 100);
+    // --g is 1% of the section's width. --u scales the frame and is capped so
+    // the cover never outgrows the viewport's height (a taller cover would pin
+    // by its bottom and cut off the title). The 3D stage caps its own frame the
+    // same way (layout() in the component) and centres it; the grid-hung
+    // eyebrow, title, ticks and copy stay on the section grid (--g).
+    --g: calc(100cqw / 100);
+    --u: min(var(--g), calc(100vh / 62.66));
     // The frame plus one stretch of scroll for each of the five level changes.
     height: calc(#{u(62.66)} + #{$level-scroll * 5});
   }
@@ -397,19 +409,22 @@ $btn-bg: #ffffff;
 
   // Left-hand content hangs off the grid lines (10.77% / 15.41%).
   .structured__eyebrow {
-    left: u(10.77);
+    left: g(10.77);
     top: u(5.9);
   }
 
-  // Size and stroke come from outline-title-size, shared with .wwo__title.
+  // Same size as the shared outline-title-size (163 / 1920 of the width), but
+  // on --u so a short viewport shrinks it with the rest of the frame.
   .structured__title {
-    left: u(15.17);
+    left: g(15.17);
     top: u(8.3);
+    font-size: u(8.49);
+    -webkit-text-stroke-width: max(2px, #{u(0.13)});
     line-height: u(8.07);
   }
 
   .structured__ticks {
-    left: u(10.77);
+    left: g(10.77);
     top: u(31.2);
   }
 
@@ -422,7 +437,7 @@ $btn-bg: #ffffff;
   }
 
   .structured__copy {
-    left: u(15.41);
+    left: g(15.41);
     top: u(29.6);
     width: u(37);
   }
@@ -466,16 +481,31 @@ $btn-bg: #ffffff;
 }
 
 // =========================================================
-// PHONES / SHORT TABLETS < 820px — stacked, page scrolls
+// PHONES / SHORT TABLETS < 820px — pinned like desktop: the board on top,
+// the level's copy under it, and the page scroll steps through the levels
 // =========================================================
 @media (max-width: 819.98px) {
+  // Scroll distance per level change while the cover is pinned.
+  $level-scroll-m: 80svh;
+
   .structured {
-    height: auto;
+    height: calc(100svh + #{$level-scroll-m * 5});
   }
 
+  // Exactly one (small) viewport tall, so it always sticks at the top.
+  .structured__cover {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  // A fixed height, so the board doesn't resize as the copy changes length.
   .structured__stage {
     position: relative;
-    height: 70vh;
+    flex: none;
+    height: 50svh;
   }
 
   .structured__eyebrow {
@@ -499,27 +529,15 @@ $btn-bg: #ffffff;
     line-height: 0.9;
   }
 
-  // Level ticks run down the left gutter (outside the first grid line),
-  // level with the copy block that follows the 70vh stage.
-  .structured__ticks {
-    left: 0;
-    top: calc(70vh + 26px);
-  }
-
-  .structured__ticks button {
-    height: 12px;
-    width: 16px;
-
-    &::after { width: 9px; }
-    &[aria-current="step"]::after { width: 15px; height: 2px; }
-  }
+  // No level ticks here: the scroll steps through the levels.
+  .structured__ticks { display: none; }
 
   .structured__copy {
     position: relative;
     left: 0;
     top: 0;
     width: auto;
-    padding: 24px 20px 40px 22px;
+    padding: 20px 20px calc(16px + env(safe-area-inset-bottom, 0px)) 22px;
   }
 
   .structured__level-title { font-size: clamp(1.25rem, 4.6vw, 1.75rem); }
@@ -536,8 +554,8 @@ $btn-bg: #ffffff;
     display: flex;
     justify-content: center;
     width: 100%;
-    margin-top: 22px;
-    height: 60px;
+    margin-top: 18px;
+    height: 54px;
     padding: 0 24px;
     font-size: 1.125rem;
     border-radius: 8px;
@@ -545,29 +563,22 @@ $btn-bg: #ffffff;
     rect { stroke-width: 1.2px; }
   }
 
+  // Both on one row, each label on two lines beside its icon.
   .structured__features {
-    margin-top: 26px;
-    gap: 22px;
-    flex-wrap: wrap;
+    margin-top: 16px;
+    gap: 20px;
 
-    a { font-size: 0.95rem; gap: 10px; }
-    img { width: 56px; }
+    a { font-size: 0.9rem; gap: 10px; line-height: 1.2; }
+    img { width: 46px; }
   }
 
-  // Labels sit on one line beside the icon.
-  .structured__feature-label br { display: none; }
-
-  .structured__arrows {
-    gap: 12px;
-    margin-top: 28px;
-
-    button { width: 52px; height: 52px; }
-  }
+  // The scroll steps through the levels here, as on desktop.
+  .structured__arrows { display: none; }
 
   .structured__status {
     right: auto;
     left: 50%;
-    top: 35vh;
+    top: 27svh;
     transform: translate(-50%, -50%);
   }
 }

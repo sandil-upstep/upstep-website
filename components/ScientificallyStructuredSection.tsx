@@ -228,7 +228,10 @@ export default function ScientificallyStructuredSection() {
     const tileGeo = new RoundedBoxGeometry(TILE, TILE_H, TILE, 4, 0.05);
     const tileTop = (i: number) => STEP_VEC.clone().multiplyScalar(i);
     type TileState = { baseY: number; y: number; v: number; press: number };
-    const tiles = STEPS.map((s, i) => {
+    // One tile per level, plus an empty step after the king's: the staircase
+    // carries on past the top level.
+    const TILE_COUNT = STEPS.length + 1;
+    const tiles = Array.from({ length: TILE_COUNT }, (_, i) => {
       const m = new THREE.Mesh(tileGeo, i % 2 ? blackMat : whiteMat);
       m.position.copy(tileTop(i)).add(new THREE.Vector3(0, -TILE_H / 2, 0));
       m.receiveShadow = true;
@@ -483,7 +486,7 @@ export default function ScientificallyStructuredSection() {
     // level 3, 2.5 = mid-air between levels 3 and 4. On desktop it comes
     // straight from the page scroll every frame, so nothing is queued or left
     // playing: scroll back and the hop plays backwards, scroll fast and the
-    // piece keeps up. On phones the buttons and swipes set it instead.
+    // piece keeps up. Phones work the same way, with touch scrolling.
     let cur = 0; // level shown in the copy panel
     let isReady = false;
     let intro = 1;
@@ -604,17 +607,18 @@ export default function ScientificallyStructuredSection() {
     // distance scrolled while pinned is split into one equal stretch per
     // level. Ticks, arrows, keys and swipes scroll the page to their level's
     // stretch, so the scroll position stays the single source of truth.
-    // Phones keep the stacked layout and step by swipe.
+    // Phones pin the same way: the board on top, the level's copy below it.
 
     // Page y where the pin starts (y0) and ends (y1).
     const pin = () => {
       const coverH = cover.offsetHeight;
-      const stickTop = Math.min(0, innerHeight - coverH);
+      // Phones stick it at the top (it's one small-viewport tall).
+      const stickTop = mobile ? 0 : Math.min(0, innerHeight - coverH);
       const distance = section.offsetHeight - coverH;
       const y0 = scrollY + section.getBoundingClientRect().top - stickTop;
       return { distance, y0, y1: y0 + distance };
     };
-    const scrollBound = () => !mobile && section.offsetHeight - cover.offsetHeight > 1;
+    const scrollBound = () => section.offsetHeight - cover.offsetHeight > 1;
     const pinned = () => {
       const { y0, y1 } = pin();
       return scrollY >= y0 - 1 && scrollY <= y1 + 1;
@@ -669,13 +673,33 @@ export default function ScientificallyStructuredSection() {
       if (snapTimer !== null) clearTimeout(snapTimer);
       snapTimer = window.setTimeout(() => {
         snapTimer = null;
-        if (!isReady || !scrollBound() || seeking || !pinned()) return;
+        // Never pull the page from under a finger; lifting it re-checks.
+        if (!isReady || !scrollBound() || seeking || touching || !pinned()) return;
         const s = scrollPos();
         const frac = s - Math.floor(s);
         if (frac > 0.002 && frac < 0.998) scrollToLevel(Math.round(s));
       }, 180);
     };
     const offScroll = onScrollFrame(syncScroll);
+
+    // Touch: a finger on the screen holds off the snap, and stops a glide
+    // to a level that's still under way so the two don't fight.
+    let touching = false;
+    const onTouchStart = () => {
+      touching = true;
+      if (!seeking) return;
+      seeking = false;
+      if (seekTimer !== null) clearTimeout(seekTimer);
+      getLenis()?.scrollTo(scrollY, { immediate: true, force: true });
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length) return;
+      touching = false;
+      syncScroll();
+    };
+    addEventListener("touchstart", onTouchStart, { passive: true });
+    addEventListener("touchend", onTouchEnd, { passive: true });
+    addEventListener("touchcancel", onTouchEnd, { passive: true });
 
     // ---- Wheel: one gesture = one level ----
     // Inside the pin the wheel never scrolls by its own amount: each gesture
@@ -1247,6 +1271,9 @@ export default function ScientificallyStructuredSection() {
       offFrame();
       if (snapTimer !== null) clearTimeout(snapTimer);
       removeEventListener("resize", onResize);
+      removeEventListener("touchstart", onTouchStart);
+      removeEventListener("touchend", onTouchEnd);
+      removeEventListener("touchcancel", onTouchEnd);
       mobileMQ.removeEventListener("change", layout);
       removeEventListener("keydown", onKeyDown);
       offScroll();

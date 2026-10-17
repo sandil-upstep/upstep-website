@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { onFrame } from "./SmoothScroll";
@@ -15,9 +15,10 @@ gsap.registerPlugin(ScrollTrigger);
 // masks (the reveal in reverse), carries the king to the centre and
 // the insight cards emerge from behind it onto an orbit around it. Clicking
 // a card turns the orbit until that card reaches its top-right, flies it to
-// the top-right of the screen, and only then opens its info window (phones:
-// a bottom sheet). Phones play the same sequence, unpinned, when the section
-// scrolls into view. Ported from the "Scientifically Structured improved"
+// the top-right of the screen, and only then opens its info window. Phones
+// get the same fall, unpinned: on landing the items come out onto the orbit,
+// but they aren't clickable there; an accordion below the orbit holds the
+// details instead. Ported from the "Scientifically Structured improved"
 // design reference.
 //
 // Every moving part is drawn by render() from the plain numbers in `S`;
@@ -151,9 +152,32 @@ const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 export default function WhyChessSection() {
+  // Phones: the accordion under the orbit. The headline follows the item
+  // opened last, so it stays put when that item is closed again.
+  const [accOpen, setAccOpen] = useState(DEFAULT_ITEM);
+  const [accHead, setAccHead] = useState(DEFAULT_ITEM);
+  const toggleAcc = (i: number) => {
+    setAccOpen(accOpen === i ? -1 : i);
+    if (accOpen !== i) setAccHead(i);
+  };
+  const head = WHY_ITEMS[accHead];
   const pinRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const fallerRef = useRef<HTMLImageElement>(null);
+
+  // Back to the default item once the section is fully off screen, so the
+  // next visit starts where the design does.
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) return;
+      setAccOpen(DEFAULT_ITEM);
+      setAccHead(DEFAULT_ITEM);
+    });
+    io.observe(section);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     const pin = pinRef.current;
@@ -362,7 +386,7 @@ export default function WhyChessSection() {
       if (allOut !== orbiting) {
         orbiting = allOut;
         section!.classList.toggle("is-orbiting", orbiting);
-        itemsWrap.inert = !orbiting;
+        itemsWrap.inert = !orbiting || mode === "mobile";
       }
 
       if (desk) {
@@ -497,6 +521,21 @@ export default function WhyChessSection() {
       gsap.to(S, { ring: 1, duration: 1 * D, delay: 0.15 * D, ease: "back.out(1.6)", onUpdate: markDirty });
       // Without the fall to follow, the heading rises on its own.
       if (!handoff()) gsap.to(S, { title: 1, duration: 1.4 * D, ease: "none", onUpdate: markDirty });
+      if (mode === "mobile") {
+        // Phones: the king drops in (unless it has just fallen in from the
+        // staircase), then the items come out onto the orbit one by one.
+        if (!landed) gsap.to(S, { drop: 1, duration: 0.9 * D, delay: 0.15 * D, ease: "bounce.out", onUpdate: markDirty });
+        items.forEach(({ st }, i) =>
+          gsap.to(st, {
+            e: 1,
+            duration: 0.7 * D,
+            delay: ((landed ? 0.35 : 0.95) + i * 0.07) * D,
+            ease: "back.out(1.4)",
+            overwrite: "auto",
+            onUpdate: markDirty,
+          })
+        );
+      }
       if (landed && !reduceMotion) {
         kingImg.classList.remove("is-landing");
         void kingImg.offsetWidth;
@@ -508,6 +547,11 @@ export default function WhyChessSection() {
       revealed = false;
       close({ instant: true });
       gsap.to(S, { ring: 0, duration: 0.4 * D, ease: "power2.in", onUpdate: markDirty });
+      if (mode === "mobile") {
+        const sts = items.map((it) => it.st);
+        gsap.to(sts, { e: 0, duration: 0.35 * D, ease: "power2.in", overwrite: "auto", onUpdate: markDirty });
+        if (!handoff()) gsap.to(S, { drop: 0, title: 0, duration: 0.4 * D, ease: "power2.in", overwrite: "auto", onUpdate: markDirty });
+      }
     }
     const onLanded = () => kingImg.classList.remove("is-landing");
     kingImg.addEventListener("animationend", onLanded);
@@ -521,9 +565,12 @@ export default function WhyChessSection() {
     // ---- Per-breakpoint timelines ----
     const visibility = new IntersectionObserver(
       ([entry]) => {
-        // Desktop without the staircase hand-off (reduced motion, or the 3D
-        // board isn't ready): land when it scrolls into view.
-        if (mode === "desktop" && !handoff() && entry.isIntersecting) reveal(false);
+        // Without the staircase hand-off (reduced motion, or the 3D board
+        // isn't ready): land when it scrolls into view. Phones also reset
+        // once it's scrolled back below the screen.
+        if (handoff()) return;
+        if (entry.isIntersecting) reveal(false);
+        else if (mode === "mobile" && entry.boundingClientRect.top > 0) unreveal();
       },
       { threshold: 0.3 }
     );
@@ -573,29 +620,15 @@ export default function WhyChessSection() {
         );
         tl.set({}, {}, 1);
         // Re-observe so a visitor already here gets the landing straight away.
-        visibility.unobserve(section);
+        visibility.disconnect();
         visibility.observe(section);
       } else {
-        // Phones: unpinned (no scroll jitter); the same sequence plays when
-        // the section scrolls into view and reverses when scrolled back above.
-        const tl = gsap.timeline({
-          onUpdate: markDirty,
-          scrollTrigger: {
-            trigger: section,
-            start: "top 70%",
-            toggleActions: "play none none reverse",
-            onLeaveBack: () => {
-              close({ instant: true });
-              autoOpened = false;
-            },
-          },
-        });
-        tl.to(S, { title: 1, duration: 1.1, ease: "none" }, 0);
-        tl.to(S, { drop: 1, duration: 0.9, ease: "bounce.out" }, 0.15);
-        tl.to(S, { ring: 1, duration: 0.9, ease: "back.out(1.6)" }, 0.8);
-        items.forEach(({ st }, i) => tl.to(st, { e: 1, duration: 0.7, ease: "back.out(1.4)" }, 0.95 + i * 0.07));
-        tl.eventCallback("onComplete", openDefault);
-        if (reduceMotion) tl.timeScale(50);
+        // Phones: unpinned. The king falls in from the staircase as on
+        // desktop (or drops in when the orbit scrolls into view without it);
+        // reveal() then brings the ring and the items out. Watching the orbit
+        // rather than the section: the accordion makes the section tall.
+        visibility.disconnect();
+        visibility.observe(hero);
       }
       return () => close({ instant: true });
     });
@@ -613,7 +646,7 @@ export default function WhyChessSection() {
     // carries it to the centre. Scrolling back plays it all backwards. The
     // image only shows if the 3D king can't be drawn (no WebGL, phones,
     // reduced motion, or the 3D board isn't ready).
-    const handoff = () => mode === "desktop" && !reduceMotion && !!staircase.current?.active();
+    const handoff = () => !reduceMotion && !!staircase.current?.active();
     let fallerOn = false;
     let kingShown = true;
     let king3dKey = ""; // the last pose drawn, so a resting king isn't redrawn every frame
@@ -670,6 +703,12 @@ export default function WhyChessSection() {
         imageKing();
         stairs?.setKingHidden(false);
         return;
+      }
+      // Phones: the king arrives by the fall, so it never drops in as well.
+      if (mode === "mobile" && S.drop !== 1) {
+        gsap.killTweensOf(S, "drop");
+        S.drop = 1;
+        dirty = true;
       }
       // Where the pin starts: the section's resting top before it sticks.
       const top = scrollY + pin!.getBoundingClientRect().top;
@@ -844,6 +883,58 @@ export default function WhyChessSection() {
                 <p className="why-card__highlight" />
               </div>
             </div>
+          </div>
+          <div className="why-acc">
+            <ul className="why-acc__list">
+              {/* One headline, placed (by grid order) right above the item it
+                  belongs to; it stays one element so aria-live announces it. */}
+              <li className="why-acc__headline" aria-live="polite" style={{ order: accHead * 2 }}>
+                {head.headline[0]}
+                <em>{head.headline[1]}</em>
+                {head.headline[2]}
+              </li>
+              {WHY_ITEMS.map((it, i) => {
+                const open = accOpen === i;
+                return (
+                  <li
+                    key={it.id}
+                    className={`why-acc__item${open ? " is-open" : ""}`}
+                    style={{ order: i * 2 + 1 }}
+                  >
+                    <h3 className="why-acc__heading">
+                      <button
+                        type="button"
+                        className="why-acc__toggle"
+                        id={`why-acc-${it.id}`}
+                        aria-expanded={open}
+                        aria-controls={`why-acc-panel-${it.id}`}
+                        onClick={() => toggleAcc(i)}
+                      >
+                        <span className="why-acc__icon">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={img(it.id)} alt="" />
+                        </span>
+                        <span className="why-acc__title">{it.title}</span>
+                      </button>
+                    </h3>
+                    <div
+                      className="why-acc__panel"
+                      id={`why-acc-panel-${it.id}`}
+                      role="region"
+                      aria-labelledby={`why-acc-${it.id}`}
+                      inert={!open}
+                    >
+                      <div className="why-acc__body">
+                        <div className="why-acc__text">
+                          <p>{it.desc}</p>
+                          <p className="why-acc__highlight">{it.highlight}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
           <div className="why__backdrop" />
         </section>
