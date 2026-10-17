@@ -8,7 +8,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import Eyebrow from "./Eyebrow";
 import RevealTitle from "./RevealTitle";
 import { getLenis, onFrame, onScrollFrame } from "./SmoothScroll";
-import { staircase } from "./staircaseBridge";
+import { staircase, type StaircaseHandle } from "./staircaseBridge";
 import "./scientificallyStructuredSection.scss";
 
 // A chess piece per curriculum level, growing from pawn to king. Each level
@@ -104,7 +104,7 @@ const MODEL_SRC: Record<Step["id"], string> = {
   pawn: "/models/pawn.glb",
   knight: "/models/knight.glb",
   bishop: "/models/bishop.glb",
-  rook: "/models/rook-90.glb",
+  rook: "/models/rook.glb",
   queen: "/models/queen.glb",
   king: "/models/king.glb",
 };
@@ -126,6 +126,7 @@ const STEP_VEC = new THREE.Vector3(2.35, 0.62, -1.0);
 const PROP_PAD = 0.12;
 const SWAP_A = 0.3;
 const SWAP_B = 0.44;
+const WHITE_TONE = 0.76; // white pieces' base colour, as a share of the model's
 
 export default function ScientificallyStructuredSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -310,6 +311,31 @@ export default function ScientificallyStructuredSection() {
       return m;
     }
 
+    // Give the white porcelain a soft satin glaze, toned to the reference
+    // render: the base slightly off-white and the room reflection turned down,
+    // so the shaded side keeps its soft grey falloff instead of burning out to
+    // flat white, and the highlights stay gentle.
+    function makeGlazed(mat: THREE.Material) {
+      const s = mat as THREE.MeshStandardMaterial;
+      // roughness/metalness multiply their maps, so keep the model's factors
+      // (1.0) or the maps are zeroed out and the piece turns into a mirror.
+      return new THREE.MeshPhysicalMaterial({
+        color: s.color.clone().multiplyScalar(WHITE_TONE),
+        map: s.map,
+        normalMap: s.normalMap,
+        normalScale: s.normalScale,
+        roughness: s.roughness,
+        roughnessMap: s.roughnessMap,
+        metalness: s.metalness,
+        metalnessMap: s.metalnessMap,
+        aoMap: s.aoMap,
+        side: s.side,
+        clearcoat: 0.3,
+        clearcoatRoughness: 0.32,
+        envMapIntensity: 0.55,
+      });
+    }
+
     // ---- Orbiting props ----
     function propTextures(src: string) {
       const c1 = document.createElement("canvas");
@@ -423,7 +449,7 @@ export default function ScientificallyStructuredSection() {
             const mesh = o as THREE.Mesh;
             mesh.castShadow = true;
             mesh.receiveShadow = true;
-            if (s.dark) mesh.material = makeDark(mesh.material as THREE.Material);
+            mesh.material = (s.dark ? makeDark : makeGlazed)(mesh.material as THREE.Material);
           });
           const box = new THREE.Box3().setFromObject(root);
           const size = box.getSize(new THREE.Vector3());
@@ -548,7 +574,7 @@ export default function ScientificallyStructuredSection() {
     // hop) instead of the browser's fast native key scroll. Holding the key
     // repeats at a calm pace. Past the first/last level the page scrolls on
     // natively.
-    const KEY_REPEAT_MS = 700;
+    const KEY_REPEAT_MS = 1000;
     let lastKeyStep = 0;
     const onKeyDown = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null;
@@ -600,7 +626,7 @@ export default function ScientificallyStructuredSection() {
     };
     // Each level's stretch of scroll: the piece stands still for HOLD of it on
     // either side of the middle and hops across the rest, in step with the scroll.
-    const HOLD = 0.2;
+    const HOLD = 0.06;
     const scrollPos = () => {
       const { distance, y0 } = pin();
       const x = clamp01((scrollY - y0) / distance) * STEPS.length - 0.5;
@@ -612,6 +638,8 @@ export default function ScientificallyStructuredSection() {
 
     let seeking = false;
     let seekTimer: number | null = null;
+    const SEEK_S = 2.1; // seconds the page takes to glide to the next level
+    const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
     // The level the page scroll is heading to; it runs ahead of `cur` while
     // hops are still playing out.
     let target = 0;
@@ -624,8 +652,10 @@ export default function ScientificallyStructuredSection() {
       // The timer also covers a Lenis scroll that's interrupted (e.g. by the
       // scrollbar) and never completes, so the wheel can't stay locked.
       if (seekTimer !== null) clearTimeout(seekTimer);
-      seekTimer = window.setTimeout(() => (seeking = false), lenis ? 1200 : reduceMotion ? 0 : 900);
-      if (lenis) lenis.scrollTo(y, { duration: 0.9, force: true, onComplete: () => (seeking = false) });
+      seekTimer = window.setTimeout(() => (seeking = false), lenis ? SEEK_S * 1000 + 400 : reduceMotion ? 0 : 1300);
+      // Ease in and out (Lenis' default starts at full speed), so each hop
+      // gathers pace and settles gently instead of jolting off the step.
+      if (lenis) lenis.scrollTo(y, { duration: SEEK_S, easing: easeInOutSine, force: true, onComplete: () => (seeking = false) });
       else scrollTo({ top: y, behavior: reduceMotion ? "auto" : "smooth" });
     };
 
@@ -759,7 +789,6 @@ export default function ScientificallyStructuredSection() {
       const t = clamp01((x - a) / (b - a));
       return t * t * (3 - 2 * t);
     };
-    const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
     const backOut = (t: number) => {
       const c1 = 1.9;
       const c3 = c1 + 1;
@@ -853,7 +882,9 @@ export default function ScientificallyStructuredSection() {
       p0.copy(tileTop(k));
       p1.copy(tileTop(k + 1));
       const f = clamp01((u - CROUCH) / (1 - 2 * CROUCH));
-      const e = easeInOut(f);
+      // Sine, not cubic: the page scroll already eases each hop, so a gentle
+      // curve here keeps the flight even instead of whipping through the middle.
+      const e = easeInOutSine(f);
 
       // Crouch on take-off and squash on landing, both tied to the scroll.
       const cIn = u < CROUCH ? Math.sin((u / CROUCH) * Math.PI) : 0;
@@ -941,12 +972,12 @@ export default function ScientificallyStructuredSection() {
           // Smooth out the scroll's small steps, but never trail it: the
           // further behind, the faster it catches up (a big jump zips
           // through the levels in a fraction of a second).
-          const step = gap * (1 - Math.exp(-14 * dt));
-          const cap = (4 + far * 10) * dt;
+          const step = gap * (1 - Math.exp(-5 * dt));
+          const cap = (1.2 + far * 10) * dt;
           sDisp += Math.max(-cap, Math.min(cap, step));
         } else {
           // Phones: a steady hop, sped up when more levels are waiting.
-          const cap = (1 / 1.1) * (1 + far * 2.5) * dt;
+          const cap = (1 / 2.2) * (1 + far * 2.5) * dt;
           sDisp += Math.max(-cap, Math.min(cap, gap));
         }
         if (Math.abs(sTarget - sDisp) < 1e-4) sDisp = sTarget;
@@ -1081,6 +1112,109 @@ export default function ScientificallyStructuredSection() {
     );
     visibility.observe(section);
 
+    // ---- The king's fall into the next section ----
+    // The stage scrolls away under the fall, so the falling king gets its own
+    // fixed full-screen canvas: the same model and glaze, seen from the stage
+    // camera's direction under its lights, so it can spin on its axis.
+    type FallView = {
+      r: THREE.WebGLRenderer;
+      scene: THREE.Scene;
+      cam: THREE.OrthographicCamera;
+      king: THREE.Group;
+      env: THREE.Texture;
+      height: number;
+    };
+    let fallView: FallView | null = null;
+    let fallTried = false;
+    let fallShown = false;
+    let fallW = 0;
+    let fallH = 0;
+    const fallRight = new THREE.Vector3();
+    const fallUp = new THREE.Vector3();
+    function makeFallView(): FallView | null {
+      const form = forms[STEPS.length - 1];
+      if (!form) return null;
+      fallTried = true;
+      let r: THREE.WebGLRenderer;
+      try {
+        r = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      } catch (err) {
+        console.error(err);
+        return null;
+      }
+      r.setPixelRatio(renderer.getPixelRatio());
+      r.outputEncoding = renderer.outputEncoding;
+      r.toneMapping = renderer.toneMapping;
+      r.toneMappingExposure = renderer.toneMappingExposure;
+      const el = r.domElement;
+      Object.assign(el.style, {
+        position: "fixed",
+        left: "0",
+        top: "0",
+        zIndex: "40",
+        pointerEvents: "none",
+        display: "none",
+      });
+      el.setAttribute("aria-hidden", "true");
+      document.body.appendChild(el);
+      const fScene = new THREE.Scene();
+      const fPmrem = new THREE.PMREMGenerator(r);
+      const env = fPmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+      fPmrem.dispose();
+      fScene.environment = env;
+      // World units are screen px; the camera looks along the stage camera's
+      // direction, so the king keeps the angle it had on the stairs.
+      const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, -5000, 5000);
+      cam.position.copy(camDir);
+      cam.lookAt(0, 0, 0);
+      cam.updateMatrixWorld();
+      fallRight.setFromMatrixColumn(cam.matrixWorld, 0);
+      fallUp.setFromMatrixColumn(cam.matrixWorld, 1);
+      const fKey = new THREE.DirectionalLight(0xffffff, 1.5);
+      fKey.position.set(4, 9, 6);
+      const fFill = new THREE.DirectionalLight(0xc9dbff, 0.45);
+      fFill.position.set(-6, 3, 5);
+      fScene.add(fKey, fFill, new THREE.HemisphereLight(0xffffff, 0xb9c4dc, 0.35));
+      const model = form.clone();
+      model.visible = true;
+      model.position.set(0, 0, 0);
+      model.scale.setScalar(1);
+      const king = new THREE.Group();
+      king.add(model);
+      fScene.add(king);
+      return { r, scene: fScene, cam, king, env, height: form.userData.height as number };
+    }
+    // A standing piece L tall shows L * cos(elevation) tall from this camera.
+    const fallFore = Math.sqrt(1 - camDir.y * camDir.y);
+    const fallKing: StaircaseHandle["fallKing"] = (pose) => {
+      if (!pose) {
+        if (fallShown && fallView) fallView.r.domElement.style.display = "none";
+        fallShown = false;
+        return true;
+      }
+      if (!fallView && !fallTried) fallView = makeFallView();
+      const v = fallView;
+      if (!v) return false;
+      if (innerWidth !== fallW || innerHeight !== fallH) {
+        fallW = innerWidth;
+        fallH = innerHeight;
+        v.r.setSize(fallW, fallH);
+        Object.assign(v.cam, { left: -fallW / 2, right: fallW / 2, top: fallH / 2, bottom: -fallH / 2 });
+        v.cam.updateProjectionMatrix();
+      }
+      v.king.scale.setScalar(pose.h / (v.height * fallFore));
+      v.king.position
+        .set(0, 0, 0)
+        .addScaledVector(fallRight, pose.cx - fallW / 2)
+        .addScaledVector(fallUp, fallH / 2 - pose.bottom);
+      v.king.rotation.y = pose.spin;
+      v.r.domElement.style.opacity = String(pose.opacity);
+      if (!fallShown) v.r.domElement.style.display = "block";
+      fallShown = true;
+      v.r.render(v.scene, v.cam);
+      return true;
+    };
+
     // ---- Hand-off to the next section (WhyChessSection) ----
     const kingA = new THREE.Vector3();
     const kingB = new THREE.Vector3();
@@ -1102,6 +1236,7 @@ export default function ScientificallyStructuredSection() {
         kingHidden = on;
         if (cur === STEPS.length - 1) propSets[cur].target = on ? 0 : 1;
       },
+      fallKing,
     };
     const handle = staircase.current;
 
@@ -1135,6 +1270,11 @@ export default function ScientificallyStructuredSection() {
       });
       envTex.dispose();
       pmrem.dispose();
+      if (fallView) {
+        fallView.env.dispose();
+        fallView.r.dispose();
+        fallView.r.domElement.remove();
+      }
       renderer.dispose();
       if (renderer.domElement.parentElement === stage) stage.removeChild(renderer.domElement);
     };

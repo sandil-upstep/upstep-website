@@ -425,7 +425,17 @@ $card-2: (
 
   // The track covers the stage as a click-through layer; slides opt back in.
   .wwo__track { inset: 0; pointer-events: none; }
-  .wwo__slide { pointer-events: auto; }
+  .wwo__slide {
+    pointer-events: auto;
+    // A slide leaving the screen keeps its under-the-laptop z-index until it
+    // has slid clear, so it never passes over the laptop; one arriving on the
+    // screen drops under it at once (slot 0 overrides the delay below).
+    transition-property: left, top, width, height, opacity, transform, z-index;
+    transition-duration: var(--wwo-dur, #{$dur}), var(--wwo-dur, #{$dur}), var(--wwo-dur, #{$dur}),
+      var(--wwo-dur, #{$dur}), var(--wwo-dur, #{$dur}), var(--wwo-dur, #{$dur}), 0s;
+    transition-delay: 0s, 0s, 0s, 0s, 0s, 0s, var(--wwo-dur, #{$dur});
+  }
+  .wwo__slide[data-slot="0"] { transition-delay: 0s; }
 
   // Two previous slides on the left (the outer one cropped by the edge), active
   // on the laptop screen, next two on the right (the outer one cropped). Cards

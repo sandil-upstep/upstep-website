@@ -10,6 +10,10 @@ export type StaircaseHandle = {
   kingRect: () => { cx: number; bottom: number; h: number } | null;
   // Hide the 3D king (and its props) while the 2D copy has it.
   setKingHidden: (on: boolean) => void;
+  // Draw the 3D king mid-fall, on its own canvas over the page: base at
+  // (cx, bottom) in viewport px, h px tall, turned `spin` radians on its own
+  // axis, at `opacity`. null hides it. Returns false if it can't be drawn.
+  fallKing: (pose: { cx: number; bottom: number; h: number; spin: number; opacity: number } | null) => boolean;
 };
 
 export const staircase: { current: StaircaseHandle | null } = { current: null };

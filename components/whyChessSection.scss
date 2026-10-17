@@ -1,8 +1,15 @@
 // "Why Chess Is Important" — the king from the staircase above falls into
-// this section, a ring spins up around it, then the insight cards stagger in.
+// this section while the outlined heading rises, then (pinned, scrubbed) the
+// king moves to the centre and the insight cards emerge from behind it onto
+// an orbit. Clicking a card turns the orbit, flies the card to the top-right
+// and opens its info window.
 // Desktop: a 1897 × 940 design frame scaled to the section width and anchored
-// to its bottom, so the king is cropped by the section edge as in the design.
-// Phones: stacked layout, the info window opens as a bottom sheet.
+// to its bottom. Phones: stacked, unpinned; the orbit sits in a hero box and
+// the info window opens as a bottom sheet.
+//
+// The king, ring, cards, cubes, heading lines, headline and info window are
+// all positioned by WhyChessSection.tsx from GSAP-tweened state, so none of
+// them carry CSS transitions on transform/opacity (they would lag the scroll).
 
 $bg: #050b1b;
 $guide: rgba(255, 255, 255, 0.06);
@@ -10,7 +17,6 @@ $outline: #2b3550;
 $cobalt: #3d78de;
 $edge: rgba(233, 211, 164, 0.75);
 $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-$ease-move: cubic-bezier(0.65, 0, 0.25, 1);
 
 .why {
   position: relative;
@@ -53,7 +59,8 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
 .why__eyebrow {
   position: absolute;
   left: 205px;
-  top: 92px;
+  // --why-dy lifts the heading on tall (portrait) screens; set by the script.
+  top: calc(92px + var(--why-dy, 0px));
   margin: 0;
   padding-left: 15px;
   font-family: var(--font-open-sans), Arial, sans-serif;
@@ -62,7 +69,7 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   font-weight: 600;
   color: #ffffff;
   white-space: nowrap;
-  transition: opacity 0.5s, transform 0.6s $ease-out;
+  opacity: 0;
 }
 
 .why__box {
@@ -77,7 +84,7 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
 .why__title {
   position: absolute;
   left: 282px;
-  top: 130px;
+  top: calc(130px + var(--why-dy, 0px));
   margin: 0;
   font-family: var(--font-open-sans), sans-serif;
   font-weight: 800;
@@ -87,9 +94,23 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   color: transparent;
   -webkit-text-stroke: 2.5px $outline;
   white-space: nowrap;
-  transition: opacity 0.5s, transform 0.6s $ease-out;
+}
 
-  span { display: block; }
+// Each line rises out of its own mask. Line-height is tighter than the
+// glyphs and the stroke spills past them, so the masks are padded on every
+// side (and pulled back by the same margin) to never clip the letters.
+.why__line {
+  display: block;
+  overflow: hidden;
+  padding: 0.22em 0.1em;
+  margin: -0.22em -0.1em;
+
+  > span {
+    display: block;
+    opacity: 0;
+    transform: translateY(140%);
+    will-change: transform;
+  }
 }
 
 .why__headline {
@@ -105,9 +126,7 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   letter-spacing: -0.02em;
   color: #ffffff;
   opacity: 0;
-  transform: translateY(24px);
   pointer-events: none;
-  transition: opacity 0.45s, transform 0.6s $ease-out;
 }
 
 .why__headline em,
@@ -119,26 +138,7 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   color: transparent;
 }
 
-.why.is-open .why__eyebrow,
-.why.is-open .why__title {
-  opacity: 0;
-  transform: translateY(-18px);
-}
-.why.is-open .why__headline {
-  opacity: 1;
-  transform: none;
-  transition-delay: 0.25s;
-}
-.why__headline.is-swapping,
-.why-card.is-swapping .why-card__body,
-.why-card.is-swapping .why-card__icon {
-  opacity: 0;
-  transform: translateY(8px);
-  transition-duration: 0.18s;
-  transition-delay: 0s;
-}
-
-// Checkerboard floor (open state)
+// Checkerboard floor (fades in as the king moves to the centre)
 .why__floor {
   position: absolute;
   left: -200px;
@@ -146,7 +146,6 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   bottom: 0;
   height: 520px;
   opacity: 0;
-  transition: opacity 0.9s;
   pointer-events: none;
   overflow: hidden;
   -webkit-mask-image: linear-gradient(to top, #000 25%, transparent 92%);
@@ -163,7 +162,6 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   transform: perspective(900px) rotateX(66deg) rotateZ(45deg);
   transform-origin: 50% 0;
 }
-.why.is-open .why__floor { opacity: 1; }
 
 // Floating cubes
 .why-cube {
@@ -173,7 +171,6 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   width: 100px;
   height: 100px;
   transform-origin: 0 0;
-  transition: transform 1s $ease-move, opacity 0.6s;
   pointer-events: none;
 
   svg {
@@ -185,7 +182,7 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   }
 }
 
-// King + ring
+// King, ring and the orbiting cards share this box's coordinates.
 .why__hero {
   position: absolute;
   inset: 0;
@@ -199,7 +196,7 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   width: 486px;
   height: 728px;
   transform-origin: 0 0;
-  transition: transform 1s $ease-move;
+  will-change: transform;
 
   img {
     display: block;
@@ -219,7 +216,7 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   width: 446px;
   height: 448px;
   transform-origin: 0 0;
-  transition: transform 1s $ease-move;
+  will-change: transform;
 
   img {
     display: block;
@@ -232,25 +229,20 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   width: 100%;
   height: 100%;
   opacity: 0;
-  transform: scale(0.55) rotate(-70deg);
-  transition: opacity 0.35s, transform 0.5s cubic-bezier(0.55, 0, 0.75, 0);
-}
-.why.is-revealed .why__ring-in {
-  opacity: 1;
-  transform: none;
-  transition: opacity 0.5s 0.15s, transform 1s 0.15s cubic-bezier(0.22, 1.25, 0.36, 1);
 }
 
-// Insight items
+// Insight cards: behind the king (z 1) while on the orbit; the script lifts
+// the chosen one above the info window (z 7) as it flies there.
 .why__items {
   position: absolute;
   inset: 0;
+  pointer-events: none;
 }
 .why-item {
   position: absolute;
   left: 0;
   top: 0;
-  z-index: 4;
+  z-index: 1;
   width: 152px;
   height: 118px;
   padding: 0;
@@ -258,24 +250,13 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   background: none;
   color: inherit;
   cursor: pointer;
+  opacity: 0;
   transform-origin: 0 0;
-  transition: transform 1s $ease-move, opacity 0.5s;
+  will-change: transform, opacity;
+  pointer-events: none;
   -webkit-tap-highlight-color: transparent;
 }
-.why-item__reveal {
-  display: block;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transform: translateY(22px) scale(0.6);
-  transition: opacity 0.25s, transform 0.3s;
-}
-.why.is-revealed .why-item__reveal {
-  opacity: 1;
-  transform: none;
-  transition: opacity 0.5s, transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1);
-  transition-delay: calc(0.75s + var(--i) * 0.11s);
-}
+.why.is-orbiting .why-item { pointer-events: auto; }
 .why-item__bob {
   display: block;
   width: 100%;
@@ -292,8 +273,7 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   border-radius: 9px;
   background: linear-gradient(160deg, rgba(44, 54, 78, 0.78), rgba(24, 31, 49, 0.78));
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
-  filter: blur(var(--blur, 0px));
-  transition: filter 0.9s, transform 0.35s $ease-out, box-shadow 0.35s;
+  transition: transform 0.4s $ease-out, box-shadow 0.4s, background 0.4s, filter 0.3s;
 
   img {
     display: block;
@@ -301,6 +281,7 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
     height: 82%;
     max-width: 84%;
     object-fit: contain;
+    transition: transform 0.45s $ease-out;
   }
 }
 // Hairline frame that brightens at the corners, as in the design
@@ -319,18 +300,28 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   mask-composite: exclude;
   pointer-events: none;
 }
+// Hover/focus: the card comes forward, out of any background dimming and blur
+// the script applies inline while a window is open (hence !important), lifts,
+// lights up its frame with a warm glow and pops its icon.
+.why.is-orbiting .why-item:hover,
+.why.is-orbiting .why-item:focus-visible {
+  z-index: 8 !important;
+  opacity: 1 !important;
+}
 .why-item:hover .why-item__card,
 .why-item:focus-visible .why-item__card {
-  filter: blur(0);
-  transform: translateY(-5px) scale(1.06);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(233, 211, 164, 0.35);
+  filter: none !important;
+  transform: translateY(-10px) scale(1.14);
+  background: linear-gradient(160deg, rgba(64, 80, 116, 0.95), rgba(32, 42, 68, 0.95));
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.55),
+    0 0 0 1.5px rgba(233, 211, 164, 0.85),
+    0 0 32px rgba(242, 193, 102, 0.45);
+
+  img { transform: scale(1.08) rotate(-3deg); }
 }
 .why-item:focus-visible { outline: none; }
 .why-item:focus-visible .why-item__card { outline: 2px solid $cobalt; outline-offset: 4px; }
-.why.is-open .why-item.is-selected {
-  opacity: 0;
-  pointer-events: none;
-}
 
 // Info window
 .why-card {
@@ -347,9 +338,9 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   backdrop-filter: blur(12px);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
   opacity: 0;
-  transform: translateY(22px) scale(0.97);
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.4s, transform 0.6s $ease-out;
+  transform-origin: 0 0;
 
   h3 {
     margin: 0 0 12px;
@@ -370,12 +361,6 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
     color: #ffffff;
   }
 }
-.why.is-open .why-card {
-  opacity: 1;
-  transform: none;
-  pointer-events: auto;
-  transition-delay: 0.35s;
-}
 .why-card__icon {
   position: absolute;
   left: 14px;
@@ -383,9 +368,7 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
   width: 122px;
   height: 122px;
   object-fit: contain;
-  transition: opacity 0.35s, transform 0.45s $ease-out;
 }
-.why-card__body { transition: opacity 0.35s, transform 0.45s $ease-out; }
 .why-card__headline { display: none; }
 .why-card__close {
   position: absolute;
@@ -437,8 +420,8 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
 
 @media (min-width: 820px) {
   // The section sticks for $why-travel of extra scroll after the landing,
-  // while the king moves to the centre and the first window opens.
-  $why-travel: 90vh;
+  // while the king moves to the centre and the cards emerge onto the orbit.
+  $why-travel: 140vh;
   .why-pin {
     position: relative;
     z-index: 2;
@@ -449,12 +432,8 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
     top: 0;
     height: max(100vh, 49.55vw);
   }
-  // Positions follow the scroll exactly while scrubbing.
-  .why.is-scrubbing {
-    .why__king, .why__ring { transition: none; }
-    .why-item { transition: opacity 0.5s; }
-    .why-cube { transition: opacity 0.6s; }
-  }
+  // The chosen card lands on the window's icon spot and stands in for the icon.
+  .why-card__icon { visibility: hidden; }
 }
 
 @media (max-width: 819.98px) {
@@ -472,14 +451,10 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
     transform: none !important;
   }
   .why__eyebrow,
-  .why__title,
-  .why.is-open .why__eyebrow,
-  .why.is-open .why__title {
+  .why__title {
     position: relative;
     left: auto;
     top: auto;
-    opacity: 1;
-    transform: none;
   }
   .why__eyebrow { font-size: 16px; padding-left: 14px; margin-left: 14px; }
   .why__box { width: 20px; height: 20px; }
@@ -491,43 +466,14 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
     white-space: normal;
   }
   .why__headline, .why__floor, .why-cube { display: none; }
+  // The orbit's box: the script sizes the king, ring and cards to it.
   .why__hero {
     position: relative;
     inset: auto;
-    height: 92vw;
-    max-height: 560px;
-    margin-top: 8px;
+    aspect-ratio: 1 / 1.15;
+    max-height: 640px;
+    margin: 28px auto 0;
   }
-  .why__king, .why__ring, .why-item { transform: none !important; }
-  .why__king {
-    left: calc(50% - 30vw);
-    top: auto;
-    bottom: -14vw;
-    width: 60vw;
-    height: 90vw;
-  }
-  .why__ring {
-    left: calc(50% - 23vw);
-    top: 10vw;
-    width: 46vw;
-    height: 46vw;
-  }
-  .why__items {
-    position: relative;
-    inset: auto;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-top: 18px;
-  }
-  .why-item {
-    position: relative;
-    width: auto;
-    height: auto;
-    aspect-ratio: 1.29;
-  }
-  .why-item__card { filter: none; }
-  .why.is-open .why-item.is-selected { opacity: 1; }
   .why-card {
     position: fixed;
     left: 12px;
@@ -540,14 +486,12 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
     max-height: 78vh;
     overflow-y: auto;
     padding: 22px 22px 24px;
-    transform: translateY(110%);
     opacity: 1;
 
     h3 { font-size: 20px; margin-bottom: 8px; }
     p { font-size: 15px; line-height: 23px; }
     p + p { margin-top: 14px; }
   }
-  .why.is-open .why-card { transform: none; transition-delay: 0s; }
   .why-card__icon {
     position: relative;
     left: auto;
@@ -579,6 +523,5 @@ $ease-move: cubic-bezier(0.65, 0, 0.25, 1);
 
 @media (prefers-reduced-motion: reduce) {
   .why__ring img, .why-item__bob, .why-cube svg { animation: none; }
-  .why.is-revealed .why-item__reveal { transition-delay: 0s; }
   .why__king img.is-landing { animation: none; }
 }
