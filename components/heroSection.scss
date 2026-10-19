@@ -69,9 +69,9 @@ $desktop-gutter: clamp(2.5rem, 4vw, 5rem);
     font-size: clamp(2rem, 8.9cqi, 3.75rem);
   }
 
-  @media (prefers-color-scheme: dark) {
-    color: #fafafa;
-  }
+  // @media (prefers-color-scheme: dark) {
+  //   color: #fafafa;
+  // }
 }
 
 // SplitText's per-line clipping masks for the intro reveal. At line-height
@@ -86,17 +86,23 @@ $gold-deep: #e9a01c;
 $gold-mid: #f5bd5a;
 $gold-light: #fde4b8;
 
+// Matches the page cover's light/dark fade (anandSection.scss), so the cards
+// still in view when the cover turns dark change along with it.
+$theme-transition: 0.7s ease;
+
 // Frosted-glass rating card: translucent white wash that thins out toward the
 // bottom-right, soft warm haze in the top corner, and a backdrop blur. The
 // design's cards have no hard edge, so the border and shadow stay faint.
 .hero-glass-card {
   position: relative;
   overflow: hidden;
+  // Keeps the ::before wash below the card's content.
+  isolation: isolate;
   border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 20px;
   // Milky-white glass: a faintly grey core with a thick, blurred white rim
   // glowing inward, and a soft grey halo just outside the edge.
-  background: rgba(246, 246, 246, 0.7);
+  background-color: rgba(246, 246, 246, 0.7);
   box-shadow:
     0 0 6px rgba(0, 0, 0, 0.06),
     0 14px 36px -20px rgba(0, 0, 0, 0.1),
@@ -104,20 +110,57 @@ $gold-light: #fde4b8;
     inset 0 0 2px 1px rgba(255, 255, 255, 1);
   backdrop-filter: blur(18px) saturate(150%);
   -webkit-backdrop-filter: blur(18px) saturate(150%);
+  transition:
+    background-color $theme-transition,
+    border-color $theme-transition,
+    box-shadow $theme-transition,
+    color $theme-transition;
 
-  @media (prefers-color-scheme: dark) {
-    border-color: rgba(255, 255, 255, 0.12);
+  // The dark theme's wash: each card's colored haze over a faint white
+  // sheen. Gradients can't transition, so it lives on a layer that fades in.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
     background:
       var(--card-glow, none),
-      linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.1) 0%,
-        rgba(255, 255, 255, 0.03) 100%
-      );
-    box-shadow:
-      0 12px 32px -12px rgba(0, 0, 0, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%);
+    opacity: 0;
+    transition: opacity $theme-transition;
+    pointer-events: none;
   }
+
+  // Dark glass once the cover turns navy while the cards are still on screen.
+  .main-cover--dark & {
+    border-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(255, 255, 255, 0);
+    // Same four layers as the light glass, so the shadows tween smoothly.
+    box-shadow:
+      0 0 6px rgba(0, 0, 0, 0.2),
+      0 12px 32px -12px rgba(0, 0, 0, 0.4),
+      inset 0 0 14px 6px rgba(255, 255, 255, 0.03),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  // @media (prefers-color-scheme: dark) {
+  //   border-color: rgba(255, 255, 255, 0.12);
+  //   background:
+  //     var(--card-glow, none),
+  //     linear-gradient(
+  //       135deg,
+  //       rgba(255, 255, 255, 0.1) 0%,
+  //       rgba(255, 255, 255, 0.03) 100%
+  //     );
+  //   box-shadow:
+  //     0 12px 32px -12px rgba(0, 0, 0, 0.4),
+  //     inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  // }
 }
 
 // Rating-card row: a staggered two-up grid below lg (right column dropped a
@@ -202,7 +245,11 @@ $gold-light: #fde4b8;
     border-radius: 16px;
   }
 
-  @media (prefers-color-scheme: dark) {
+  // @media (prefers-color-scheme: dark) {
+  //   color: #fafafa;
+  // }
+
+  .main-cover--dark & {
     color: #fafafa;
   }
 }
@@ -273,6 +320,12 @@ $gold-light: #fde4b8;
   height: 50%;
   min-height:80px;
   pointer-events: none;
+  transition: filter $theme-transition;
+  // The line art is black with a blue accent: flip it to white on the dark
+  // glass, and hue-rotate the inversion back so the accent stays blue.
+  .main-cover--dark & {
+    filter: invert(1) hue-rotate(180deg);
+  }
   @media (max-width: 1200px) {
     height: 40%;
   }

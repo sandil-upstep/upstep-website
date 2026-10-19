@@ -591,7 +591,7 @@ export default function HeroSection() {
         its own stacking context would otherwise cap the video beneath it. */}
     <section
       ref={sectionRef}
-      className={`relative overflow-x-clip dark:bg-black lg:aspect-16/10 ${isPlaying ? "z-100" : "z-10"}`}
+      className={`relative overflow-x-clip lg:aspect-16/10 ${isPlaying ? "z-100" : "z-10"}`}
     >
       {/* The copy column runs a little wider than half on desktop: the title
           is meant to reach in past the frame line, as in the design. */}
@@ -609,7 +609,7 @@ export default function HeroSection() {
           <div className="relative flex flex-col gap-3 text-base font-medium sm:flex-row">
             {/* <Link
               href="/courses"
-              className="flex h-12 items-center justify-center rounded-full bg-foreground px-6 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
+              className="flex h-12 items-center justify-center rounded-full bg-foreground px-6 text-background transition-colors hover:bg-[#383838]"
             >
               Browse courses
             </Link> */}
