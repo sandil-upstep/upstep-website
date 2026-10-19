@@ -1,6 +1,59 @@
 $gap-gold-dark: #6b4a12;
 $gap-gold: #a87a24;
 $gap-gold-light: #f3d27a;
+$ink: #141b34;
+$theme-transition: 0.7s ease; // the page cover's theme switch (anandSection.scss)
+
+// Registered so it can tween: the links and menu icon read it, so their
+// colour fades with the bar instead of snapping.
+@property --nav-fg {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #141b34;
+}
+
+// The frosted bar follows whatever is behind it (Header.tsx sets data-theme):
+// light glass with ink text over light sections, dark glass with white text
+// over dark ones.
+.site-nav {
+  --nav-fg: #{$ink};
+  --nav-divider: rgba(0, 0, 0, 0.05);
+  border-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 8px 30px -6px rgba(20, 27, 52, 0.18);
+  transition:
+    --nav-fg $theme-transition,
+    border-color $theme-transition,
+    background-color $theme-transition,
+    box-shadow $theme-transition;
+
+  &[data-theme="dark"] {
+    --nav-fg: #ffffff;
+    --nav-divider: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba($ink, 0.6);
+    box-shadow: 0 8px 30px -6px rgba(0, 0, 0, 0.45);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.site-nav__logo {
+  transition: filter $theme-transition;
+
+  // The wordmark's black squares and lettering flip to white; hue-rotate
+  // turns the inverted blue and red back round (same trick as the hero's
+  // line art).
+  .site-nav[data-theme="dark"] & {
+    filter: invert(1) hue-rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
 
 // Placeholder for the gold "GAP" badge: dark bronze plate with a shield
 // emblem on the left and engraved-gold lettering.
