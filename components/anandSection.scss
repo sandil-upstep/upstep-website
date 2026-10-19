@@ -618,6 +618,11 @@ $theme-transition: 0.7s ease;
     &:first-child {
       margin-left: 10px;
     }
+
+    // Ends the row just clear of the 60px fade (with the 20px padding).
+    &:last-child {
+      margin-right: 40px;
+    }
   }
 }
 

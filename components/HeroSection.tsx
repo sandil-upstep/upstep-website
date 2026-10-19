@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
-import { useEffect, useEffectEvent, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import "./heroSection.scss";
 import InteractivePersonalizedText from "./InteractivePersonalizedText";
 import Button from "./common/Button";
@@ -205,9 +205,13 @@ export default function HeroSection() {
   const shapeScale = boxSize.width / DESIGN_WIDTH;
   const mobileClipPivot = `translate(${boxSize.width - MOBILE_CLIP_INSET.x} ${boxSize.height - MOBILE_CLIP_INSET.y}) rotate(${MOBILE_CLIP_ROTATION})`;
 
-  useEffect(() => {
+  // Measure before the first paint, so the slide-in below never reveals the
+  // mask and play button at the placeholder design size, then track resizes.
+  useLayoutEffect(() => {
     const container = videoContainerRef.current;
     if (!container) return;
+    const { width, height } = container.getBoundingClientRect();
+    setBoxSize({ width, height });
     const observer = new ResizeObserver(([entry]) => {
       setBoxSize({ width: entry.contentRect.width, height: entry.contentRect.height });
     });
@@ -268,7 +272,9 @@ export default function HeroSection() {
     gsap.set(clipRectRef.current, { attr: CLIP_RECT });
   }, []);
 
-  // Slide the video panel in from the right on mount.
+  // Slide the video panel in from the right on mount. It's server-rendered
+  // hidden: its mask is sized from the measured box, so before hydration it
+  // would show at the design size and visibly snap into place.
   useEffect(() => {
     if (!videoContainerRef.current) return;
     gsap.fromTo(
@@ -644,6 +650,7 @@ export default function HeroSection() {
           <div
             ref={videoContainerRef}
             className="video-container relative h-full w-full"
+            style={{ visibility: "hidden" }}
           >
             {/* Stacked layout's frame: just the line under the slanted
                 bottom edge of the photo. */}

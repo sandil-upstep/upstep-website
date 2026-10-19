@@ -455,11 +455,12 @@ $card-2: (
   .wwo__track { inset: 0; pointer-events: none; }
   .wwo__slide { pointer-events: auto; }
 
-  // Two previous slides on the left (the outer one cropped by the edge), active
-  // on the laptop screen, next two on the right (the outer one cropped). Cards
-  // leaving either side slide straight out as they fade.
+  // The previous slide on the left, active on the laptop screen, next two on
+  // the right (the outer one cropped). Cards leaving either side slide straight
+  // out as they fade.
   .wwo__slide[data-slot="out-l"] { @include card(-480, 408 + $dy, $card-m2, 0); }
-  .wwo__slide[data-slot="-2"]    { @include card(-60, 408 + $dy, $card-m2, 0.20); }
+  // Hidden on desktop: a slide fades out as it moves past the left card.
+  .wwo__slide[data-slot="-2"]    { @include card(-60, 408 + $dy, $card-m2, 0); pointer-events: none; }
   .wwo__slide[data-slot="-1"]    { @include card(300, 376 + $dy, $card-m1, 0.5); }
   .wwo__slide[data-slot="0"]     { @include screen-slot; }
   .wwo__slide[data-slot="1"]     { @include card(1330, 262 + $dy, $card-1, 0.5); }

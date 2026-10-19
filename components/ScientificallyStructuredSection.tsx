@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { setCoverDark } from "./coverTheme";
 import Eyebrow from "./Eyebrow";
 import RevealTitle from "./RevealTitle";
 import { getLenis, onFrame, onScrollFrame } from "./SmoothScroll";
@@ -228,10 +229,8 @@ export default function ScientificallyStructuredSection() {
     const tileGeo = new RoundedBoxGeometry(TILE, TILE_H, TILE, 4, 0.05);
     const tileTop = (i: number) => STEP_VEC.clone().multiplyScalar(i);
     type TileState = { baseY: number; y: number; v: number; press: number };
-    // One tile per level, plus an empty step after the king's: the staircase
-    // carries on past the top level.
-    const TILE_COUNT = STEPS.length + 1;
-    const tiles = Array.from({ length: TILE_COUNT }, (_, i) => {
+    // One tile per level; the king's is the top of the staircase.
+    const tiles = Array.from({ length: STEPS.length }, (_, i) => {
       const m = new THREE.Mesh(tileGeo, i % 2 ? blackMat : whiteMat);
       m.position.copy(tileTop(i)).add(new THREE.Vector3(0, -TILE_H / 2, 0));
       m.receiveShadow = true;
@@ -1304,6 +1303,38 @@ export default function ScientificallyStructuredSection() {
       }
       renderer.dispose();
       if (renderer.domElement.parentElement === stage) stage.removeChild(renderer.domElement);
+    };
+  }, []);
+
+  // Once the levels have played out and the king drops into the Why Chess
+  // section, the page cover turns dark, as it does for the Anand section, and
+  // the board and copy go white on it. It stays dark further down (the
+  // sections there paint their own backgrounds) and turns light again when
+  // the page is scrolled back into the levels. Kept apart from the 3D scene
+  // so it still happens when WebGL can't start.
+  useEffect(() => {
+    const section = sectionRef.current;
+    const cover = coverRef.current;
+    const page = section?.closest(".main-cover");
+    if (!section || !cover || !page) return;
+    let dark: boolean | null = null;
+    const update = () => {
+      // Past the pin the sticky cover rests on the section's bottom edge:
+      // the moment the king leaves the top step.
+      const past =
+        section.offsetHeight - cover.offsetHeight > 1 &&
+        section.getBoundingClientRect().bottom - cover.getBoundingClientRect().bottom < 1;
+      if (past === dark) return;
+      dark = past;
+      setCoverDark(page, "structured", past);
+    };
+    const offScroll = onScrollFrame(update);
+    addEventListener("resize", update);
+    update();
+    return () => {
+      offScroll();
+      removeEventListener("resize", update);
+      setCoverDark(page, "structured", false);
     };
   }, []);
 

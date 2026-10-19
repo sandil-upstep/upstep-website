@@ -15,6 +15,7 @@ $accent: #f2a81d;
 $cta: #f2875a;
 $cobalt: #3d78de;
 $btn-bg: #ffffff;
+$theme-transition: 0.7s ease; // the page cover's theme switch (anandSection.scss)
 
 @function u($n) {
   @return calc(var(--u) * #{$n});
@@ -29,14 +30,30 @@ $btn-bg: #ffffff;
 // The section is the scroll track; everything visible lives in the cover,
 // which sticks while the page scroll steps through the levels (desktop).
 // No overflow clipping on the section itself: that would break the sticky.
+// No background either: the page cover shows through, so when it turns dark
+// as the king drops into the next section (see the component) the section
+// goes white on dark with it.
 .structured {
+  --structured-fg: #{$ink};
+  --structured-eyebrow: #222222;
+  --structured-outline: #{$outline};
+  --structured-guide: #{$guide};
+  --structured-tick: #{$tick};
   position: relative;
-  background: #ffffff;
-  color: $ink;
+  color: var(--structured-fg);
+  transition: color $theme-transition;
   container-type: inline-size;
   // Horizontal swipes step through the levels (handled in JS); vertical
   // drags still scroll the page.
   touch-action: pan-y;
+
+  .main-cover--dark & {
+    --structured-fg: #ffffff;
+    --structured-eyebrow: #ffffff;
+    --structured-outline: rgba(255, 255, 255, 0.28);
+    --structured-guide: rgba(255, 255, 255, 0.07);
+    --structured-tick: rgba(255, 255, 255, 0.3);
+  }
 }
 
 .structured__cover {
@@ -85,7 +102,8 @@ $btn-bg: #ffffff;
     top: 0;
     height: 100%;
     width: 1px;
-    background: $guide;
+    background: var(--structured-guide);
+    transition: background-color $theme-transition;
   }
 
   // Shared page grid: two pairs mirrored about the centre, pinned 12px / 28px
@@ -114,7 +132,8 @@ $btn-bg: #ffffff;
   font-size: 20px;
   line-height: 28px;
   font-weight: 600;
-  color: #222222;
+  color: var(--structured-eyebrow);
+  transition: color $theme-transition;
   white-space: nowrap;
 
   @media (max-width: 1440px) { font-size: 18px; }
@@ -139,7 +158,8 @@ $btn-bg: #ffffff;
   font-weight: 800;
   color: transparent;
   padding-right:10px;
-  -webkit-text-stroke: 2px $outline;
+  -webkit-text-stroke: 2px var(--structured-outline);
+  transition: -webkit-text-stroke-color $theme-transition;
   @include outline-title-size;
 
   span,
@@ -171,7 +191,7 @@ $btn-bg: #ffffff;
       left: 0;
       top: 50%;
       height: 1px;
-      background: $tick;
+      background: var(--structured-tick);
       transition: width 0.4s, background 0.4s, height 0.4s;
     }
 
@@ -215,10 +235,10 @@ $btn-bg: #ffffff;
   position: relative;
   display: inline-flex;
   align-items: center;
-  color: $ink;
+  color: inherit;
   text-decoration: none;
   font-weight: 600;
-  transition: background 0.3s, color 0.3s;
+  transition: background 0.3s;
 
   svg {
     position: absolute;
@@ -263,7 +283,7 @@ $btn-bg: #ffffff;
   a {
     display: flex;
     align-items: center;
-    color: $ink;
+    color: inherit;
     text-decoration: none;
   }
 

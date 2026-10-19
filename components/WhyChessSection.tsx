@@ -9,21 +9,31 @@ import "./whyChessSection.scss";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Why Chess Is Important: the king falls in from the staircase above while
-// the outlined heading rises out of its masks. On desktop the section then
-// stays pinned while one scrubbed timeline sinks the heading back into its
-// masks (the reveal in reverse), carries the king to the centre and
-// the insight cards emerge from behind it onto an orbit around it. Clicking
-// a card turns the orbit until that card reaches its top-right, flies it to
-// the top-right of the screen, and only then opens its info window. Phones
-// get the same fall, unpinned: on landing the items come out onto the orbit,
-// but they aren't clickable there; an accordion below the orbit holds the
-// details instead. Ported from the "Scientifically Structured improved"
-// design reference.
+// Why Chess Is Important: the king falls in from the staircase above, and
+// the outlined heading rises out of its masks once its top reaches the
+// middle of the screen (sinking back when scrolled above it again, as the
+// other outlined titles do). On desktop the section then
+// stays pinned while one scrubbed timeline plays the rest: the insight cards
+// rise in from below the screen to their scattered spots round the landed
+// king, each at its own depth's pace (parallax); the heading sinks back into
+// its masks (the reveal in reverse) as the king travels to the centre and
+// the cards gather onto an orbit round it; then the first card flies into
+// the info window, which unfolds from it at the top-right, and the pin holds
+// it there for a while before the page moves on. Clicking a card opens its
+// window right where the card sits: the card settles into the window's icon
+// spot and the window unfolds from it, to the right of cards on the right
+// of the king and mirrored to the left of those on its left, so it never
+// sits under the king. Phones get the same fall, unpinned: on
+// landing the items come out onto the orbit, but they aren't clickable
+// there; an accordion below the orbit holds the details instead. Ported
+// from the "Scientifically Structured improved" design reference.
 //
-// Every moving part is drawn by render() from the plain numbers in `S`;
-// GSAP only ever tweens those numbers, so the scroll timeline and the click
-// timelines can overlap and reverse without fighting over the same styles.
+// Every moving part is drawn by render() from plain numbers: the scroll
+// timeline tweens its own (`S` scroll fields, each card's rise/arr, and `A`
+// for the window it opens), the click timelines theirs (S.bg/card/side and
+// each card's fly), so they can overlap and reverse without fighting over
+// the same styles. A click takes over from the scroll's window (`manual`)
+// until the visitor scrolls back above it.
 
 type WhyItem = {
   id: string;
@@ -91,7 +101,7 @@ const KING_SRC = img("king");
 const RING_SRC = img("ring");
 
 type Spot3 = readonly [number, number, number]; // centre x, centre y, size
-type CubeDef = { c: keyof typeof CUBE_FACES; r: number; closed: Spot3; open: Spot3 };
+type CubeDef = { c: keyof typeof CUBE_FACES; r: number; closed: Spot3; open: Spot3; z: number };
 const CUBE_FACES = {
   beige: ["#f6ead3", "#dcc8a4", "#c4ad86"],
   light: ["#c4d8f4", "#93b3df", "#7499cb"],
@@ -99,47 +109,89 @@ const CUBE_FACES = {
   duo: ["#f3f4f7", "#2f5fb4", "#21478f"],
 } as const;
 // Design-frame spots; they drift from `closed` to `open` as the king centres.
+// z: depth for the parallax while the cards rise in (nearer drifts further).
 const WHY_CUBES: CubeDef[] = [
-  { c: "beige", r: 14, closed: [1622, 88, 34], open: [1635, 132, 52] },
-  { c: "light", r: -10, closed: [290, 198, 30], open: [290, 400, 52] },
-  { c: "blue", r: 18, closed: [660, 793, 30], open: [510, 800, 30] },
-  { c: "duo", r: -16, closed: [1707, 762, 48], open: [1707, 800, 48] },
+  { c: "beige", r: 14, closed: [1622, 88, 34], open: [1635, 132, 52], z: 0.45 },
+  { c: "light", r: -10, closed: [290, 198, 30], open: [290, 400, 52], z: 0.3 },
+  { c: "blue", r: 18, closed: [660, 793, 30], open: [510, 800, 30], z: 0.6 },
+  { c: "duo", r: -16, closed: [1707, 762, 48], open: [1707, 800, 48], z: 0.9 },
 ];
+
+// Desktop card spots in the design frame: centre, scale (of ITEM) and blur.
+type Spot = { x: number; y: number; s: number; blur: number };
+// Where each card settles round the landed king as it rises in (WHY_ITEMS
+// order), as in the first design. blur in px, o its opacity; z its depth:
+// nearer cards start further below the screen, so over the same scroll they
+// rise faster than the far ones (the parallax).
+const SCATTER: (Spot & { o: number; z: number })[] = [
+  { x: 1623, y: 264, s: 1, blur: 0, o: 1, z: 1 }, // problem
+  { x: 1797, y: 650, s: 0.73, blur: 0, o: 1, z: 0.65 }, // fitness
+  { x: 1158, y: 775, s: 0.95, blur: 1, o: 0.85, z: 0.8 }, // hemispheres
+  { x: 338, y: 762, s: 1, blur: 0, o: 1, z: 1 }, // memory
+  { x: 722, y: 614, s: 0.82, blur: 0, o: 1, z: 0.75 }, // logic
+  { x: 1103, y: 461, s: 0.74, blur: 3, o: 0.55, z: 0.4 }, // creativity
+];
+const RISE_TRAVEL = 1310; // design px a z = 1 card rises through
+// The orbit round the centred king, as in the second design: one slot per
+// card (WHY_ITEMS order), clockwise from the top-right one, which sits right
+// on the default window's icon spot. blur here is how far (0–1) a card in
+// that slot goes out of focus while a window on the right is open (mirrored
+// for one on the left).
+const SLOTS: Spot[] = [
+  { x: 1163, y: 225, s: 0.92, blur: 0 },
+  { x: 1340, y: 479, s: 0.74, blur: 0 },
+  { x: 1175, y: 683, s: 0.92, blur: 0.2 },
+  { x: 637, y: 683, s: 0.92, blur: 1 },
+  { x: 513, y: 454, s: 0.92, blur: 1 },
+  { x: 767, y: 263, s: 0.92, blur: 1 },
+];
+const ITEM_MIN = 100; // on-screen px a scale-1 card never shrinks below (narrow tablets)
 
 const KING_BOX = { w: 486, h: 728, cx: 243, top: 14, bottom: 712, base: 659 }; // the image and where the piece sits in it (base: the middle of its footprint)
 const KING_MID = (KING_BOX.top + KING_BOX.base) / 2; // the piece's middle, where the items emerge from
 const KING_PIECE = KING_BOX.base - KING_BOX.top;
 // Design-frame poses. Landed: where the king comes down from the staircase,
 // its base on the section's bottom edge so it doesn't hang over the Earth in
-// the reviews below. Centre: the large centred king the orbit is built around.
-const KING_AT = { landed: { cx: 1412, top: 271, s: 0.94 }, centre: { cx: 912, top: 244, s: 0.984 } };
+// the reviews below. Centre: the large centred king the orbit is built around,
+// set down as in the design: the blue band of its base on the section's
+// bottom edge and the foot hanging over the reviews below.
+const KING_AT = { landed: { cx: 1412, top: 271, s: 0.94 }, centre: { cx: 912, top: 312, s: 0.984 } };
 // The ring hangs around the king's chest: its centre `y` image px below the
 // top of the king's box, `d` image px across, for each pose.
 const RING_AT = { landed: { y: 220, d: 348 }, centre: { y: 275, d: 412 } };
 const RING_IMG = { w: 446, h: 448 };
-// The orbit around the centred king (design frame): the items sit on this
-// ellipse, the first at its top-right and the rest evenly spaced clockwise.
-const ORBIT = { cx: 912, cy: 480, rx: 420, ry: 250, item: 0.92 };
+// Phones: the items sit on an ellipse round the king, the first at its
+// top-right and the rest evenly spaced clockwise.
 const ORBIT_START = -Math.PI / 3;
-const DEFAULT_ITEM = 0; // opens on its own once the items are out (Problem-solving, already top-right)
+const DEFAULT_ITEM = 0; // the window the scroll opens (Problem-solving, already top-right)
 const ITEM = { w: 152, h: 118 };
 // Info window (design frame): position, and its icon's centre and size, where
-// the chosen item lands.
-const CARD = { right: 1750, top: 152, w: 662, iconX: 14 + 61, iconY: 12 + 61, icon: 122 };
+// the chosen item lands. It unfolds from the icon's box.
+const CARD = { w: 662, iconX: 14 + 61, iconY: 12 + 61, icon: 122 };
+// Where a window may sit (design frame): clear of the frame's sides and
+// bottom, and below the headline.
+const WIN_EDGE = 30;
+const WIN_TOP = 140;
 const HEADLINE_TOP = 34;
 const WHY_W = 1897;
 const WHY_H = 940;
 
-// The desktop pin's scrubbed timeline, as fractions of the pin: the king
-// travels to the centre, then the items emerge one after another.
-const MOVE_END = 0.4;
-const TITLE_OUT_AT = 0.02;
-const TITLE_OUT_DUR = 0.26;
-const EMERGE_AT = 0.36;
-const EMERGE_GAP = 0.045;
-const EMERGE_DUR = 0.22;
-const EMERGE_END = EMERGE_AT + (WHY_ITEMS.length - 1) * EMERGE_GAP + EMERGE_DUR;
-const STEP = (Math.PI * 2) / WHY_ITEMS.length; // even spacing on the orbit, clockwise
+// The desktop pin's scrubbed timeline, as fractions of the pin: the cards
+// rise in round the landed king; the king travels to the centre as they
+// gather onto the orbit; the default window opens; then the pin holds.
+const RISE_END = 0.26;
+const ARRANGE_AT = 0.3;
+const TITLE_OUT_DUR = 0.14;
+const MOVE_DUR = 0.3;
+const ARR_LAG = 0.02; // the cards set off a beat after the king
+const ARR_GAP = 0.015;
+const ARR_DUR = 0.26;
+const OPEN_AT = ARRANGE_AT + ARR_LAG + (WHY_ITEMS.length - 1) * ARR_GAP + ARR_DUR; // every card on the orbit
+const OPEN_FLY = 0.1;
+const OPEN_CARD_AT = OPEN_AT + 0.07;
+const OPEN_CARD_DUR = 0.12; // the window is fully open at ~0.85; the pin holds it to 1
+const N = WHY_ITEMS.length;
+const STEP = (Math.PI * 2) / N; // phones: even spacing on the orbit, clockwise
 
 // The fall from the staircase.
 const FALL_PAD = 24; // px kept clear around the falling king
@@ -150,17 +202,12 @@ const MOVE_SPINS = 1; // turns the king makes while it moves to the centre
 
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const r4 = (x: number) => x.toFixed(4);
 
 export default function WhyChessSection() {
-  // Phones: the accordion under the orbit. The headline follows the item
-  // opened last, so it stays put when that item is closed again.
+  // Phones: the accordion under the orbit; each card holds its own headline.
   const [accOpen, setAccOpen] = useState(DEFAULT_ITEM);
-  const [accHead, setAccHead] = useState(DEFAULT_ITEM);
-  const toggleAcc = (i: number) => {
-    setAccOpen(accOpen === i ? -1 : i);
-    if (accOpen !== i) setAccHead(i);
-  };
-  const head = WHY_ITEMS[accHead];
+  const toggleAcc = (i: number) => setAccOpen(accOpen === i ? -1 : i);
   const pinRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const fallerRef = useRef<HTMLImageElement>(null);
@@ -173,7 +220,6 @@ export default function WhyChessSection() {
     const io = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) return;
       setAccOpen(DEFAULT_ITEM);
-      setAccHead(DEFAULT_ITEM);
     });
     io.observe(section);
     return () => io.disconnect();
@@ -204,14 +250,16 @@ export default function WhyChessSection() {
     const cardDesc = q<HTMLParagraphElement>(".why-card__desc");
     const cardHi = q<HTMLParagraphElement>(".why-card__highlight");
     const closeBtn = q<HTMLButtonElement>(".why-card__close");
+    const cardBody = q<HTMLDivElement>(".why-card__body");
     const backdrop = q<HTMLDivElement>(".why__backdrop");
-    // e: 0 = tucked behind the king, 1 = on the orbit. fly: 0 = on the orbit,
-    // 1 = at the info window's icon spot.
+    // Phones — e: 0 = tucked behind the king, 1 = on the orbit. Desktop —
+    // rise: 0 = below the screen, 1 = at its scattered spot; arr: 0 = there,
+    // 1 = on the orbit. fly: 0 = on the orbit, 1 = at the info window's icon spot.
     const items = WHY_ITEMS.map((data) => ({
       data,
       el: q<HTMLButtonElement>(`.why-item[data-id="${data.id}"]`),
       cardEl: q<HTMLSpanElement>(`.why-item[data-id="${data.id}"] .why-item__card`),
-      st: { e: 0, fly: 0 },
+      st: { e: 0, rise: 0, arr: 0, fly: 0 },
     }));
     const cubes = WHY_CUBES.map((def, i) => ({ def, el: section.querySelectorAll<HTMLDivElement>(".why-cube")[i] }));
 
@@ -220,17 +268,24 @@ export default function WhyChessSection() {
 
     // ---- State ----
     const S = {
-      title: 0, // heading reveal, 0 → 1
+      title: 0, // heading reveal, 0 → 1 (played/reversed at mid-screen)
       titleOut: 0, // desktop: the heading leaving again once the king has landed, 0 → 1
       ring: 0, // ring spin-in, 0 → 1
       drop: 0, // phones: the king dropping into the hero box
+      rise: 0, // desktop: the cubes' parallax drift while the cards rise in
       move: 0, // desktop: the king travelling from its landing spot to the centre
-      rot: 0, // the orbit's turn, radians
       bg: 0, // the other items easing into the background while a window is open
       card: 0, // the info window opening
+      side: 0, // desktop: 0 = the open window is on the right of the king, 1 = on its left
     };
+    // Desktop: the default window as the scroll opens it — its card flying
+    // in, the rest stepping back, the window unfolding. Drawn until a click
+    // takes over (`manual`), then S.bg/S.card and the cards' fly instead.
+    const A = { fly: 0, bg: 0, card: 0 };
+    let manual = false;
+    let handingBack = false; // closing what the visitor opened, before the scroll takes over again
     let mode: "desktop" | "mobile" = "desktop";
-    let sel = -1; // index of the open item
+    let sel = -1; // index of the open item (while manual)
     let lastFocus: HTMLElement | null = null;
     let clickTl: gsap.core.Timeline | null = null;
     let orbiting = false;
@@ -240,18 +295,52 @@ export default function WhyChessSection() {
 
     // ---- Layout: orbit and window geometry, in the coordinates the king and
     // items are drawn in (desktop: the design frame; phones: the hero box). ----
+    // Each item's window: its top-left corner, whether it opens to the
+    // card's left (flip: icon at its top-right), and the icon spot the card
+    // settles into.
+    type Place = { left: number; top: number; flip: boolean; spot: { x: number; y: number; s: number } };
     type Geo = {
-      cx: number; // the orbit
+      cx: number; // phones: the orbit
       cy: number;
       rx: number;
       ry: number;
       king: { cx: number; top: number; s: number }; // the centred king
-      itemS: number;
+      itemS: number; // desktop: a multiplier on the design's card scales; phones: the cards' scale
       cardS: number;
-      spot: { x: number; y: number; s: number };
+      places: Place[];
       dropDist: number;
     };
     let geo: Geo | null = null;
+    let winItem = DEFAULT_ITEM; // the item whose details are in the window
+
+    // Desktop: each window opens where its card sits on the orbit — the
+    // card's centre on the window's icon spot — on the card's side of the
+    // king, nudged only as far as it takes to stay on screen and clear of
+    // the headline. Heights are measured with each item's own text.
+    function placeWindows(cardS: number, visTop: number): Place[] {
+      const heights = WHY_ITEMS.map((it) => {
+        fillText(it);
+        return card.offsetHeight;
+      });
+      fillText(WHY_ITEMS[winItem]);
+      const w = CARD.w * cardS;
+      const ix = CARD.iconX * cardS; // the icon's centre from the window's near edge
+      const iy = CARD.iconY * cardS;
+      return SLOTS.map((P, i) => {
+        const flip = P.x < KING_AT.centre.cx;
+        const left = Math.max(WIN_EDGE, Math.min(flip ? P.x + ix - w : P.x - ix, WHY_W - WIN_EDGE - w));
+        const top = Math.max(WIN_TOP, visTop + WIN_EDGE, Math.min(P.y - iy, WHY_H - WIN_EDGE - heights[i] * cardS));
+        return { left, top, flip, spot: { x: flip ? left + w - ix : left + ix, y: top + iy, s: (CARD.icon * cardS) / ITEM.w } };
+      });
+    }
+    // Moves the window to its item's place.
+    function placeCard() {
+      const p = geo?.places[winItem];
+      if (!p || mode !== "desktop") return;
+      card.style.left = `${p.left}px`;
+      card.style.top = `${p.top}px`;
+      card.classList.toggle("is-flip", p.flip);
+    }
 
     function layout() {
       if (mode === "desktop") {
@@ -267,30 +356,29 @@ export default function WhyChessSection() {
         const dy = Math.min(0, visTop + 300);
         frame.style.setProperty("--why-dy", `${dy}px`);
         // Items and the window never shrink below a usable on-screen size
-        // (narrow tablets); the window stays right-aligned as it grows.
-        const itemS = Math.max(ORBIT.item, 92 / (ITEM.w * k));
+        // (narrow tablets).
+        const itemS = Math.max(1, ITEM_MIN / (ITEM.w * k));
         const cardS = Math.max(1, 0.8 / k);
-        const cardLeft = CARD.right - CARD.w * cardS;
         headline.style.top = `${HEADLINE_TOP}px`;
-        card.style.left = `${cardLeft}px`;
-        card.style.top = `${CARD.top}px`;
         geo = {
-          cx: ORBIT.cx,
-          cy: ORBIT.cy,
-          rx: ORBIT.rx,
-          ry: ORBIT.ry,
+          cx: 0,
+          cy: 0,
+          rx: 0,
+          ry: 0,
           king: KING_AT.centre,
           itemS,
           cardS,
-          spot: { x: cardLeft + CARD.iconX * cardS, y: CARD.top + CARD.iconY * cardS, s: (CARD.icon * cardS) / ITEM.w },
+          places: placeWindows(cardS, visTop),
           dropDist: 0,
         };
+        placeCard();
       } else {
         frame.style.transform = "";
         frame.style.removeProperty("--why-dy");
         headline.style.top = "";
         card.style.left = "";
         card.style.top = "";
+        card.classList.remove("is-flip");
         const W = hero.clientWidth;
         const H = hero.clientHeight;
         const itemS = (0.2 * W) / ITEM.w;
@@ -308,7 +396,7 @@ export default function WhyChessSection() {
           king: { cx: W / 2, top: H / 2 - KING_MID * kingS, s: kingS },
           itemS,
           cardS: 1,
-          spot: { x: W - (ITEM.w * s) / 2 - 2, y: (ITEM.h * s) / 2 + 2, s },
+          places: WHY_ITEMS.map(() => ({ left: 0, top: 0, flip: false, spot: { x: W - (ITEM.w * s) / 2 - 2, y: (ITEM.h * s) / 2 + 2, s } })),
           dropDist: H * 0.9,
         };
       }
@@ -325,6 +413,11 @@ export default function WhyChessSection() {
       const g = geo;
       if (!g) return;
       const desk = mode === "desktop";
+      // The window as drawn: the scroll's, until a click takes over.
+      const bg = manual ? S.bg : A.bg;
+      const cardV = manual ? S.card : A.card;
+      const flyOf = (i: number) => (manual ? items[i].st.fly : i === DEFAULT_ITEM ? A.fly : 0);
+      const side = manual ? S.side : 0; // the scroll's window (the default item's) is on the right
 
       // Heading: each line rises out of its mask, the second a beat later.
       // Leaving plays the same reveal backwards (second line sinks first).
@@ -334,7 +427,7 @@ export default function WhyChessSection() {
         el.style.transform = `translateY(${(1 - titleEase(p)) * 140}%)`;
         el.style.opacity = String(clamp01(p * 2.5));
       });
-      const away = desk ? S.bg : 0; // the heading steps back while a window is open
+      const away = desk ? bg : 0; // the heading steps back while a window is open
       eyebrow.style.opacity = String(clamp01(shown * 3) * (1 - away));
       eyebrow.style.transform = title.style.transform = `translateY(${-18 * away}px)`;
       title.style.opacity = String(1 - away);
@@ -355,33 +448,62 @@ export default function WhyChessSection() {
       ringIn.style.opacity = String(clamp01(S.ring));
       ringIn.style.transform = `scale(${0.55 + 0.45 * S.ring}) rotate(${-70 * (1 - S.ring)}deg)`;
 
-      // Items: out from behind the king (spiralling a little as they go) onto
-      // the orbit; the open one flies to the window's icon spot.
+      // Items. Desktop: up from below the screen to their scattered spots,
+      // then round onto the orbit. Phones: out from behind the king
+      // (spiralling a little as they go) onto the orbit. The open one
+      // settles into its window's icon spot.
       let allOut = true;
       items.forEach(({ el, cardEl, st }, i) => {
-        const e = st.e;
-        if (e < 0.98) allOut = false;
-        const a = ORBIT_START + i * STEP + S.rot - (1 - Math.min(1, e)) * 0.7;
-        const ox = g.cx + Math.cos(a) * g.rx;
-        const oy = g.cy + Math.sin(a) * g.ry;
-        const depth = 0.9 + 0.1 * Math.sin(a); // a touch smaller round the back (top) of the orbit
-        let x = lerp(kcx, ox, e);
-        let y = lerp(kcy, oy, e);
-        let s = g.itemS * depth * (0.35 + 0.65 * e);
-        let o = clamp01(e * 3);
-        const b = S.bg * (1 - st.fly);
+        let x: number, y: number, s: number, o: number;
+        let blur = 0; // px
+        let focus: number; // how far it goes out of focus behind an open window
+        let shown = true;
+        if (desk) {
+          if (st.arr < 0.999) allOut = false;
+          const sc = SCATTER[i];
+          const P = SLOTS[i];
+          const scS = sc.s * g.itemS;
+          // Nearer cards start further down, so they rise faster; none starts on screen.
+          const from = Math.max(sc.y + RISE_TRAVEL * sc.z, WHY_H + (ITEM.h * scS) / 2 + 30);
+          x = lerp(sc.x, P.x, st.arr);
+          y = lerp(lerp(from, sc.y, st.rise), P.y, st.arr);
+          s = lerp(scS, P.s * g.itemS, st.arr);
+          o = lerp(sc.o, 1, st.arr);
+          blur = sc.blur * (1 - st.arr);
+          // The side away from the open window goes out of focus.
+          focus = lerp(P.blur, SLOTS[N - 1 - i].blur, side) * st.arr;
+          shown = st.rise > 0.001;
+        } else {
+          const e = st.e;
+          if (e < 0.98) allOut = false;
+          const a = ORBIT_START + i * STEP - (1 - Math.min(1, e)) * 0.7;
+          const depth = 0.9 + 0.1 * Math.sin(a); // a touch smaller round the back (top) of the orbit
+          x = lerp(kcx, g.cx + Math.cos(a) * g.rx, e);
+          y = lerp(kcy, g.cy + Math.sin(a) * g.ry, e);
+          s = g.itemS * depth * (0.35 + 0.65 * e);
+          o = clamp01(e * 3);
+          focus = 1;
+        }
+        const fly = flyOf(i);
+        const b = bg * (1 - fly) * focus;
         s *= 1 - 0.06 * b;
         o *= 1 - 0.3 * b;
-        x = lerp(x, g.spot.x, st.fly);
-        y = lerp(y, g.spot.y, st.fly);
-        s = lerp(s, g.spot.s, st.fly);
-        o = lerp(o, 1, st.fly);
+        blur = blur * (1 - fly) + 2.5 * b;
+        const spot = g.places[i].spot;
+        x = lerp(x, spot.x, fly);
+        y = lerp(y, spot.y, fly);
+        s = lerp(s, spot.s, fly);
+        o = lerp(o, 1, fly);
         at(el, x - (ITEM.w / 2) * s, y - (ITEM.h / 2) * s, s);
         el.style.opacity = String(o);
-        // Out of focus while in the background, as in the design.
-        cardEl.style.filter = b > 0.01 ? `blur(${(2.5 * b).toFixed(2)}px)` : "";
+        el.style.visibility = shown ? "" : "hidden";
+        // Its frame fades as it settles into the window, leaving the icon.
+        el.style.setProperty("--fly", fly.toFixed(3));
+        el.classList.toggle("is-in", fly > 0.5);
+        // Out of focus while far back or in the background, as in the design.
+        cardEl.style.filter = blur > 0.01 ? `blur(${blur.toFixed(2)}px)` : "";
         // Behind the king while on the orbit; above the window once flying to it.
-        el.style.zIndex = st.fly > 0.001 ? "7" : "1";
+        el.style.zIndex = fly > 0.001 ? "7" : "1";
       });
       if (allOut !== orbiting) {
         orbiting = allOut;
@@ -392,23 +514,48 @@ export default function WhyChessSection() {
       if (desk) {
         cubes.forEach(({ def, el }) => {
           const s = lerp(def.closed[2], def.open[2], m);
-          at(el, lerp(def.closed[0], def.open[0], m) - s / 2, lerp(def.closed[1], def.open[1], m) - s / 2, s / 100);
+          const drift = (1 - S.rise) * 140 * def.z; // rising with the cards, at their own depth
+          at(el, lerp(def.closed[0], def.open[0], m) - s / 2, lerp(def.closed[1], def.open[1], m) + drift - s / 2, s / 100);
         });
         floor.style.opacity = String(m);
-        headline.style.opacity = String(S.card);
-        headline.style.transform = `translateY(${(1 - S.card) * 24}px)`;
-        card.style.opacity = String(S.card);
-        card.style.transform = `translateY(${(1 - S.card) * 22}px) scale(${g.cardS * (0.97 + 0.03 * S.card)})`;
+        headline.style.opacity = String(cardV);
+        headline.style.transform = `translateY(${(1 - cardV) * 24}px)`;
+        // The window unfolds out of its icon's box (where the chosen card
+        // sits) down and away from it — rightwards, or leftwards when it
+        // opens to the card's left; its text follows.
+        const r = r4(1 - cardV);
+        const pad = (60 * cardV).toFixed(2); // room for its shadow once open
+        const across = `calc(${r} * (100% - ${CARD.iconX * 2}px) - ${pad}px)`;
+        const down = `calc(${r} * (100% - ${CARD.iconY * 2}px) - ${pad}px)`;
+        card.style.clipPath =
+          cardV < 0.999
+            ? g.places[winItem].flip
+              ? `inset(-60px -60px ${down} ${across} round 10px)`
+              : `inset(-60px ${across} ${down} -60px round 10px)`
+            : "";
+        card.style.opacity = String(clamp01(cardV * 4));
+        card.style.transform = `scale(${g.cardS})`;
+        const t = clamp01((cardV - 0.45) / 0.55);
+        cardBody.style.opacity = closeBtn.style.opacity = String(t);
+        cardBody.style.transform = `translateY(${(1 - t) * 10}px)`;
+        // The scroll's own window: reachable (and announced) once it's open.
+        if (!manual) {
+          const open = cardV > 0.5;
+          if (open === card.inert) card.inert = !open;
+        }
       } else {
         card.style.opacity = "";
-        card.style.transform = `translateY(${(1 - S.card) * 110}%)`;
+        card.style.clipPath = "";
+        cardBody.style.opacity = closeBtn.style.opacity = "";
+        cardBody.style.transform = "";
+        card.style.transform = `translateY(${(1 - cardV) * 110}%)`;
       }
-      card.style.visibility = S.card > 0.001 ? "visible" : "hidden";
-      card.style.pointerEvents = S.card > 0.5 ? "auto" : "none";
+      card.style.visibility = cardV > 0.001 ? "visible" : "hidden";
+      card.style.pointerEvents = cardV > 0.5 ? "auto" : "none";
     }
 
     // ---- Info window ----
-    function fill(it: WhyItem) {
+    function fillText(it: WhyItem) {
       [headline, cardHeadline].forEach((el) => {
         const em = document.createElement("em");
         em.textContent = it.headline[1];
@@ -419,53 +566,94 @@ export default function WhyChessSection() {
       cardDesc.textContent = it.desc;
       cardHi.textContent = it.highlight;
     }
-    fill(WHY_ITEMS[0]);
+    // Item i's details, in its own place.
+    function fill(i: number) {
+      winItem = i;
+      fillText(WHY_ITEMS[i]);
+      placeCard();
+    }
+    fill(DEFAULT_ITEM);
+    const sideOf = (i: number) => (geo?.places[i].flip ? 1 : 0);
 
-    // Turn the orbit so item i reaches the point nearest the window, fly it
-    // there, and only once it has arrived open the window.
-    // Once the items are all out, DEFAULT_ITEM opens on its own: once per
-    // pass, so a visitor who closes it isn't overruled until the items have
-    // been tucked away (scrolled back) and come out again.
-    let autoOpened = false;
-    const allOut = () => items.every((it) => it.st.e >= 0.98);
-    function openDefault() {
-      if (autoOpened || sel >= 0) return;
-      autoOpened = true;
-      select(DEFAULT_ITEM, null);
+    // On desktop the scroll opens DEFAULT_ITEM's window itself (A); a click,
+    // or closing that window, takes over from wherever the scroll has got
+    // to. Scrolling back above the window hands it back to the scroll.
+    const allOut = () => items.every((it) => (mode === "desktop" ? it.st.arr >= 0.999 : it.st.e >= 0.98));
+    const openItem = () => (manual ? sel : A.fly > 0 || A.bg > 0 || A.card > 0 ? DEFAULT_ITEM : -1);
+    function takeOver() {
+      if (manual) return;
+      manual = true;
+      sel = openItem();
+      S.bg = A.bg;
+      S.card = A.card;
+      S.side = sideOf(DEFAULT_ITEM);
+      items.forEach((it, j) => (it.st.fly = j === DEFAULT_ITEM ? A.fly : 0));
+    }
+    function handBack() {
+      if (!manual || handingBack) return;
+      handingBack = true;
+      const restore = card.contains(document.activeElement);
+      sel = -1;
+      clickTl?.kill();
+      section!.classList.remove("is-open");
+      card.inert = true;
+      if (restore && lastFocus) lastFocus.focus({ preventScroll: true });
+      lastFocus = null;
+      const sts = items.map((it) => it.st);
+      const home = sideOf(DEFAULT_ITEM);
+      const done = () => {
+        manual = handingBack = false;
+        clickTl = null;
+        fill(DEFAULT_ITEM);
+        dirty = true;
+      };
+      if (!S.card && !S.bg && S.side === home && sts.every((st) => !st.fly)) return done();
+      clickTl = gsap
+        .timeline({ onUpdate: markDirty, onComplete: done })
+        .to(S, { card: 0, duration: 0.3 * D, ease: "power2.in" })
+        .to(sts, { fly: 0, duration: 0.6 * D, ease: "power3.inOut" }, ">-0.05")
+        .to(S, { bg: 0, side: home, duration: 0.6 * D, ease: "power2.inOut" }, "<");
     }
 
-    // fromEl null: opened by the page itself (the default item), so focus stays put.
+    // Open item i's window where the card sits: the card settles into the
+    // window's icon spot (barely moving unless the window had to be nudged
+    // onto the screen) and the window unfolds from it.
     function select(i: number, fromEl: HTMLElement | null) {
       const g = geo;
       if (!allOut() || !g) return;
+      takeOver();
+      handingBack = false;
       if (sel === i) return close({ restoreFocus: true });
       if (sel < 0) lastFocus = fromEl;
       sel = i;
       clickTl?.kill();
-      const target = Math.atan2((g.spot.y - g.cy) / g.ry, (g.spot.x - g.cx) / g.rx);
-      const from = ORBIT_START + i * STEP + S.rot;
-      const TAU = Math.PI * 2;
-      const delta = ((((target - from) % TAU) + TAU * 1.5) % TAU) - Math.PI; // shortest way round
-      const rotDur = (0.7 + Math.abs(delta) * 0.3) * D;
       const tl = gsap.timeline({ onUpdate: markDirty });
       // Switching items: the open window closes first, while it's still full.
       if (S.card > 0) tl.to(S, { card: 0, duration: 0.25 * D, ease: "power2.in" });
       const t0 = tl.duration();
-      tl.to(S, { rot: S.rot + delta, duration: rotDur, ease: "power2.inOut" }, t0);
-      tl.to(S, { bg: 1, duration: 0.6 * D, ease: "power2.out" }, t0);
+      tl.to(S, { bg: 1, side: sideOf(i), duration: 0.6 * D, ease: "power2.out" }, t0);
       tl.to(items.filter((_, j) => j !== i).map((it) => it.st), { fly: 0, duration: 0.6 * D, ease: "power3.inOut" }, t0);
-      tl.to(items[i].st, { fly: 1, duration: 0.75 * D, ease: "power3.inOut" }, t0 + rotDur * 0.5);
-      tl.call(() => {
-        fill(WHY_ITEMS[i]);
-        section!.classList.add("is-open");
-        card.inert = false;
-      });
-      tl.to(S, { card: 1, duration: 0.55 * D, ease: "power3.out" });
+      tl.to(items[i].st, { fly: 1, duration: 0.5 * D, ease: "power3.inOut" }, t0);
+      const openAt = t0 + 0.3 * D;
+      tl.call(
+        () => {
+          fill(i);
+          section!.classList.add("is-open");
+          card.inert = false;
+        },
+        undefined,
+        openAt
+      );
+      tl.to(S, { card: 1, duration: 0.55 * D, ease: "power3.out" }, openAt);
       if (fromEl) tl.call(() => closeBtn.focus({ preventScroll: true }));
       clickTl = tl;
     }
 
+    // instant: a reset (scrolled away, breakpoint change), so everything is
+    // back at rest and the scroll owns the window again.
     function close({ instant = false, restoreFocus = false } = {}) {
+      if (instant) manual = handingBack = false;
+      else takeOver();
       if (sel < 0) return;
       sel = -1;
       clickTl?.kill();
@@ -476,6 +664,7 @@ export default function WhyChessSection() {
       if (instant) {
         S.card = S.bg = 0;
         sts.forEach((st) => (st.fly = 0));
+        fill(DEFAULT_ITEM);
         dirty = true;
       } else {
         clickTl = gsap
@@ -505,11 +694,11 @@ export default function WhyChessSection() {
     backdrop.addEventListener("click", closeByUser);
     // Clicking empty space around the open window closes it.
     const onSectionClick = (e: MouseEvent) => {
-      if (sel >= 0 && !(e.target as HTMLElement).closest(".why-item, .why-card")) closeByUser();
+      if (openItem() >= 0 && !(e.target as HTMLElement).closest(".why-item, .why-card")) closeByUser();
     };
     section.addEventListener("click", onSectionClick);
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && sel >= 0) closeByUser();
+      if (e.key === "Escape" && openItem() >= 0) closeByUser();
     };
     addEventListener("keydown", onKeyDown);
 
@@ -519,8 +708,6 @@ export default function WhyChessSection() {
       if (revealed) return;
       revealed = true;
       gsap.to(S, { ring: 1, duration: 1 * D, delay: 0.15 * D, ease: "back.out(1.6)", onUpdate: markDirty });
-      // Without the fall to follow, the heading rises on its own.
-      if (!handoff()) gsap.to(S, { title: 1, duration: 1.4 * D, ease: "none", onUpdate: markDirty });
       if (mode === "mobile") {
         // Phones: the king drops in (unless it has just fallen in from the
         // staircase), then the items come out onto the orbit one by one.
@@ -550,17 +737,11 @@ export default function WhyChessSection() {
       if (mode === "mobile") {
         const sts = items.map((it) => it.st);
         gsap.to(sts, { e: 0, duration: 0.35 * D, ease: "power2.in", overwrite: "auto", onUpdate: markDirty });
-        if (!handoff()) gsap.to(S, { drop: 0, title: 0, duration: 0.4 * D, ease: "power2.in", overwrite: "auto", onUpdate: markDirty });
+        if (!handoff()) gsap.to(S, { drop: 0, duration: 0.4 * D, ease: "power2.in", overwrite: "auto", onUpdate: markDirty });
       }
     }
     const onLanded = () => kingImg.classList.remove("is-landing");
     kingImg.addEventListener("animationend", onLanded);
-    const setTitle = (v: number) => {
-      if (S.title === v) return;
-      gsap.killTweensOf(S, "title");
-      S.title = v;
-      dirty = true;
-    };
 
     // ---- Per-breakpoint timelines ----
     const visibility = new IntersectionObserver(
@@ -576,10 +757,11 @@ export default function WhyChessSection() {
     );
     const resetState = () => {
       close({ instant: true });
-      autoOpened = false;
-      gsap.killTweensOf([S, ...items.map((it) => it.st)]);
-      Object.assign(S, { title: 0, titleOut: 0, ring: 0, drop: 0, move: 0, rot: 0, bg: 0, card: 0 });
-      items.forEach((it) => Object.assign(it.st, { e: 0, fly: 0 }));
+      gsap.killTweensOf([S, A, ...items.map((it) => it.st)]);
+      Object.assign(S, { title: 0, titleOut: 0, ring: 0, drop: 0, rise: 0, move: 0, bg: 0, card: 0, side: 0 });
+      Object.assign(A, { fly: 0, bg: 0, card: 0 });
+      items.forEach((it) => Object.assign(it.st, { e: 0, rise: 0, arr: 0, fly: 0 }));
+      card.inert = true;
       revealed = false;
     };
 
@@ -588,9 +770,26 @@ export default function WhyChessSection() {
       mode = ctx.conditions!.desktop ? "desktop" : "mobile";
       resetState();
       layout();
+      // The heading rises out of its masks once its top reaches the middle
+      // of the screen, and sinks back when scrolled above that again.
+      // Measured from the pin wrapper: the section is sticky on desktop, so
+      // its own position shifts once it sticks.
+      gsap.to(S, {
+        title: 1,
+        duration: 1.4 * D,
+        ease: "none",
+        onUpdate: markDirty,
+        scrollTrigger: {
+          trigger: pin,
+          start: () => `top+=${title.getBoundingClientRect().top - section.getBoundingClientRect().top} 50%`,
+          toggleActions: "play none none reverse",
+        },
+      });
       if (mode === "desktop") {
-        // One scrubbed timeline across the pin: king to the centre, then the
-        // items out onto the orbit. Scrolling back plays it backwards.
+        // One scrubbed timeline across the pin: the cards rise in round the
+        // landed king, gather onto the orbit as the king moves to the
+        // centre, and the default window opens; the rest of the pin holds
+        // it on screen. Scrolling back plays it backwards.
         const tl = gsap.timeline({
           defaults: { ease: "none" },
           onUpdate: markDirty,
@@ -600,24 +799,28 @@ export default function WhyChessSection() {
             end: "bottom bottom",
             scrub: true,
             onUpdate: (self) => {
-              // Every item out: the default one opens (once per pass).
-              if (self.progress >= EMERGE_END) openDefault();
-              // Back above the orbit: the open window gives way to the scroll.
-              else if (self.progress < EMERGE_END - 0.02) {
-                close();
-                autoOpened = false;
-              }
-              // Items fully tucked away: the orbit starts from its first turn again.
-              if (self.progress < EMERGE_AT && sel < 0 && !clickTl?.isActive()) S.rot = 0;
+              // Back above the window: one the visitor opened (or closed)
+              // gives way, and the scroll's own window takes over again.
+              if (self.progress < OPEN_AT) handBack();
             },
           },
         });
-        // The heading leaves as the king sets off for the centre.
-        tl.to(S, { titleOut: 1, duration: TITLE_OUT_DUR, ease: "none" }, TITLE_OUT_AT);
-        tl.to(S, { move: 1, duration: MOVE_END, ease: "power2.inOut" }, 0);
+        // Up from below the screen, each card at its own depth's pace, with
+        // the cubes drifting up behind them.
+        items.forEach(({ st }) => tl.to(st, { rise: 1, duration: RISE_END, ease: "power2.out" }, 0));
+        tl.to(S, { rise: 1, duration: RISE_END, ease: "power1.out" }, 0);
+        // The heading leaves as the king sets off for the centre, and the
+        // cards follow it round onto the orbit.
+        tl.to(S, { titleOut: 1, duration: TITLE_OUT_DUR }, ARRANGE_AT);
+        tl.to(S, { move: 1, duration: MOVE_DUR, ease: "power2.inOut" }, ARRANGE_AT);
         items.forEach(({ st }, i) =>
-          tl.to(st, { e: 1, duration: EMERGE_DUR, ease: "back.out(1.4)" }, EMERGE_AT + i * EMERGE_GAP)
+          tl.to(st, { arr: 1, duration: ARR_DUR, ease: "power2.inOut" }, ARRANGE_AT + ARR_LAG + i * ARR_GAP)
         );
+        // The default card flies into the window's icon spot as the others
+        // step back, and the window unfolds from it.
+        tl.to(A, { fly: 1, duration: OPEN_FLY, ease: "power3.inOut" }, OPEN_AT);
+        tl.to(A, { bg: 1, duration: OPEN_FLY, ease: "power2.out" }, OPEN_AT);
+        tl.to(A, { card: 1, duration: OPEN_CARD_DUR, ease: "power3.out" }, OPEN_CARD_AT);
         tl.set({}, {}, 1);
         // Re-observe so a visitor already here gets the landing straight away.
         visibility.disconnect();
@@ -636,11 +839,13 @@ export default function WhyChessSection() {
     const resizeObserver = new ResizeObserver(layout);
     resizeObserver.observe(section);
     resizeObserver.observe(hero);
+    // The windows' heights (and so their places) depend on the loaded fonts.
+    let alive = true;
+    document.fonts?.ready.then(() => alive && layout());
 
     // ---- The king: the staircase's 3D king, all the way down ----
     // The fall is tied to the scroll between the staircase's last level and
-    // this section reaching the top of the screen; the heading rises with it.
-    // After the landing the same 3D king stays: it is drawn over the (hidden)
+    // this section reaching the top of the screen. After the landing the same 3D king stays: it is drawn over the (hidden)
     // image king's exact spot, so it rides the layout here — resting where it
     // landed, then spinning MOVE_SPINS turns on its axis as the pinned scroll
     // carries it to the centre. Scrolling back plays it all backwards. The
@@ -715,7 +920,6 @@ export default function WhyChessSection() {
       const y1 = stairs.pinEnd();
       // +2px: scroll positions can be fractional, so the last pixel still counts as landed.
       const t = top > y1 ? clamp01((scrollY - y1 + 2) / (top - y1)) : 1;
-      setTitle(clamp01((t - 0.15) / 0.85));
       if (t <= 0) {
         imageKing();
         stairs.setKingHidden(false);
@@ -777,10 +981,11 @@ export default function WhyChessSection() {
     });
 
     return () => {
+      alive = false;
       offFrame();
       mm.revert();
       clickTl?.kill();
-      gsap.killTweensOf([S, ...items.map((it) => it.st)]);
+      gsap.killTweensOf([S, A, ...items.map((it) => it.st)]);
       visibility.disconnect();
       resizeObserver.disconnect();
       removeEventListener("keydown", onKeyDown);
@@ -886,21 +1091,10 @@ export default function WhyChessSection() {
           </div>
           <div className="why-acc">
             <ul className="why-acc__list">
-              {/* One headline, placed (by grid order) right above the item it
-                  belongs to; it stays one element so aria-live announces it. */}
-              <li className="why-acc__headline" aria-live="polite" style={{ order: accHead * 2 }}>
-                {head.headline[0]}
-                <em>{head.headline[1]}</em>
-                {head.headline[2]}
-              </li>
               {WHY_ITEMS.map((it, i) => {
                 const open = accOpen === i;
                 return (
-                  <li
-                    key={it.id}
-                    className={`why-acc__item${open ? " is-open" : ""}`}
-                    style={{ order: i * 2 + 1 }}
-                  >
+                  <li key={it.id} className={`why-acc__item${open ? " is-open" : ""}`}>
                     <h3 className="why-acc__heading">
                       <button
                         type="button"
@@ -926,6 +1120,11 @@ export default function WhyChessSection() {
                     >
                       <div className="why-acc__body">
                         <div className="why-acc__text">
+                          <p className="why-acc__headline">
+                            {it.headline[0]}
+                            <em>{it.headline[1]}</em>
+                            {it.headline[2]}
+                          </p>
                           <p>{it.desc}</p>
                           <p className="why-acc__highlight">{it.highlight}</p>
                         </div>

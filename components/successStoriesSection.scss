@@ -1,4 +1,4 @@
-// "Success stories" — student story on the left, a tilted yellow card with
+// "Success stories" — student story on the left, a tilted colour card with
 // the student's cut-out photo on the right, prev/next arrows on the sides.
 
 @use "outlineTitle" as *;
@@ -152,16 +152,22 @@ $yellow: #f3bb4f;
   container-type: inline-size;
 }
 
-// Rotated mask: same footprint as the yellow card, extended upward so the
-// head can pop out of the top.
+// Rotated mask: same footprint as the card, extended upward so the head can
+// pop out of the top. Its rotation origin is the visual box's centre.
+// The component tweens these on slide change: --card (base colour), --tilt
+// (deg) and --drift (cqw of the visual box, a sideways nudge).
 .stories__clip {
+  --card: #{$yellow};
+  --tilt: 20;
+  --drift: 0;
+
   position: absolute;
   left: 11%;
   top: -12.4%;
   width: 78%;
   height: 101.4%;
   transform-origin: 50% 61.5%;
-  transform: rotate(20deg);
+  transform: translateX(calc(var(--drift) * 1cqw)) rotate(calc(var(--tilt) * 1deg));
   overflow: hidden;
   border-radius: 0 0 11.5% 11.5% / 0 0 8.85% 8.85%;
 }
@@ -173,10 +179,16 @@ $yellow: #f3bb4f;
   width: 100%;
   aspect-ratio: 1 / 1;
   border-radius: 11.5%;
-  background: radial-gradient(circle at 30% 20%, #f6c86a 0%, $yellow 55%, #efb444 100%);
+  background: radial-gradient(
+    circle at 30% 20%,
+    color-mix(in srgb, var(--card) 85%, #ffffff) 0%,
+    var(--card) 55%,
+    color-mix(in srgb, var(--card) 96%, #000000) 100%
+  );
 }
 
-// Counter-rotated back into normal orientation.
+// Exact inverse of the clip's transform around the same point, so the photo
+// stays upright and in place while the card swings.
 .stories__photo-wrap {
   position: absolute;
   left: -14.1%;
@@ -184,7 +196,7 @@ $yellow: #f3bb4f;
   width: 128.2%;
   height: 98.6%;
   transform-origin: 50% 50%;
-  transform: rotate(-20deg);
+  transform: rotate(calc(var(--tilt) * -1deg)) translateX(calc(var(--drift) * -1cqw));
 }
 
 .stories__photo {

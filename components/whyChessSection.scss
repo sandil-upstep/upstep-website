@@ -11,7 +11,7 @@
 // all positioned by WhyChessSection.tsx from GSAP-tweened state, so none of
 // them carry CSS transitions on transform/opacity (they would lag the scroll).
 
-$bg: #050b1b;
+$bg: #071025;
 $guide: rgba(255, 255, 255, 0.06);
 $outline: #2b3550;
 $cobalt: #3d78de;
@@ -267,15 +267,22 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   animation: why-bob 6s ease-in-out infinite;
   animation-delay: calc(var(--i) * -0.9s);
 }
+// --fly (set by the script) runs 0 → 1 as the card settles into the info
+// window: its frame fades away and the icon grows, as in the design.
 .why-item__card {
+  --chrome: calc(1 - var(--fly, 0));
   position: relative;
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
   border-radius: 9px;
-  background: linear-gradient(160deg, rgba(44, 54, 78, 0.78), rgba(24, 31, 49, 0.78));
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(
+    160deg,
+    rgba(44, 54, 78, calc(0.78 * var(--chrome))),
+    rgba(24, 31, 49, calc(0.78 * var(--chrome)))
+  );
+  box-shadow: 0 14px 32px rgba(0, 0, 0, calc(0.35 * var(--chrome)));
   transition: transform 0.4s $ease-out, box-shadow 0.4s, background 0.4s, filter 0.3s;
 
   img {
@@ -284,9 +291,11 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
     height: 82%;
     max-width: 84%;
     object-fit: contain;
+    scale: calc(1 + 0.35 * var(--fly, 0));
     transition: transform 0.45s $ease-out;
   }
 }
+.why-item__card::before { opacity: var(--chrome); }
 // Hairline frame that brightens at the corners, as in the design
 .why-item__card::before,
 .why-card::before,
@@ -312,8 +321,9 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 8 !important;
   opacity: 1 !important;
 }
-.why-item:hover .why-item__card,
-.why-item:focus-visible .why-item__card {
+// (Not the card sitting in the open window: it stays a bare icon there.)
+.why-item:not(.is-in):hover .why-item__card,
+.why-item:not(.is-in):focus-visible .why-item__card {
   filter: none !important;
   transform: translateY(-10px) scale(1.14);
   background: linear-gradient(160deg, rgba(64, 80, 116, 0.95), rgba(32, 42, 68, 0.95));
@@ -374,6 +384,14 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   object-fit: contain;
 }
 .why-card__headline { display: none; }
+// Opening to the left of its card (cards left of the king): mirrored, the
+// icon spot at the top-right and the close button at the top-left.
+.why-card.is-flip {
+  padding: 22px 152px 28px 56px;
+
+  .why-card__icon { left: auto; right: 14px; }
+  .why-card__close { right: auto; left: 12px; }
+}
 .why-card__close {
   position: absolute;
   top: 10px;
@@ -427,8 +445,9 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
 @media (min-width: 820px) {
   // The section sticks for $why-travel of extra scroll after the landing,
-  // while the king moves to the centre and the cards emerge onto the orbit.
-  $why-travel: 140vh;
+  // while the cards rise in, the king moves to the centre as they gather
+  // onto the orbit, and the info window opens and holds.
+  $why-travel: 260vh;
   .why-pin {
     position: relative;
     z-index: 2;
@@ -490,16 +509,6 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
     display: block;
     position: relative;
     margin-top: 56px;
-  }
-  // Sits in the list, right above the item opened last (order set inline);
-  // the list's gap plus this margin keep it closer to its item than to the
-  // one before.
-  .why-acc__headline {
-    margin: 12px 0 0;
-    font-size: 30px;
-    line-height: 1.15;
-    font-weight: 700;
-    letter-spacing: -0.02em;
   }
   .why-acc__list {
     display: grid;
@@ -584,6 +593,15 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
       color: #c7cfde;
     }
     p + p { margin-top: 14px; }
+  }
+  // The item's headline, at the top of its card's details.
+  .why-acc__text .why-acc__headline {
+    margin-bottom: 4px;
+    font-size: 26px;
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #ffffff;
   }
   .why-acc__highlight {
     font-weight: 700;

@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent, type TouchEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type TouchEvent,
+} from "react";
 import { flushSync } from "react-dom";
 import { Open_Sans, Plus_Jakarta_Sans, Poppins } from "next/font/google";
+import gsap from "gsap";
 import Eyebrow from "./Eyebrow";
 import RevealTitle from "./RevealTitle";
 import StoryPhotoMorph, { type StoryPhotoMorphHandle } from "./StoryPhotoMorph";
@@ -33,6 +41,8 @@ type Story = {
   location: string;
   // Transparent cut-out of the student; its head pops out above the card.
   photo: string;
+  // Base colour of the tilted card behind the photo.
+  card: string;
   title: string;
   lead: string;
   highlights: string[];
@@ -49,6 +59,7 @@ const STORIES: Story[] = [
     lastName: "Nayudu",
     location: "Singapore",
     photo: VEDANT_PHOTO,
+    card: "#f3bb4f",
     title: "Placeholder headline for the second success story",
     lead: "A one or two sentence summary of this student's achievement goes here.",
     highlights: [
@@ -63,6 +74,7 @@ const STORIES: Story[] = [
     lastName: "Two",
     location: "City",
     photo: "/images/player2.png",
+    card: "#8fbcf2",
     title: "Placeholder headline for the second success story",
     lead: "A one or two sentence summary of this student's achievement goes here.",
     highlights: [
@@ -77,6 +89,7 @@ const STORIES: Story[] = [
     lastName: "Three",
     location: "City",
     photo: VEDANT_PHOTO,
+    card: "#f2875a",
     title: "Placeholder headline for the third success story",
     lead: "A one or two sentence summary of this student's achievement goes here.",
     highlights: [
@@ -93,6 +106,10 @@ const REDUCED_DURATION = 200; // must match the reduced-motion fade
 const SWIPE_MIN = 50; // px of horizontal travel that counts as a swipe
 const AUTOPLAY_DELAY = 6000; // ms each story stays up before advancing
 const PHOTOS = STORIES.map((s) => s.photo);
+// Card swing on slide change: resting tilt and how far it swings / drifts.
+const CARD_TILT = 20; // deg, must match --tilt in the stylesheet
+const CARD_SWING = 8; // deg
+const CARD_DRIFT = 3; // cqw of the visual box
 
 type Dir = "next" | "prev";
 // "out": current story slides away; "in": new story jumps to the opposite
@@ -107,6 +124,7 @@ export default function SuccessStoriesSection() {
   const timerRef = useRef<number | undefined>(undefined);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const photoRef = useRef<StoryPhotoMorphHandle>(null);
+  const clipRef = useRef<HTMLDivElement>(null);
   const goRef = useRef<(step: -1 | 1) => void>(() => {});
   // Autoplay pauses while hovered, keyboard-focused, off-screen or in a
   // hidden tab, and is off entirely for reduced-motion users.
@@ -118,7 +136,13 @@ export default function SuccessStoriesSection() {
 
   const story = STORIES[index];
 
-  useEffect(() => () => window.clearTimeout(timerRef.current), []);
+  useEffect(() => {
+    const clip = clipRef.current;
+    return () => {
+      window.clearTimeout(timerRef.current);
+      gsap.killTweensOf(clip);
+    };
+  }, []);
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -159,6 +183,30 @@ export default function SuccessStoriesSection() {
     });
   }, []);
 
+  // The card recolours over the whole transition while it swings away in
+  // the slide direction (counter-clockwise and left for "next") and springs
+  // back to rest. The photo inside is counter-rotated, so only the card moves.
+  const swingCard = (target: number, dir: Dir, seconds: number, reduce: boolean) => {
+    const clip = clipRef.current;
+    if (!clip) return;
+    gsap.killTweensOf(clip);
+    gsap.to(clip, { "--card": STORIES[target].card, duration: seconds, ease: "power2.inOut" });
+    if (reduce) {
+      gsap.set(clip, { "--tilt": CARD_TILT, "--drift": 0 });
+      return;
+    }
+    const s = dir === "next" ? -1 : 1;
+    gsap
+      .timeline()
+      .to(clip, {
+        "--tilt": CARD_TILT + CARD_SWING * s,
+        "--drift": CARD_DRIFT * s,
+        duration: seconds / 2,
+        ease: "power2.inOut",
+      })
+      .to(clip, { "--tilt": CARD_TILT, "--drift": 0, duration: seconds * 0.8, ease: "back.out(1.8)" });
+  };
+
   const go = (step: -1 | 1) => {
     if (busyRef.current || STORIES.length < 2) return;
     let target = index + step;
@@ -172,6 +220,7 @@ export default function SuccessStoriesSection() {
 
     // The WebGL photo morphs across both halves while the text slides.
     photoRef.current?.morphTo(target, (wait * 2) / 1000, reduce);
+    swingCard(target, dir, (wait * 2) / 1000, reduce);
     setPhase({ kind: "out", dir });
     timerRef.current = window.setTimeout(() => {
       // Park the new story off to the side and force a reflow so that
@@ -279,7 +328,12 @@ export default function SuccessStoriesSection() {
 
         <div className="stories__visual">
           <div className="stories__visual-box">
-            <div className="stories__clip">
+            {/* GSAP owns --card after mount; React only sets the first one. */}
+            <div
+              ref={clipRef}
+              className="stories__clip"
+              style={{ "--card": STORIES[0].card } as CSSProperties}
+            >
               <div className="stories__card" />
               <div className="stories__photo-wrap">
                 <div className="stories__photo">

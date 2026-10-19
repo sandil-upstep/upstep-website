@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
+import { setCoverDark } from "./coverTheme";
 import { onScrollFrame } from "./SmoothScroll";
 
 // Pins the Anand section while vertical scrolling drives its card slider
@@ -132,13 +133,16 @@ export default function AnandSliderPin({ children, markers = false }: { children
       (entries) => {
         for (const entry of entries) past.set(entry.target, entry.isIntersecting);
         const dark = past.get(section) && !(offer && past.get(offer));
-        cover.classList.toggle("main-cover--dark", Boolean(dark));
+        setCoverDark(cover, "anand", Boolean(dark));
       },
       { rootMargin: "0px 0px -40% 0px" },
     );
     observer.observe(section);
     if (offer) observer.observe(offer);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      setCoverDark(cover, "anand", false);
+    };
   }, []);
 
   return (

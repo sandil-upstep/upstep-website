@@ -82,12 +82,12 @@ function offsetOf(index: number, s: number) {
 const AUTOPLAY_MS = 4000;
 
 // Where a slide sits relative to the active one: "0" is the laptop screen,
-// "-2".."3" are the faded cards around it, "out-l"/"out-r" wait off-stage.
-// (Desktop shows -2..2, the mobile deck shows 1..3.)
+// "-1".."3" are the faded cards around it, "out-r" waits off-stage. Only the
+// previous slide is kept behind, so even a short list fills the mobile deck
+// (1..3). (Desktop shows -1..2; while pinned the scroll places the slides.)
 function slotOf(index: number, active: number) {
-  let o = (index - active + N) % N;
-  if (o >= N - 3) o -= N;
-  if (o < -2) return "out-l";
+  const o = (index - active + N) % N;
+  if (o === N - 1) return "-1";
   return o <= 3 ? String(o) : "out-r";
 }
 
