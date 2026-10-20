@@ -146,7 +146,7 @@ export default function AnandSliderPin({ children, markers = false }: { children
   }, []);
 
   return (
-    <div ref={wrapRef} className="anand-pin0">
+    <div ref={wrapRef} className="anand-pin0" data-cube-scope>
       {children}
       {markers && (
         <>

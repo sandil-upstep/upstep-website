@@ -176,10 +176,14 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   transform-origin: 0 0;
   pointer-events: none;
 
-  svg {
+  // Inset so the rendered cube fills the box as much as the old drawn one did
+  // (the spots' sizes are of the box).
+  img {
     display: block;
-    width: 100%;
-    height: 100%;
+    width: 88%;
+    height: 88%;
+    margin: 6%;
+    object-fit: contain;
     animation: why-bob 7s ease-in-out infinite;
     animation-delay: var(--d, 0s);
   }
@@ -610,7 +614,7 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .why__ring img, .why-item__bob, .why-cube svg { animation: none; }
+  .why__ring img, .why-item__bob, .why-cube img { animation: none; }
   .why__king img.is-landing { animation: none; }
   .why-acc__icon, .why-acc__panel { transition: none; }
 }

@@ -20,11 +20,12 @@ const CHAMPIONSHIP_YEARS = ["2012", "2010", "2008", "2007", "2000"];
 const CERTIFICATE_SRC = "/images/certificate.png";
 const PORTRAIT_SRC = "/images/anand-video-thumb.png";
 const CROWN_SRC = "/images/crown.svg";
-const CUBE_SRCS = [
-  "/images/cubes/cube-1.png",
-  "/images/cubes/cube-16.png",
-  "/images/cubes/cube-3.png",
-  "/images/cubes/cube-11.png",
+// depth: how far each drifts with the scroll (see CubeParallax).
+const CUBES = [
+  { src: "/images/cubes/cube-1.png", depth: 0.4 },
+  { src: "/images/cubes/cube-16.png", depth: 0.75 },
+  { src: "/images/cubes/cube-3.png", depth: 0.55 },
+  { src: "/images/cubes/cube-11.png", depth: 0.9 },
 ];
 
 // Messages rolling through the certificate card. Only the first has real copy
@@ -90,8 +91,8 @@ export default function AnandSection() {
         <span className="anand__line" />
         <span className="anand__line" />
         <div className="anand__checker" />
-        {CUBE_SRCS.map((src, i) => (
-          <Image key={src} src={src} width={200} height={200} alt="" className={`anand__cube anand__cube--${i + 1}`} />
+        {CUBES.map(({ src, depth }, i) => (
+          <Image key={src} src={src} width={200} height={200} alt="" className={`anand__cube anand__cube--${i + 1}`} data-cube={depth} />
         ))}
       </div>
 

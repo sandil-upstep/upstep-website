@@ -6,6 +6,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { setCoverDark } from "./coverTheme";
+import { cubeScroll } from "./CubeParallax";
 import Eyebrow from "./Eyebrow";
 import RevealTitle from "./RevealTitle";
 import { getLenis, onFrame, onScrollFrame } from "./SmoothScroll";
@@ -251,7 +252,8 @@ export default function ScientificallyStructuredSection() {
     const cubeGeo = new RoundedBoxGeometry(1, 1, 1, 3, 0.1);
     // x/y/s are design px on the 1920 frame. `m` places a cube on phones as
     // [x, y, size] fractions of the stage (x, size × width, y × height);
-    // cubes without one are hidden there, as in the mobile design.
+    // cubes without one are hidden there, as in the mobile design. `z` is the
+    // depth it drifts with the scroll at, as the page's other cubes do.
     const cubeDefs: {
       x: number;
       y: number;
@@ -259,12 +261,13 @@ export default function ScientificallyStructuredSection() {
       c: number;
       r: readonly [number, number, number];
       soft: boolean;
+      z: number;
       m?: readonly [number, number, number];
     }[] = [
-      { x: 1625, y: 195, s: 34, c: 0x2c5bb0, r: [0.5, 0.7, 0.2], soft: false },
-      { x: 200, y: 452, s: 46, c: 0x8fb7ef, r: [0.3, -0.6, 0.1], soft: true },
-      { x: 1012, y: 826, s: 50, c: 0x3a6cc0, r: [0.9, 0.8, 0.4], soft: true, m: [0.07, 0.67, 0.06] },
-      { x: 1577, y: 1006, s: 38, c: 0xe8d6b5, r: [0.6, 0.5, 0.3], soft: false, m: [0.67, 0.83, 0.05] },
+      { x: 1625, y: 195, s: 34, c: 0x2c5bb0, r: [0.5, 0.7, 0.2], soft: false, z: 0.5 },
+      { x: 200, y: 452, s: 46, c: 0x8fb7ef, r: [0.3, -0.6, 0.1], soft: true, z: 0.8 },
+      { x: 1012, y: 826, s: 50, c: 0x3a6cc0, r: [0.9, 0.8, 0.4], soft: true, z: 0.9, m: [0.07, 0.67, 0.06] },
+      { x: 1577, y: 1006, s: 38, c: 0xe8d6b5, r: [0.6, 0.5, 0.3], soft: false, z: 0.6, m: [0.67, 0.83, 0.05] },
     ];
     const cubes = cubeDefs.map((d) => {
       const mat = new THREE.MeshStandardMaterial({
@@ -1090,10 +1093,16 @@ export default function ScientificallyStructuredSection() {
       }
 
       if (!reduceMotion) {
+        // Through the section's whole pass, pin included (see CubeParallax).
+        const box = section.getBoundingClientRect();
+        const pass = (innerHeight - box.top) / (innerHeight + box.height);
         cubes.forEach((c, i) => {
-          const base = (c.userData as { base: THREE.Vector3 | null }).base;
-          if (!base) return;
-          c.position.y = base.y + Math.sin(time * 0.9 + i * 1.7) * c.scale.x * 0.12;
+          const d = c.userData as (typeof cubeDefs)[number] & { base: THREE.Vector3 | null };
+          if (!d.base) return;
+          // The overlay's y and turns run the other way from the page's.
+          const drift = cubeScroll(pass, d.z, i % 2 ? 1 : -1);
+          c.position.y = d.base.y - drift.y + Math.sin(time * 0.9 + i * 1.7) * c.scale.x * 0.12;
+          c.rotation.z = d.r[2] - THREE.MathUtils.degToRad(drift.turn);
           c.rotation.y += dt * 0.25;
         });
       }

@@ -2,6 +2,7 @@ import AnandSection from "@/components/AnandSection";
 import BookDemoSection from "@/components/BookDemoSection";
 import CarouselSection from "@/components/CarouselSection";
 import Button from "@/components/common/Button/Button";
+import CubeParallax from "@/components/CubeParallax";
 import DarkSection from "@/components/DarkSection";
 import HeroSection from "@/components/HeroSection";
 import ReviewSection from "@/components/ReviewSection";
@@ -24,6 +25,7 @@ export default function Home() {
       <ReviewSection />
       <CarouselSection />
       <BookDemoSection />
+      <CubeParallax />
     </div>
   );
 }

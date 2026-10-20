@@ -290,8 +290,8 @@ export default function SuccessStoriesSection() {
       </div>
 
       <div className="stories__inner">
-        <span className="stories__cube stories__cube--blue stories__cube--1" aria-hidden="true" />
-        <span className="stories__cube stories__cube--duo stories__cube--2" aria-hidden="true" />
+        <span className="stories__cube stories__cube--blue stories__cube--1" aria-hidden="true" data-cube="0.9" />
+        <span className="stories__cube stories__cube--duo stories__cube--2" aria-hidden="true" data-cube="0.5" />
 
         <button
           type="button"
@@ -360,8 +360,8 @@ export default function SuccessStoriesSection() {
               <span>{story.location}</span>
             </p>
 
-            <span className="stories__cube stories__cube--blue stories__cube--3" aria-hidden="true" />
-            <span className="stories__cube stories__cube--beige stories__cube--4" aria-hidden="true" />
+            <span className="stories__cube stories__cube--blue stories__cube--3" aria-hidden="true" data-cube="0.4" />
+            <span className="stories__cube stories__cube--beige stories__cube--4" aria-hidden="true" data-cube="1" />
           </div>
         </div>
 

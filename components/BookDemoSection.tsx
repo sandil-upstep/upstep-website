@@ -118,8 +118,8 @@ export default function BookDemoSection() {
         className="book-demo__board"
         aria-hidden="true"
       />
-      <span className="book-demo__cube book-demo__cube--tan" aria-hidden="true" />
-      <span className="book-demo__cube book-demo__cube--right" aria-hidden="true" />
+      <span className="book-demo__cube book-demo__cube--tan" aria-hidden="true" data-cube="0.4" />
+      <span className="book-demo__cube book-demo__cube--right" aria-hidden="true" data-cube="0.9" />
 
       <div className="book-demo__inner">
         <Eyebrow className="book-demo__eyebrow" boxClassName="book-demo__eyebrow-box">
@@ -160,11 +160,13 @@ export default function BookDemoSection() {
             <path d="M565 115 C 610 40, 760 20, 825 117" />
             <path d="M950 502 C 990 590, 1110 650, 1190 574" />
           </svg>
-          <span className="book-demo__cube book-demo__cube--steps" aria-hidden="true" />
+          <span className="book-demo__cube book-demo__cube--steps" aria-hidden="true" data-cube="0.6" />
 
           <ol className="book-demo__cards">
+            {/* Phones draw a cube as some cards' ::before (CubeParallax
+                skips the rest). */}
             {STEPS.map((step, i) => (
-              <li className="book-demo__step" key={step.title}>
+              <li className="book-demo__step" key={step.title} data-cube-before="0.6">
                 <span className="book-demo__num" aria-hidden="true">
                   {String(i + 1).padStart(2, "0")}
                 </span>

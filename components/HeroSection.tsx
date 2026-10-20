@@ -600,7 +600,7 @@ export default function HeroSection() {
         {/* Desktop gaps shrink with the viewport, like the rest of the
             design, so the copy clears the card row on 1280-1440 laptops. */}
         <div ref={copyRef} className="@container relative z-10 h-full flex flex-col items-start gap-8 lg:gap-[clamp(1.5rem,2.5vw,3rem)]">
-          <Image src="/images/cubes/cube-1.png" width={200} height={200} alt="" aria-hidden="true" className="hero-cube hero-cube--title" />
+          <Image src="/images/cubes/cube-1.png" width={200} height={200} alt="" aria-hidden="true" className="hero-cube hero-cube--title" data-cube="0.5" />
 
           <h1 ref={titleRef} className="hero-title" style={{ visibility: "hidden" }}>
             Interactive Chess<br/> Learning, Personalized<br/> for Every Child
@@ -641,7 +641,7 @@ export default function HeroSection() {
           ref={videoSlotRef}
           className="relative order-first -mx-4 -mt-24 aspect-3/4 w-[calc(100%+2rem)] sm:-mx-10 sm:-mt-32 sm:aspect-4/3 sm:w-[calc(100%+5rem)] lg:static lg:order-none lg:mx-0 lg:mt-0 lg:aspect-auto lg:w-full"
         >
-        <Image src="/images/cubes/cube-4.png" width={200} height={200} alt="" aria-hidden="true" className="hero-cube hero-cube--photo" />
+        <Image src="/images/cubes/cube-4.png" width={200} height={200} alt="" aria-hidden="true" className="hero-cube hero-cube--photo" data-cube="0.9" />
         {/* z-20 while playing keeps the rating cards from painting over it. */}
         <div
           ref={videoLayerRef}
@@ -812,8 +812,8 @@ export default function HeroSection() {
       </svg> */}
       {/* Desktop cubes: one sitting on the frame line beside the title, one
           blurred down between the first two cards. */}
-      <Image src="/images/cubes/cube-11.png" width={200} height={200} alt="" aria-hidden="true" className="hero-cube hero-cube--frame" />
-      <Image src="/images/cubes/cube-4.png" width={200} height={200} alt="" aria-hidden="true" className="hero-cube hero-cube--cards" />
+      <Image src="/images/cubes/cube-11.png" width={200} height={200} alt="" aria-hidden="true" className="hero-cube hero-cube--frame" data-cube="0.5" />
+      <Image src="/images/cubes/cube-4.png" width={200} height={200} alt="" aria-hidden="true" className="hero-cube hero-cube--cards" data-cube="0.9" />
       <div ref={ratingRowRef} className="rating-card-row">
         {RATING_CARDS.map((card, index) => (
           <div
@@ -860,8 +860,8 @@ export default function HeroSection() {
         ))}
         {/* Stacked grid's cubes, either side of the cards. After the cards
             so the nth-child stagger still counts only cards. */}
-        <Image src="/images/cubes/cube-4.png" width={200} height={200} alt="" aria-hidden="true" className="hero-cube hero-cube--grid-left" />
-        <Image src="/images/cubes/cube-21.png" width={200} height={200} alt="" aria-hidden="true" className="hero-cube hero-cube--grid-right" />
+        <Image src="/images/cubes/cube-4.png" width={200} height={200} alt="" aria-hidden="true" className="hero-cube hero-cube--grid-left" data-cube="0.6" />
+        <Image src="/images/cubes/cube-21.png" width={200} height={200} alt="" aria-hidden="true" className="hero-cube hero-cube--grid-right" data-cube="0.4" />
       </div>
 
       

@@ -24,7 +24,11 @@ const openSans = Open_Sans({
 const LAPTOP = { src: "/images/laptop-3d.png", width: 1120, height: 838 };
 const BOY = { src: "/images/boy-3d.png", width: 1120, height: 838 };
 const SCENE_SIZES = "(min-width: 1200px) 59vw, 106vw";
-const CUBE_SRCS = ["/images/cubes/cube-4.png", "/images/cubes/cube-21.png"];
+// depth: how far each drifts with the scroll (see CubeParallax).
+const CUBES = [
+  { src: "/images/cubes/cube-4.png", depth: 0.5 },
+  { src: "/images/cubes/cube-21.png", depth: 0.8 },
+];
 
 // A slide is either a local/remote image or a YouTube video. YouTube slides
 // show the video's thumbnail (or `poster`) until played.
@@ -554,7 +558,7 @@ export default function WhatWeOfferSection() {
   };
 
   return (
-    <div ref={pinRef} className="wwo-pin">
+    <div ref={pinRef} className="wwo-pin" data-cube-scope>
     <section
       ref={sectionRef}
       className={`wwo ${openSans.variable}`}
@@ -568,7 +572,7 @@ export default function WhatWeOfferSection() {
         <span className="wwo__gl wwo__gl--4" aria-hidden="true" />
         <div className="wwo__floor" aria-hidden="true" />
 
-        {CUBE_SRCS.map((src, i) => (
+        {CUBES.map(({ src, depth }, i) => (
           <Image
             key={src}
             src={src}
@@ -577,6 +581,7 @@ export default function WhatWeOfferSection() {
             alt=""
             aria-hidden="true"
             className={`wwo__cube wwo__cube--${i + 1}`}
+            data-cube={depth}
           />
         ))}
 

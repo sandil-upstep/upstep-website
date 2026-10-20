@@ -101,20 +101,16 @@ const KING_SRC = img("king");
 const RING_SRC = img("ring");
 
 type Spot3 = readonly [number, number, number]; // centre x, centre y, size
-type CubeDef = { c: keyof typeof CUBE_FACES; r: number; closed: Spot3; open: Spot3; z: number };
-const CUBE_FACES = {
-  beige: ["#f6ead3", "#dcc8a4", "#c4ad86"],
-  light: ["#c4d8f4", "#93b3df", "#7499cb"],
-  blue: ["#5486d8", "#2f5fb4", "#21478f"],
-  duo: ["#f3f4f7", "#2f5fb4", "#21478f"],
-} as const;
-// Design-frame spots; they drift from `closed` to `open` as the king centres.
+type CubeDef = { src: string; closed: Spot3; open: Spot3; z: number };
+const cube = (n: number) => `/images/cubes/cube-${n}.png`;
+// The same rendered cubes as the other sections. Design-frame spots; they
+// drift from `closed` to `open` as the king centres.
 // z: depth for the parallax while the cards rise in (nearer drifts further).
 const WHY_CUBES: CubeDef[] = [
-  { c: "beige", r: 14, closed: [1622, 88, 34], open: [1635, 132, 52], z: 0.45 },
-  { c: "light", r: -10, closed: [290, 198, 30], open: [290, 400, 52], z: 0.3 },
-  { c: "blue", r: 18, closed: [660, 793, 30], open: [510, 800, 30], z: 0.6 },
-  { c: "duo", r: -16, closed: [1707, 762, 48], open: [1707, 800, 48], z: 0.9 },
+  { src: cube(5), closed: [1622, 88, 34], open: [1635, 132, 52], z: 0.45 },
+  { src: cube(6), closed: [290, 198, 30], open: [290, 400, 52], z: 0.3 },
+  { src: cube(12), closed: [660, 793, 30], open: [510, 800, 30], z: 0.6 },
+  { src: cube(2), closed: [1707, 762, 48], open: [1707, 800, 48], z: 0.9 },
 ];
 
 // Desktop card spots in the design frame: centre, scale (of ITEM) and blur.
@@ -1027,20 +1023,12 @@ export default function WhyChessSection() {
             </h2>
             <p className="why__headline" aria-hidden="true" />
             <div className="why__cubes" aria-hidden="true">
-              {WHY_CUBES.map((c, i) => {
-                const [t, l, r] = CUBE_FACES[c.c];
-                return (
-                  <div key={i} className="why-cube">
-                    <svg viewBox="0 0 100 100" style={{ "--d": `${-i * 1.7}s` } as CSSProperties}>
-                      <g strokeLinejoin="round" strokeWidth="4" transform={`rotate(${c.r} 50 52)`}>
-                        <polygon points="50,10 90,31 50,52 10,31" fill={t} stroke={t} />
-                        <polygon points="10,31 50,52 50,94 10,73" fill={l} stroke={l} />
-                        <polygon points="50,52 90,31 90,73 50,94" fill={r} stroke={r} />
-                      </g>
-                    </svg>
-                  </div>
-                );
-              })}
+              {WHY_CUBES.map((c, i) => (
+                <div key={i} className="why-cube">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={c.src} alt="" style={{ "--d": `${-i * 1.7}s` } as CSSProperties} />
+                </div>
+              ))}
             </div>
             <div className="why__hero">
               <div className="why__king" aria-hidden="true">

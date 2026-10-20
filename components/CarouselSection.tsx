@@ -100,6 +100,7 @@ export default function CarouselSection() {
             height={200}
             className="carousel__cube carousel__cube--right"
             aria-hidden="true"
+            data-cube="0.7"
           />
           <Image
             src="/images/cubes/cube-4.png"
@@ -108,6 +109,7 @@ export default function CarouselSection() {
             height={200}
             className="carousel__cube carousel__cube--left"
             aria-hidden="true"
+            data-cube="0.5"
           />
 
           {/* Page-coloured arcs over the top and bottom edges: the row reads as

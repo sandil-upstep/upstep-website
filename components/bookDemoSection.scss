@@ -371,6 +371,9 @@ $cobalt: #3d78de;
   box-shadow: inset -3px -4px 6px rgba(20, 40, 90, 0.25), inset 2px 2px 4px rgba(255, 255, 255, 0.5),
     0 8px 14px rgba(20, 40, 90, 0.2);
   pointer-events: none;
+  // Scroll drift and float, set on the card by CubeParallax.
+  translate: var(--cube-translate, none);
+  rotate: var(--cube-rotate, none);
 }
 
 @media (max-width: 767.98px) {

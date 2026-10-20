@@ -203,8 +203,9 @@ export default function ReviewSection() {
             height={200}
             className="review__cube"
             aria-hidden="true"
+            data-cube="0.5"
           />
-          <span className="review__diamond" aria-hidden="true" />
+          <span className="review__diamond" aria-hidden="true" data-cube="0.7" />
         </div>
 
         {/* Mobile only: the flags run as a horizontal strip under the title. */}
