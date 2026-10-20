@@ -31,8 +31,8 @@ $theme-transition: 0.7s ease; // the page cover's theme switch (anandSection.scs
 // which sticks while the page scroll steps through the levels (desktop).
 // No overflow clipping on the section itself: that would break the sticky.
 // No background either: the page cover shows through, so when it turns dark
-// as the king drops into the next section (see the component) the section
-// goes white on dark with it.
+// as the next section's heading reaches mid-screen (see WhyChessSection.tsx)
+// the section goes white on dark with it.
 .structured {
   --structured-fg: #{$ink};
   --structured-eyebrow: #222222;

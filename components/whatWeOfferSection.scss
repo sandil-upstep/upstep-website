@@ -151,10 +151,10 @@ $card-2: (
   top: var(--pin-top, 0px);
 }
 
-// While pinned the scroll scrubs the slides: WhatWeOfferSection blends each
-// slide between the slots below (geometry, opacity, --fade and stacking) from
-// the scroll position, so the slot transitions are off. Mobile (no pin)
-// keeps them.
+// While pinned (at every width, once the script runs) the scroll scrubs the
+// slides: WhatWeOfferSection blends each slide between the slots below
+// (geometry, opacity, --fade and stacking) from the scroll position, so the
+// slot transitions are off.
 .wwo-pin--active {
   .wwo__slide,
   .wwo__clip,
@@ -252,8 +252,7 @@ $card-2: (
   // Thin dark edge that follows the clipped polygon, like the design's stroke.
   filter: drop-shadow(0 0 0.6px rgba(17, 17, 17, 0.9));
   transition-property: left, top, width, height, opacity, transform;
-  // --wwo-dur shortens while rapid scrolling queues up slides (set from JS).
-  transition-duration: var(--wwo-dur, #{$dur});
+  transition-duration: $dur;
   transition-timing-function: $ease;
   background: $white;
   // Behind the laptop: its bezel frames the slide through the see-through screen.
@@ -272,14 +271,14 @@ $card-2: (
   overflow: hidden;
   background: $white;
   clip-path: var(--poly);
-  transition: clip-path var(--wwo-dur, #{$dur}) $ease;
+  transition: clip-path $dur $ease;
   // Caption + play button scale with the slide itself.
   container-type: inline-size;
   
   img {
     object-fit: cover;
     opacity: var(--fade, 1);
-    transition: opacity var(--wwo-dur, #{$dur}) $ease;
+    transition: opacity $dur $ease;
   }
 
   iframe {

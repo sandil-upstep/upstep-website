@@ -63,10 +63,6 @@ const HOLD = 0.08;
 // Seconds the page takes to glide to a slide's spot (buttons, wheel, keys).
 const SEEK_S = 1.1;
 
-// Time each slide change gets before the next one starts on mobile (no pin);
-// matches the slide transition ($dur in whatWeOfferSection.scss).
-const STEP_MS = 750;
-
 // Slots in order of a slide's offset from the active one, -3..3. While pinned,
 // each slide is placed by blending the two slots its offset falls between.
 const SCRUB_SLOTS = ["out-l", "-2", "-1", "0", "1", "2", "out-r"];
@@ -80,10 +76,6 @@ function offsetOf(index: number, s: number) {
   const o = (((index - s) % N) + N) % N;
   return o >= 3 ? o - N : o;
 }
-
-// Mobile has no scroll pin, so the slides advance on their own while the
-// section is in view.
-const AUTOPLAY_MS = 4000;
 
 // Where a slide sits relative to the active one: "0" is the laptop screen,
 // "-1".."3" are the faded cards around it, "out-r" waits off-stage. Only the
@@ -102,18 +94,15 @@ const ytEmbed = (id: string) =>
 export default function WhatWeOfferSection() {
   const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [autoplay, setAutoplay] = useState(false);
   const swipeX = useRef<number | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
-  // True while the scroll pin runs (≥768px); the scroll then drives the slides.
+  // True while the scroll pin runs (once mounted, at every width); the scroll
+  // then drives the slides.
   const pinnedRef = useRef(false);
-  // Mobile: swipes, arrows and autoplay set the target; the shown slide walks
-  // to it one step per STEP_MS, so rapid clicks never skip slides.
-  const targetRef = useRef(0);
+  // The slide the scroll last showed.
   const shownRef = useRef(0);
-  const stepTimer = useRef<number | null>(null);
   // True while goTo's scroll to a slide's spot is still under way.
   const seekingRef = useRef(false);
   const seekTimer = useRef<number | null>(null);
@@ -134,43 +123,13 @@ export default function WhatWeOfferSection() {
     return { start, end: start + distance };
   }, []);
 
-  const setTarget = useCallback((i: number) => {
-    targetRef.current = i;
-    const chase = () => {
-      const target = targetRef.current;
-      if (shownRef.current === target) return;
-      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      shownRef.current = reduced ? target : shownRef.current + Math.sign(target - shownRef.current);
-      // The more slides still waiting behind this step, the faster it plays
-      // (up to ~2.8×), so rapid taps keep up.
-      const pending = Math.abs(target - shownRef.current);
-      const ms = Math.round(STEP_MS / (1 + Math.min(pending, 3) * 0.6));
-      trackRef.current?.style.setProperty("--wwo-dur", `${ms}ms`);
-      setActive(shownRef.current);
-      setPlaying(false);
-      stepTimer.current = window.setTimeout(() => {
-        stepTimer.current = null;
-        chase();
-      }, reduced ? 0 : ms);
-    };
-    // A running chase picks up the new target on its next step.
-    if (stepTimer.current === null) chase();
-  }, []);
-
-  useEffect(() => () => {
-    if (stepTimer.current !== null) clearTimeout(stepTimer.current);
-  }, []);
-
   // Buttons, keys, swipes, wheel and card clicks scroll the page to the
   // slide's spot inside the pin; the scrub then follows the scroll there.
   const goTo = useCallback((i: number) => {
     const index = Math.min(N - 1, Math.max(0, i));
     headingRef.current = index;
     const range = getRange();
-    if (!range) {
-      setTarget(index);
-      return;
-    }
+    if (!range) return;
     // The middle of the slide's band, where the carousel rests on it.
     const top = Math.round(range.start + ((range.end - range.start) * (index + 0.5)) / N);
     const lenis = getLenis();
@@ -192,9 +151,9 @@ export default function WhatWeOfferSection() {
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       window.scrollTo({ top, behavior: reduced ? "auto" : "smooth" });
     }
-  }, [getRange, setTarget]);
+  }, [getRange]);
 
-  // ---- Scroll pin + scrub (≥768px) ----
+  // ---- Scroll pin + scrub ----
   // The section sticks inside a taller wrapper (CSS `position: sticky`, as in
   // AnandSliderPin; a ScrollTrigger pin would jolt a section this big as it
   // switches to `position: fixed`). The extra height is split into N equal
@@ -207,14 +166,14 @@ export default function WhatWeOfferSection() {
   // so nothing queues or lags: scroll back and the move plays backwards.
   // Each slide carries one paused animation through all the slots (read from
   // the stylesheet with a probe, so the CSS stays the source of every layout),
-  // and the scroll sets how far along it is.
+  // and the scroll sets how far along it is. Phones pin the same way, scrubbed
+  // by touch scrolling.
   useEffect(() => {
     const wrap = pinRef.current;
     const section = sectionRef.current;
     const track = trackRef.current;
     const laptop = track?.querySelector<HTMLElement>(".wwo__laptop");
     if (!wrap || !section || !track || !laptop) return;
-    const pinMQ = window.matchMedia("(min-width: 768px)");
     const wideMQ = window.matchMedia("(min-width: 1200px)");
     const reducedMQ = window.matchMedia("(prefers-reduced-motion: reduce)");
     const slides = Array.from(track.querySelectorAll<HTMLElement>(".wwo__slide"));
@@ -334,26 +293,19 @@ export default function WhatWeOfferSection() {
       draw(s);
       const shown = Math.round(s);
       if (shown !== shownRef.current) {
-        shownRef.current = targetRef.current = shown;
+        shownRef.current = shown;
         setActive(shown);
         setPlaying(false);
       }
     };
 
+    const setPinTop = () =>
+      wrap.style.setProperty("--pin-top", `${Math.min(0, window.innerHeight - section.offsetHeight)}px`);
+
     const measure = () => {
       track.style.setProperty("--k", String(laptop.getBoundingClientRect().width / LAPTOP.width));
-      const on = pinMQ.matches;
-      if (on !== pinnedRef.current) {
-        pinnedRef.current = on;
-        wrap.classList.toggle("wwo-pin--active", on);
-        if (!on) clear();
-      }
-      if (!on) {
-        wrap.style.height = "";
-        return;
-      }
+      setPinTop();
       // Extra height is the scroll the pin holds the section for.
-      wrap.style.setProperty("--pin-top", `${Math.min(0, window.innerHeight - section.offsetHeight)}px`);
       wrap.style.height = `${section.offsetHeight + N * window.innerHeight * SCROLL_PER_SLIDE}px`;
       dirty = true;
       lastY = NaN;
@@ -372,8 +324,21 @@ export default function WhatWeOfferSection() {
     const observer = new ResizeObserver(remeasure);
     observer.observe(section);
     observer.observe(laptop);
-    window.addEventListener("resize", remeasure);
-    pinMQ.addEventListener("change", remeasure);
+
+    // Mobile browsers resize the viewport's height as the address bar shows
+    // and hides mid-scroll; resizing the wrapper then would shift the page
+    // under the finger. A height-only change just keeps a section taller than
+    // the viewport pinned by its bottom edge.
+    let lastWidth = window.innerWidth;
+    const onResize = () => {
+      if (window.innerWidth === lastWidth) {
+        setPinTop();
+        return;
+      }
+      lastWidth = window.innerWidth;
+      remeasure();
+    };
+    window.addEventListener("resize", onResize);
     wideMQ.addEventListener("change", remeasure);
 
     // A finger on the screen holds off the snap and stops a glide that's
@@ -394,6 +359,8 @@ export default function WhatWeOfferSection() {
     window.addEventListener("touchend", onTouchEnd, { passive: true });
     window.addEventListener("touchcancel", onTouchEnd, { passive: true });
 
+    pinnedRef.current = true;
+    wrap.classList.add("wwo-pin--active");
     // Every frame on the shared ticker, right after Lenis moves the scroll.
     const offFrame = onFrame(tick);
     measure();
@@ -402,8 +369,7 @@ export default function WhatWeOfferSection() {
       cancelAnimationFrame(frame);
       if (snapTimer !== null) clearTimeout(snapTimer);
       observer.disconnect();
-      window.removeEventListener("resize", remeasure);
-      pinMQ.removeEventListener("change", remeasure);
+      window.removeEventListener("resize", onResize);
       wideMQ.removeEventListener("change", remeasure);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchend", onTouchEnd);
@@ -416,45 +382,6 @@ export default function WhatWeOfferSection() {
     };
   }, [getRange, goTo]);
 
-  // Autoplay on mobile (below the pin breakpoint) while the section is on
-  // screen, unless the user prefers reduced motion.
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-    const mobile = window.matchMedia("(max-width: 767.98px)");
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let inView = false;
-    const update = () => setAutoplay(inView && mobile.matches && !reduced.matches);
-    const observer = new IntersectionObserver(([entry]) => {
-      inView = entry.isIntersecting;
-      update();
-    }, { threshold: 0.4 });
-    observer.observe(section);
-    mobile.addEventListener("change", update);
-    reduced.addEventListener("change", update);
-    return () => {
-      observer.disconnect();
-      mobile.removeEventListener("change", update);
-      reduced.removeEventListener("change", update);
-    };
-  }, []);
-
-  // Each slide change (auto or by the user) restarts the countdown; a playing
-  // video holds it. After the last slide it wraps straight back to the first,
-  // which the circular slots animate as a single step.
-  useEffect(() => {
-    if (!autoplay || playing) return;
-    const timer = window.setTimeout(() => {
-      if (shownRef.current < N - 1) {
-        setTarget(shownRef.current + 1);
-      } else {
-        targetRef.current = shownRef.current = 0;
-        setActive(0);
-      }
-    }, AUTOPLAY_MS);
-    return () => clearTimeout(timer);
-  }, [autoplay, playing, active, setTarget]);
-
   // ---- Wheel: one gesture = one slide ----
   // Inside the pin the wheel never scrolls by its own amount: each gesture
   // moves exactly one slide, and the rest of it (a trackpad's momentum tail
@@ -465,7 +392,7 @@ export default function WhatWeOfferSection() {
   // into the pin from above or below stops on the first/last slide instead of
   // skipping through. Past the last slide (or before the first) the page
   // scrolls on as usual. Runs in the capture phase on document, ahead of
-  // Lenis's window listener. Desktop/tablet only: mobile has no pin.
+  // Lenis's window listener.
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
@@ -537,9 +464,9 @@ export default function WhatWeOfferSection() {
       if (seekTimer.current !== null) clearTimeout(seekTimer.current);
     };
   }, [getRange, goTo]);
-  // Steps count from where the page is heading (pinned) or the target, so
-  // each click queues exactly one more slide.
-  const step = (dir: -1 | 1) => goTo((pinnedRef.current ? headingRef.current : targetRef.current) + dir);
+  // Steps count from where the page is heading, so each click queues exactly
+  // one more slide.
+  const step = (dir: -1 | 1) => goTo(headingRef.current + dir);
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }

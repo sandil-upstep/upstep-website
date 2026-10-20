@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { onFrame } from "./SmoothScroll";
+import { setCoverDark } from "./coverTheme";
+import { onFrame, onScrollFrame } from "./SmoothScroll";
 import { staircase, type StaircaseHandle } from "./staircaseBridge";
 import "./whyChessSection.scss";
 
@@ -152,8 +153,16 @@ const KING_PIECE = KING_BOX.base - KING_BOX.top;
 // set down as in the design: the blue band of its base on the section's
 // bottom edge and the foot hanging over the reviews below.
 const KING_AT = { landed: { cx: 1412, top: 271, s: 0.94 }, centre: { cx: 912, top: 312, s: 0.984 } };
-// The ring hangs around the king's chest: its centre `y` image px below the
-// top of the king's box, `d` image px across, for each pose.
+// The halo ring round the 3D king, for each pose: its centre `y` above the
+// king's base and its radius `r`, as shares of the king's height (the centred
+// pose as in the "King with ring" reference). Its gold arcs turn slowly
+// clockwise, RING_SPIN rad/s, after spinning in from RING_IN_TURN back.
+const RING_3D = { landed: { y: 0.68, r: 0.24 }, centre: { y: 0.6, r: 0.29 } };
+const RING_SPIN = 0.15;
+const RING_IN_TURN = (70 * Math.PI) / 180;
+// The flat ring image, shown only round the image king (when the 3D one
+// can't be drawn): its centre `y` image px below the top of the king's box,
+// `d` image px across, for each pose.
 const RING_AT = { landed: { y: 220, d: 348 }, centre: { y: 275, d: 412 } };
 const RING_IMG = { w: 446, h: 448 };
 // Phones: the items sit on an ellipse round the king, the first at its
@@ -844,9 +853,11 @@ export default function WhyChessSection() {
     // this section reaching the top of the screen. After the landing the same 3D king stays: it is drawn over the (hidden)
     // image king's exact spot, so it rides the layout here — resting where it
     // landed, then spinning MOVE_SPINS turns on its axis as the pinned scroll
-    // carries it to the centre. Scrolling back plays it all backwards. The
-    // image only shows if the 3D king can't be drawn (no WebGL, phones,
-    // reduced motion, or the 3D board isn't ready).
+    // carries it to the centre. Its halo ring is 3D too, drawn round it on the
+    // same canvas so the king hides the ring's far side. Scrolling back plays
+    // it all backwards. The image king and its flat ring only show if the 3D
+    // king can't be drawn (no WebGL, reduced motion, or the 3D board isn't
+    // ready).
     const handoff = () => !reduceMotion && !!staircase.current?.active();
     let fallerOn = false;
     let kingShown = true;
@@ -858,14 +869,19 @@ export default function WhyChessSection() {
         faller.style.display = on ? "block" : "none";
       }
     };
+    // The image king, and the flat ring round it: the 3D king brings its own ring.
     const showKing = (on: boolean) => {
       if (on !== kingShown) {
         kingShown = on;
-        kingEl.style.visibility = on ? "" : "hidden";
+        kingEl.style.visibility = ringEl.style.visibility = on ? "" : "hidden";
       }
     };
     const draw3d = (stairs: StaircaseHandle, pose: Parameters<StaircaseHandle["fallKing"]>[0]) => {
-      const key = pose ? `${pose.cx.toFixed(1)}|${pose.bottom.toFixed(1)}|${pose.h.toFixed(2)}|${pose.spin.toFixed(4)}` : "";
+      const ring = pose?.ring;
+      const key = pose
+        ? `${pose.cx.toFixed(1)}|${pose.bottom.toFixed(1)}|${pose.h.toFixed(2)}|${pose.spin.toFixed(4)}` +
+          (ring ? `|${ring.y.toFixed(4)}|${ring.r.toFixed(4)}|${ring.turn.toFixed(4)}|${ring.opacity.toFixed(3)}` : "")
+        : "";
       if (key === king3dKey) return king3dOk;
       king3dKey = key;
       king3dOk = stairs.fallKing(pose);
@@ -884,12 +900,25 @@ export default function WhyChessSection() {
       }
       const es = r.width / KING_BOX.w;
       const p = S.move * S.move * (3 - 2 * S.move);
+      // The ring spins in as the flat one did: growing, turning clockwise
+      // into place and fading up.
+      const m = mode === "desktop" ? S.move : 1;
+      const ring =
+        S.ring > 0.001
+          ? {
+              y: lerp(RING_3D.landed.y, RING_3D.centre.y, m),
+              r: lerp(RING_3D.landed.r, RING_3D.centre.r, m) * (0.55 + 0.45 * S.ring),
+              turn: RING_IN_TURN * (1 - S.ring) - (performance.now() / 1000) * RING_SPIN,
+              opacity: clamp01(S.ring),
+            }
+          : null;
       return draw3d(stairs, {
         cx: r.left + r.width / 2,
         bottom: r.top + KING_BOX.base * es,
         h: KING_PIECE * es,
         spin: -MOVE_SPINS * 2 * Math.PI * p, // leftwards, the way it travels
         opacity: 1,
+        ring,
       });
     }
     const imageKing = () => {
@@ -992,6 +1021,34 @@ export default function WhyChessSection() {
       kingImg.removeEventListener("animationend", onLanded);
       hide3d();
       staircase.current?.setKingHidden(false);
+    };
+  }, []);
+
+  // The page cover turns dark once the outlined heading's top reaches the
+  // middle of the screen (as the heading starts rising in), taking this
+  // section and the levels above with it, and light again when scrolled back
+  // above that. It stays dark further down: the heading stays above the
+  // middle, and the sections there paint their own backgrounds. Kept apart
+  // from the animation so it still happens without it.
+  useEffect(() => {
+    const section = sectionRef.current;
+    const title = section?.querySelector(".why__title");
+    const page = section?.closest(".main-cover");
+    if (!title || !page) return;
+    let dark: boolean | null = null;
+    const update = () => {
+      const past = title.getBoundingClientRect().top <= innerHeight / 2;
+      if (past === dark) return;
+      dark = past;
+      setCoverDark(page, "why", past);
+    };
+    const offScroll = onScrollFrame(update);
+    addEventListener("resize", update);
+    update();
+    return () => {
+      offScroll();
+      removeEventListener("resize", update);
+      setCoverDark(page, "why", false);
     };
   }, []);
 

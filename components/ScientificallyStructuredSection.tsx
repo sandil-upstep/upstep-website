@@ -5,7 +5,6 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
-import { setCoverDark } from "./coverTheme";
 import { cubeScroll } from "./CubeParallax";
 import Eyebrow from "./Eyebrow";
 import RevealTitle from "./RevealTitle";
@@ -129,6 +128,82 @@ const PROP_PAD = 0.12;
 const SWAP_A = 0.3;
 const SWAP_B = 0.44;
 const WHITE_TONE = 0.76; // white pieces' base colour, as a share of the model's
+
+// The halo ring round the king once it has landed in the next section, from
+// the "King with ring" reference: thin glowing cyan circles and four rounded
+// gold arcs, built at unit radius (the pose sizes it). It faces the camera,
+// leaning back RING_TILT so its lower arc swings in front of the king and the
+// upper one passes behind its head, as in the reference's opening view.
+const RING_TILT = 0.31;
+function makeRing(facing: THREE.Vector3) {
+  const group = new THREE.Group();
+  group.rotation.y = Math.atan2(facing.x, facing.z);
+  const tilt = new THREE.Group();
+  tilt.rotation.x = -(Math.asin(facing.y) + RING_TILT);
+  group.add(tilt);
+  // Every material, its full opacity kept so the pose can fade it. Colours
+  // are the design's sRGB ones, as for the staircase.
+  const mats: THREE.Material[] = [];
+  const keep = <M extends THREE.MeshBasicMaterial | THREE.MeshStandardMaterial>(m: M) => {
+    m.color.convertSRGBToLinear();
+    if (m instanceof THREE.MeshStandardMaterial) m.emissive.convertSRGBToLinear();
+    m.userData.opacity = m.opacity;
+    mats.push(m);
+    return m;
+  };
+  const line = 0.0062;
+  // [radius, thickness, line opacity, glow opacity]
+  [[1, 1, 0.95, 0.16], [0.86, 1, 0.85, 0.14], [0.82, 0.7, 0.4, 0.08]].forEach(([k, w, o, g]) => {
+    tilt.add(
+      new THREE.Mesh(
+        new THREE.TorusGeometry(k, line * w, 8, 256),
+        keep(new THREE.MeshBasicMaterial({ color: 0xa8f4ff, transparent: true, opacity: o, toneMapped: false }))
+      ),
+      new THREE.Mesh(
+        new THREE.TorusGeometry(k, line * w * 6, 8, 256),
+        keep(
+          new THREE.MeshBasicMaterial({
+            color: 0x4fe3ff,
+            transparent: true,
+            opacity: g,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            toneMapped: false,
+          })
+        )
+      )
+    );
+  });
+  const arcs = new THREE.Group();
+  tilt.add(arcs);
+  const gold = keep(
+    new THREE.MeshStandardMaterial({
+      color: 0xf6d49a,
+      emissive: 0x6b4a1a,
+      emissiveIntensity: 0.7,
+      roughness: 0.35,
+      metalness: 0.15,
+      transparent: true,
+    })
+  );
+  const gr = 1.03;
+  const tube = 0.033;
+  const cap = new THREE.SphereGeometry(tube, 16, 12);
+  // Each arc's start and end, in degrees anticlockwise from 3 o'clock.
+  [[59, 90], [161, 180], [-46, 0], [-119, -90]].forEach(([a0, a1]) => {
+    const s = (a0 * Math.PI) / 180;
+    const e = (a1 * Math.PI) / 180;
+    const arc = new THREE.Mesh(new THREE.TorusGeometry(gr, tube, 16, 64, e - s), gold);
+    arc.rotation.z = s;
+    arcs.add(arc);
+    [s, e].forEach((a) => {
+      const c = new THREE.Mesh(cap, gold);
+      c.position.set(Math.cos(a) * gr, Math.sin(a) * gr, 0);
+      arcs.add(c);
+    });
+  });
+  return { group, arcs, mats };
+}
 
 export default function ScientificallyStructuredSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -1147,12 +1222,16 @@ export default function ScientificallyStructuredSection() {
     // ---- The king's fall into the next section ----
     // The stage scrolls away under the fall, so the falling king gets its own
     // fixed full-screen canvas: the same model and glaze, seen from the stage
-    // camera's direction under its lights, so it can spin on its axis.
+    // camera's direction under its lights, so it can spin on its axis. Once
+    // it has landed, the halo ring shows round it on the same canvas, so the
+    // king hides the ring's far side.
     type FallView = {
       r: THREE.WebGLRenderer;
       scene: THREE.Scene;
       cam: THREE.OrthographicCamera;
-      king: THREE.Group;
+      king: THREE.Group; // placed and sized by the pose
+      turn: THREE.Group; // the model, spun on its axis (the ring isn't)
+      ring: ReturnType<typeof makeRing>;
       env: THREE.Texture;
       height: number;
     };
@@ -1211,10 +1290,14 @@ export default function ScientificallyStructuredSection() {
       model.visible = true;
       model.position.set(0, 0, 0);
       model.scale.setScalar(1);
+      const turn = new THREE.Group();
+      turn.add(model);
+      const ring = makeRing(camDir);
+      ring.group.visible = false;
       const king = new THREE.Group();
-      king.add(model);
+      king.add(turn, ring.group);
       fScene.add(king);
-      return { r, scene: fScene, cam, king, env, height: form.userData.height as number };
+      return { r, scene: fScene, cam, king, turn, ring, env, height: form.userData.height as number };
     }
     // A standing piece L tall shows L * cos(elevation) tall from this camera.
     const fallFore = Math.sqrt(1 - camDir.y * camDir.y);
@@ -1239,7 +1322,18 @@ export default function ScientificallyStructuredSection() {
         .set(0, 0, 0)
         .addScaledVector(fallRight, pose.cx - fallW / 2)
         .addScaledVector(fallUp, fallH / 2 - pose.bottom);
-      v.king.rotation.y = pose.spin;
+      v.turn.rotation.y = pose.spin;
+      // The ring's radius and height are shares of the on-screen height:
+      // facing the camera, its radius shows in full, while heights up the
+      // piece show fallFore as tall.
+      const ring = pose.ring;
+      v.ring.group.visible = !!ring && ring.opacity > 0.001;
+      if (ring) {
+        v.ring.group.position.set(0, ring.y * v.height, 0);
+        v.ring.group.scale.setScalar(ring.r * v.height * fallFore);
+        v.ring.arcs.rotation.z = ring.turn;
+        v.ring.mats.forEach((m) => (m.opacity = (m.userData.opacity as number) * Math.min(1, ring.opacity)));
+      }
       v.r.domElement.style.opacity = String(pose.opacity);
       if (!fallShown) v.r.domElement.style.display = "block";
       fallShown = true;
@@ -1306,44 +1400,14 @@ export default function ScientificallyStructuredSection() {
       envTex.dispose();
       pmrem.dispose();
       if (fallView) {
+        fallView.ring.group.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
+        fallView.ring.mats.forEach((m) => m.dispose());
         fallView.env.dispose();
         fallView.r.dispose();
         fallView.r.domElement.remove();
       }
       renderer.dispose();
       if (renderer.domElement.parentElement === stage) stage.removeChild(renderer.domElement);
-    };
-  }, []);
-
-  // Once the levels have played out and the king drops into the Why Chess
-  // section, the page cover turns dark, as it does for the Anand section, and
-  // the board and copy go white on it. It stays dark further down (the
-  // sections there paint their own backgrounds) and turns light again when
-  // the page is scrolled back into the levels. Kept apart from the 3D scene
-  // so it still happens when WebGL can't start.
-  useEffect(() => {
-    const section = sectionRef.current;
-    const cover = coverRef.current;
-    const page = section?.closest(".main-cover");
-    if (!section || !cover || !page) return;
-    let dark: boolean | null = null;
-    const update = () => {
-      // Past the pin the sticky cover rests on the section's bottom edge:
-      // the moment the king leaves the top step.
-      const past =
-        section.offsetHeight - cover.offsetHeight > 1 &&
-        section.getBoundingClientRect().bottom - cover.getBoundingClientRect().bottom < 1;
-      if (past === dark) return;
-      dark = past;
-      setCoverDark(page, "structured", past);
-    };
-    const offScroll = onScrollFrame(update);
-    addEventListener("resize", update);
-    update();
-    return () => {
-      offScroll();
-      removeEventListener("resize", update);
-      setCoverDark(page, "structured", false);
     };
   }, []);
 

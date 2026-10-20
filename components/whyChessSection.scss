@@ -11,7 +11,6 @@
 // all positioned by WhyChessSection.tsx from GSAP-tweened state, so none of
 // them carry CSS transitions on transform/opacity (they would lag the scroll).
 
-$bg: #071025;
 $guide: rgba(255, 255, 255, 0.06);
 $outline: #2b3550;
 $cobalt: #3d78de;
@@ -24,7 +23,8 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   overflow-x: clip;
   overflow-y: visible;
   z-index: 2;
-  background: $bg;
+  // No background: the page cover shows through, light as the section comes
+  // in and dark once the heading reaches mid-screen (see the component).
   color: #ffffff;
   font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
 }
@@ -215,6 +215,7 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
     animation: why-land 0.65s cubic-bezier(0.3, 0.7, 0.4, 1);
   }
 }
+// The flat ring, round the image king only: the 3D king brings its own.
 .why__ring {
   position: absolute;
   left: 0;
