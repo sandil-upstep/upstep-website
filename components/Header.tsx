@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import "./header.scss";
 import Button from "./common/Button";
+import { openDemoBooking } from "./demoBooking";
 import Image from "next/image";
 
 type NavLink = { label: string; href: string };
@@ -288,7 +289,7 @@ export default function Header() {
 
           <div className="hidden items-center gap-4 lg:flex">
             <GapBadge />
-            <Button size="sm" className="h-[46px]" href="/book-demo">
+            <Button size="sm" className="h-[46px]" onClick={openDemoBooking}>
               Book a FREE demo class
             </Button>
           </div>
@@ -330,7 +331,13 @@ export default function Header() {
             </ul>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <GapBadge />
-              <Button size="sm" href="/book-demo">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setMenuOpen(false);
+                  openDemoBooking();
+                }}
+              >
                 Book a FREE demo class
               </Button>
             </div>

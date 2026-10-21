@@ -5,6 +5,7 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Button from "./common/Button";
+import { openDemoBooking } from "./demoBooking";
 import Eyebrow from "./Eyebrow";
 import RevealTitle from "./RevealTitle";
 import "./bookDemoSection.scss";
@@ -188,7 +189,7 @@ export default function BookDemoSection() {
 
         <div className="book-demo__cta">
           <span className="book-demo__cta-outline" aria-hidden="true" />
-          <Button className="book-demo__cta-btn" href="/book-demo">
+          <Button className="book-demo__cta-btn" onClick={openDemoBooking}>
             Book a FREE demo today!
           </Button>
         </div>

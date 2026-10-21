@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono, Open_Sans } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import SmoothScroll from "@/components/SmoothScroll";
-import ScrollToTop from "@/components/ScrollToTop";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -32,12 +29,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${plusJakartaSans.variable} ${geistMono.variable} ${openSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <SmoothScroll />
-        <Header />
-        {children}
-        <ScrollToTop />
-      </body>
+      {/* The site's header and drawer live in app/(site)/layout.tsx. */}
+      <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
 }

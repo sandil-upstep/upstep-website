@@ -279,7 +279,11 @@ export default function ScientificallyStructuredSection() {
     scene.add(new THREE.HemisphereLight(0xffffff, 0xb9c4dc, 0.35));
 
     // ---- Staircase: tiles fade out with distance from the active piece ----
-    const fadeUniforms = { uFocus: { value: new THREE.Vector3() }, uR0: { value: 1.7 }, uR1: { value: 5.2 } };
+    // As in the reference, a neighbouring step stays solid only along its edge
+    // nearest the piece (~1.5 away) and has misted out by its middle (~2.8
+    // away), so it dissolves before reaching the cover's edge instead of being
+    // cut off there. uR0 stays above the active tile's corners (~1.34 away).
+    const fadeUniforms = { uFocus: { value: new THREE.Vector3() }, uR0: { value: 1.45 }, uR1: { value: 2.8 } };
     function fadingMaterial(color: number, rough: number) {
       const m = new THREE.MeshStandardMaterial({ color, roughness: rough, envMapIntensity: 0.6, transparent: true });
       m.color.convertSRGBToLinear();

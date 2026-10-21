@@ -10,6 +10,7 @@ import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSP
 import "./heroSection.scss";
 import InteractivePersonalizedText from "./InteractivePersonalizedText";
 import Button from "./common/Button";
+import { openDemoBooking } from "./demoBooking";
 
 gsap.registerPlugin(ScrollTrigger, DrawSVGPlugin, SplitText);
 
@@ -621,7 +622,7 @@ export default function HeroSection() {
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 -translate-x-2.5 translate-y-2.5 rounded-[10px] border border-[#B4511D]"
               />
-              <Button className="relative z-10" href="/book-demo">
+              <Button className="relative z-10" onClick={openDemoBooking}>
                 Book a FREE demo today!
               </Button>
             </div>

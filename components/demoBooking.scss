@@ -1,0 +1,1717 @@
+// Demo booking: the drawer (DemoBookingDrawer.tsx) and the confirmation page
+// it opens in a new tab (DemoConfirmed.tsx). Sizes follow the 1920px-wide
+// "book a demo drawer" designs: CTA-1-1 (details), CTA-2/CTA-3 (date and
+// time), CTA-4 (confirmed). The drawer's panel and the confirmation page are
+// both the "demo-panel" size container, so they rearrange by the room they
+// have rather than the window's width.
+
+$ink: #1b1b1b;
+$text: #4a4a4a;
+$muted: #8a8a8a;
+$line: #e2e2e2;
+$rule: #ebebeb;
+$cream: #fbf5ec;
+$cream-line: #efe6d8;
+$orange: #f56318;
+$orange-ink: #c2410c;
+$amber: #f0a620;
+$blue: #3576cb;
+$blue-soft: #ebf4ff;
+$blue-ink: #1d4578;
+$tag: #1b66c4;
+$corner: #296ec8;
+$navy: #081126;
+$card: #f8f8f8;
+$strip: #c2d6f0;
+$ticket: #fdf3e0;
+$ticket-line: #eadfcc;
+$ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+$title-font: var(--font-open-sans), system-ui, sans-serif;
+
+html.demo-drawer-lock {
+  overflow: hidden;
+}
+
+@keyframes demo-fade { from { opacity: 0; } }
+@keyframes demo-fade-out { to { opacity: 0; } }
+@keyframes demo-rise { from { transform: translateY(100%); } }
+@keyframes demo-sink { to { transform: translateY(100%); } }
+@keyframes demo-in { from { opacity: 0; transform: translateY(16px); } }
+@keyframes demo-pop { from { opacity: 0; transform: translateY(-6px) scale(0.97); } }
+@keyframes demo-slide { from { opacity: 0; transform: translateX(18px); } }
+@keyframes demo-bounce { 0% { transform: scale(0); } 60% { transform: scale(1.15); } }
+@keyframes demo-spin { to { transform: rotate(360deg); } }
+
+// ---------- Shell ----------
+// The dialog is the full-screen layer and the scroller; the panel is the sheet.
+.demo-drawer {
+  --top: clamp(16px, 11vh, 100px);
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0 24px;
+  border: 0;
+  background: transparent;
+  color: $ink;
+  font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition: padding 0.6s $ease;
+
+  &::backdrop {
+    background: rgba(24, 30, 42, 0.32);
+    animation: demo-fade 0.35s ease both;
+  }
+  &.is-closing::backdrop {
+    animation: demo-fade-out 0.45s ease both;
+  }
+}
+
+// Element resets at zero specificity, so every class below (and the site's
+// button) wins over them.
+:where(.demo-drawer, .demo-confirmed) :where(button, input) {
+  font: inherit;
+  color: inherit;
+}
+:where(.demo-drawer, .demo-confirmed) :where(button) {
+  cursor: pointer;
+}
+:where(.demo-drawer, .demo-confirmed) :where(p, h1, h2, h3, h4, ul, ol) {
+  margin: 0;
+}
+:where(.demo-drawer, .demo-confirmed) :where(ul, ol) {
+  padding: 0;
+  list-style: none;
+}
+
+.demo-drawer__panel {
+  container: demo-panel / inline-size;
+  position: relative;
+  max-width: 1168px;
+  min-height: calc(100dvh - var(--top));
+  margin: var(--top) auto 0;
+  border-radius: 48px 48px 0 0;
+  // Frosted white: the page shows through, blurred, behind the sheet.
+  background: rgba(255, 255, 255, 0.78);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  backdrop-filter: blur(28px) saturate(1.4);
+  box-shadow:
+    0 -12px 40px rgba(10, 20, 40, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  animation: demo-rise 0.6s $ease both;
+
+  // No blur to frost with: plain white, as in the designs.
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background: #ffffff;
+  }
+  transition:
+    max-width 0.6s $ease,
+    margin-top 0.6s $ease,
+    min-height 0.6s $ease,
+    border-radius 0.6s $ease;
+
+  .is-slot & { max-width: 1700px; }
+  .is-closing & { animation: demo-sink 0.45s cubic-bezier(0.5, 0, 0.75, 0) both; }
+}
+
+// Backgrounds, clipped to the sheet: the checkered fade and the blue corner.
+.demo-drawer__deco {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.demo-drawer__checks {
+  position: absolute;
+  top: -96px;
+  right: -40px;
+  width: 640px;
+  aspect-ratio: 729 / 939;
+  background: url("/images/checked-bg.png") center / contain no-repeat;
+  transition: opacity 0.4s ease;
+
+  .is-slot & {
+    top: auto;
+    right: auto;
+    bottom: -560px;
+    left: -60px;
+    width: 860px;
+    transform: scaleX(-1) rotate(90deg);
+    opacity: 0.8;
+  }
+}
+.demo-drawer__corner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 224px;
+  height: 212px;
+  background: $corner;
+  clip-path: path("M0 0H224V198C214 206 200 212 186 212C170 212 158 204 148 192Z");
+}
+.demo-drawer__close {
+  position: absolute;
+  z-index: 5;
+  top: 21px;
+  right: 45px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: #ffffff;
+  transition: background-color 0.2s ease;
+
+  svg { width: 30px; height: 30px; }
+  &:hover { background: rgba(255, 255, 255, 0.16); }
+  &:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; }
+}
+
+.demo-drawer__body {
+  position: relative;
+  z-index: 1;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
+
+  &.is-leaving {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+// ---------- Shared pieces ----------
+.demo-main {
+  position: relative;
+  min-width: 0;
+}
+
+.demo-steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 0;
+  animation: demo-in 0.55s $ease both;
+}
+.demo-steps__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: $ink;
+
+  & + &::before {
+    content: "";
+    width: 36px;
+    height: 2px;
+    margin: 0 4px 0 2px;
+    border-radius: 2px;
+    background: #d6d6d6;
+  }
+}
+.demo-steps__dot {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 600;
+
+  .is-todo & {
+    border: 1.5px solid #d9d9d9;
+    color: #333333;
+  }
+  .is-current &,
+  .is-done & {
+    background: $orange;
+    color: #ffffff;
+    animation: demo-bounce 0.45s $ease both;
+  }
+  svg { width: 16px; height: 16px; }
+}
+
+.demo-title {
+  margin-top: 44px;
+  font-family: $title-font;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: $ink;
+  text-wrap: balance;
+  outline: none;
+  animation: demo-in 0.55s $ease 0.04s both;
+}
+.demo-sub {
+  margin-top: 16px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: $text;
+  animation: demo-in 0.55s $ease 0.08s both;
+}
+
+.demo-card {
+  position: relative;
+  border: 1.5px solid #e3e3e5;
+  border-radius: 28px;
+  background: linear-gradient(160deg, #ffffff 55%, rgba(246, 247, 250, 0.9));
+  animation: demo-in 0.55s $ease 0.12s both;
+
+  // A faint diamond glinting in the top edge, as in the designs.
+  &::after {
+    content: "";
+    position: absolute;
+    top: 22px;
+    left: 62%;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    background: rgba(53, 118, 203, 0.07);
+    transform: rotate(45deg);
+    filter: blur(1.5px);
+    pointer-events: none;
+  }
+}
+
+.demo-cube {
+  position: absolute;
+  z-index: -1;
+  background: center / contain no-repeat;
+  pointer-events: none;
+}
+
+.demo-illustration {
+  position: absolute;
+  pointer-events: none;
+  animation: demo-in 0.7s $ease 0.18s both;
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+}
+
+// The site's orange button, with its offset outline.
+.demo-cta {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.demo-cta__outline {
+  position: absolute;
+  inset: 0;
+  border: 1px solid #b4511d;
+  border-radius: 10px;
+  transform: translate(-8px, 9px);
+  transition: border-color 0.2s ease;
+  pointer-events: none;
+}
+.demo-cta__btn.upstep-btn {
+  position: relative;
+  z-index: 1;
+  min-width: 223px;
+  height: 49px;
+  padding: 0 26px;
+  font-size: 20px;
+  font-weight: 600;
+  gap: 10px;
+}
+.demo-cta.is-dim {
+  .demo-cta__outline { border-color: rgba(180, 81, 29, 0.35); }
+  .upstep-btn {
+    opacity: 0.4;
+    box-shadow: none;
+    transform: none;
+  }
+}
+.demo-arrow {
+  width: 18px;
+  height: 18px;
+}
+.demo-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: demo-spin 0.7s linear infinite;
+}
+
+.demo-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  animation: demo-in 0.55s $ease 0.18s both;
+}
+
+// ---------- Form fields ----------
+// Above what follows it, so its lists can hang over the button below.
+.demo-form {
+  z-index: 2;
+  padding: 33px 40px 43px 43px;
+}
+.demo-form__group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.demo-form__legend {
+  margin-bottom: 14px;
+  padding: 0;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: $ink;
+}
+.demo-form__row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 11px;
+
+  & + & { margin-top: 24px; }
+  &--phone {
+    grid-template-columns: minmax(0, 268px) auto;
+    align-items: start;
+    column-gap: 31px;
+  }
+}
+.demo-form__rule {
+  height: 1px;
+  margin: 27px 0;
+  border: 0;
+  background: $rule;
+}
+.demo-form__cell {
+  position: relative;
+  min-width: 0;
+}
+
+.demo-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  color: $ink;
+  text-align: left;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+
+    &::placeholder {
+      color: $ink;
+      opacity: 0.92;
+    }
+    // The browser's autofill paints its own (blue) fill and text colour on
+    // the input's square box; cover it with the pill's cream instead, and
+    // keep the text ours.
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus {
+      -webkit-text-fill-color: $ink;
+      caret-color: $ink;
+      -webkit-box-shadow: 0 0 0 40px $cream inset;
+      box-shadow: 0 0 0 40px $cream inset;
+      transition: background-color 600000s 0s;
+    }
+  }
+  // Filled, open or being typed in: the warm fill from the designs.
+  &.is-filled,
+  &.is-active,
+  &:focus-within {
+    border-color: $cream-line;
+    background: $cream;
+  }
+  // Autofilled before React has heard about it (kept apart: a browser that
+  // can't read this selector would drop the whole list above).
+  &:has(input:-webkit-autofill) {
+    border-color: $cream-line;
+    background: $cream;
+  }
+  &:focus-within:has(input:focus-visible),
+  &:focus-visible {
+    border-color: $blue;
+    box-shadow: 0 0 0 3px rgba(53, 118, 203, 0.16);
+    outline: none;
+  }
+  &.is-error {
+    border-color: $orange;
+    box-shadow: 0 0 0 3px rgba(245, 99, 24, 0.12);
+  }
+}
+.demo-field--select {
+  justify-content: space-between;
+  padding-right: 10px;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+.demo-chevron {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: $orange;
+}
+.demo-field--phone {
+  padding-left: 4px;
+}
+.demo-code {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 6px 0 10px;
+  border: 1px solid $cream-line;
+  border-radius: 999px;
+  background: $cream;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &:hover { border-color: #e2d3bd; }
+  &:focus-visible { outline: 2px solid $blue; outline-offset: 1px; }
+}
+.demo-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: $ink;
+
+  svg { width: 18px; height: 18px; color: $orange; }
+  &:hover { color: $orange-ink; }
+  &:focus-visible { outline: 2px solid $blue; outline-offset: 3px; border-radius: 6px; }
+}
+.demo-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 7px 0 0 16px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: $orange-ink;
+  animation: demo-pop 0.22s ease-out both;
+
+  svg { flex: none; width: 14px; height: 14px; margin-top: 1px; }
+}
+
+// ---------- Popovers ----------
+.demo-pop-root {
+  position: relative;
+}
+.demo-pop {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 100%;
+  padding: 8px;
+  border: 1px solid $line;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 18px 40px rgba(16, 24, 40, 0.14);
+  transform-origin: top center;
+  animation: demo-pop 0.2s ease-out both;
+}
+.demo-pop__title {
+  display: block;
+  margin: 2px 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #666666;
+}
+.demo-pop--ages {
+  width: 292px;
+  padding: 16px;
+}
+.demo-pop__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.demo-chip {
+  height: 40px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+
+  &:hover { border-color: $cream-line; background: $cream; }
+  &[aria-pressed="true"] { border-color: $blue; background: $blue; color: #ffffff; }
+}
+.demo-pop--list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: max(100%, 260px);
+}
+.demo-pop--tz { width: 300px; }
+.demo-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  text-align: left;
+
+  &:hover { background: $cream; }
+  &[aria-pressed="true"] { background: $blue-soft; color: $blue-ink; }
+}
+.demo-option__label {
+  font-size: 14px;
+  font-weight: 600;
+}
+.demo-option__sub {
+  font-size: 12px;
+  color: #6b6b6b;
+}
+.demo-pop--codes { width: 320px; }
+.demo-pop__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  margin-bottom: 6px;
+  padding: 0 14px;
+  border: 1px solid $line;
+  border-radius: 999px;
+
+  &:focus-within { border-color: $blue; }
+  svg { flex: none; width: 16px; height: 16px; color: $muted; }
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+  }
+}
+.demo-pop__scroll {
+  max-height: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.demo-country {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  text-align: left;
+
+  &:hover { background: $cream; }
+  &[aria-pressed="true"] { background: $blue-soft; }
+}
+.demo-country__iso {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #666666;
+}
+.demo-country__name { font-size: 14px; font-weight: 500; }
+.demo-country__dial { font-size: 14px; font-weight: 600; color: $blue; }
+.demo-pop__empty {
+  display: block;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #666666;
+}
+
+// ---------- Step 1: details (CTA-1-1) ----------
+.demo-details {
+  padding: 43px 58px 42px;
+
+  .demo-main { max-width: 556px; }
+  .demo-form { margin-top: 12px; }
+  .demo-foot {
+    margin-top: 11px;
+    padding-left: 43px;
+  }
+  .demo-illustration {
+    top: 255px;
+    right: -72px;
+    width: 452px;
+  }
+}
+.demo-cube--form {
+  top: 359px;
+  left: -40px;
+  width: 66px;
+  height: 66px;
+  background-image: url("/images/cubes/cube-14.png");
+}
+.demo-consent {
+  font-size: 11px;
+  font-style: italic;
+  line-height: 1.4;
+  color: $ink;
+}
+.demo-trust {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 52px;
+  min-height: 40px;
+  margin: 27px 0 0 -4px;
+  padding: 5px 24px;
+  border-radius: 999px;
+  background: $strip;
+  animation: demo-in 0.55s $ease 0.22s both;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 196px;
+    font-size: 13px;
+    line-height: 15px;
+    color: #3f4752;
+  }
+  img {
+    flex: none;
+    width: auto;
+    height: 28px;
+  }
+
+  @media (max-width: 640px) {
+    li { max-width: 100%; }
+  }
+}
+
+// ---------- Step 2: date and time (CTA-2, CTA-3) ----------
+.demo-slot {
+  display: grid;
+  grid-template-columns: 318px minmax(0, 766px);
+  align-items: start;
+  column-gap: 69px;
+  padding: 42px 58px 38px 179px;
+
+  .demo-illustration {
+    top: 430px;
+    right: -60px;
+    width: 355px;
+  }
+  .demo-foot { margin-top: 19px; }
+}
+
+.demo-info {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 30px 22px 22px 16px;
+  border-radius: 28px;
+  background: $card;
+  animation: demo-in 0.55s $ease both;
+}
+.demo-info__blob {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 90px;
+  height: 90px;
+  border-radius: 0 28px 0 40px;
+  background: $amber;
+}
+.demo-info__tag {
+  position: relative;
+  align-self: flex-start;
+  padding: 2px 10px 3px;
+  border-radius: 999px;
+  background: $tag;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  color: #ffffff;
+}
+.demo-info__title {
+  position: relative;
+  margin-top: 14px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.demo-info__text {
+  margin-top: 12px;
+  font-size: 15px;
+  line-height: 19.5px;
+  color: #555555;
+
+  b { font-weight: 600; color: #333333; }
+}
+.demo-info__needs-title {
+  margin-top: 26px;
+  font-family: $title-font;
+  font-size: 15px;
+  font-weight: 700;
+}
+.demo-info__needs {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  justify-content: start;
+  gap: 12px 30px;
+  margin-top: 8px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 14px;
+    color: $ink;
+  }
+  li.is-wide { grid-column: 1 / -1; }
+  img {
+    flex: none;
+    width: 25px;
+    height: 22px;
+    object-fit: contain;
+  }
+}
+.demo-info__slot {
+  display: flex;
+  flex-direction: column;
+  margin: 26px 0 0;
+  padding: 18px 18px 20px;
+  border-radius: 14px;
+  background: $navy;
+  color: #ffffff;
+}
+.demo-info__slot-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.demo-info__slot-none,
+.demo-info__slot-date {
+  margin-top: 12px;
+  font-size: 15px;
+  line-height: 1.3;
+}
+.demo-info__slot-date { font-weight: 600; }
+.demo-info__slot-time {
+  margin-top: 4px;
+  font-size: 15px;
+}
+.demo-info__hold {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  font-size: 15px;
+  line-height: 1.35;
+
+  img { flex: none; width: auto; height: 24px; }
+  b { margin-left: 4px; font-weight: 700; font-variant-numeric: tabular-nums; }
+}
+.demo-info__trust {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    line-height: 15px;
+    color: #444444;
+  }
+  img { flex: none; width: auto; height: 22px; }
+}
+.demo-cube--info {
+  top: 423px;
+  left: -42px;
+  width: 64px;
+  height: 64px;
+  background-image: url("/images/cubes/cube-14.png");
+}
+
+.demo-tz {
+  position: relative;
+  z-index: 3; // its list hangs over the calendar
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: 12px;
+  font-size: 15px;
+  color: #333333;
+  animation: demo-in 0.55s $ease 0.08s both;
+
+  > svg { flex: none; width: 19px; height: 19px; }
+}
+.demo-tz__btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px 0 20px;
+  border: 1.5px solid $line;
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  color: $ink;
+
+  svg { width: 14px; height: 14px; }
+  &:hover,
+  &[aria-expanded="true"] { border-color: #cfd5de; }
+  &:focus-visible { outline: 2px solid $blue; outline-offset: 2px; }
+}
+.demo-tz__note {
+  font-size: 13px;
+  color: #777777;
+}
+
+// The calendar; picking a day opens its times beside it (below, when narrow:
+// the wrapper is the size container the calendar's own query reads).
+.demo-cal-wrap {
+  container-type: inline-size;
+  margin-top: 23px;
+}
+.demo-cal {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
+  padding: 30px 26px 26px;
+  transition:
+    grid-template-columns 0.55s $ease,
+    column-gap 0.55s $ease;
+
+  &.has-day {
+    grid-template-columns: minmax(0, 1.75fr) minmax(220px, 1fr);
+    column-gap: 22px;
+  }
+  &::after { display: none; }
+}
+.demo-cube--cal-a {
+  top: -4px;
+  left: -19px;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  background-image: url("/images/cubes/cube-4.png");
+}
+.demo-cube--cal-b {
+  top: 96px;
+  right: -19px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  background-image: url("/images/cubes/cube-8.png");
+}
+.demo-cal__month {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.demo-cal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-left: 27px;
+}
+.demo-cal__label {
+  overflow: hidden;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.demo-cal__nav {
+  display: flex;
+  flex: none;
+  gap: 8px;
+
+  button {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1.5px solid $orange;
+    border-radius: 50%;
+    background: #ffffff;
+    color: $ink;
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+
+    svg { width: 16px; height: 16px; }
+    &:hover:not(:disabled) { background: #fff3ec; }
+    &:disabled {
+      border-color: rgba(245, 99, 24, 0.45);
+      color: #a0a0a0;
+      cursor: default;
+    }
+    &:focus-visible { outline: 2px solid $blue; outline-offset: 2px; }
+  }
+}
+.demo-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  row-gap: 8px;
+}
+.demo-cal__dow {
+  margin: 22px 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555555;
+  text-align: center;
+}
+.demo-cal__cell {
+  display: grid;
+  place-items: center;
+  height: 50px;
+}
+.demo-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 50px);
+  height: 50px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+
+  &.is-off {
+    font-weight: 300;
+    color: $muted;
+  }
+}
+button.demo-day {
+  gap: 2px;
+  background: $blue-soft;
+  font-weight: 600;
+  color: $blue-ink;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  // The orange dot under an open day.
+  &::after {
+    content: "";
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: $orange;
+  }
+  &:hover { background: #d9e8fd; }
+  &.is-sel {
+    background: $blue;
+    color: #ffffff;
+
+    &::after { display: none; }
+  }
+  &:focus-visible { outline: 2px solid $orange; outline-offset: 2px; }
+}
+.demo-cal__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #555555;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    &::before {
+      content: "";
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+  }
+  .is-open::before { border: 1px solid #a9ccfa; background: $blue-soft; }
+  .is-sel::before { background: $blue; }
+}
+
+.demo-cal__times {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+
+  .has-day > & { opacity: 1; }
+}
+.demo-times {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 20px;
+  border-left: 1px solid $rule;
+  animation: demo-slide 0.42s $ease 0.12s both;
+}
+.demo-times__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+.demo-times__day {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.demo-times__count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555555;
+
+  span { color: $blue; }
+}
+.demo-times__close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #dddddd;
+  border-radius: 50%;
+  background: #ffffff;
+
+  svg { width: 20px; height: 20px; }
+  &:hover { background: #f5f5f5; }
+  &:focus-visible { outline: 2px solid $blue; outline-offset: 2px; }
+}
+.demo-times__list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 22px;
+  min-height: 0;
+  padding: 4px 4px 18px 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none; // the fade at the bottom shows there's more
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent);
+
+  &::-webkit-scrollbar { display: none; }
+}
+.demo-times__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.demo-times__name {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: $ink;
+}
+.demo-times__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 13px 8px;
+}
+.demo-time {
+  height: 38px;
+  padding: 0 8px;
+  border: 1px solid #f0e8da;
+  border-radius: 999px;
+  background: $cream;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &:hover { border-color: #e6d6bd; }
+  &[aria-pressed="true"] { border-color: $blue; background: $blue; color: #ffffff; }
+  &:focus-visible { outline: 2px solid $orange; outline-offset: 2px; }
+}
+
+.demo-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 18px;
+  font-weight: 600;
+  color: $orange;
+
+  svg { width: 18px; height: 18px; }
+  &:hover { color: $orange-ink; }
+  &:focus-visible { outline: 2px solid $blue; outline-offset: 3px; border-radius: 6px; }
+}
+.demo-foot--slot .demo-cta__btn.upstep-btn { min-width: 290px; height: 50px; }
+.demo-foot__error {
+  justify-content: flex-end;
+  margin: 14px 0 0;
+  text-align: right;
+}
+
+// ---------- Confirmation page (CTA-4) ----------
+.demo-confirmed {
+  container: demo-panel / inline-size;
+  position: relative;
+  min-height: 100dvh;
+  overflow: clip;
+  color: $ink;
+  font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
+}
+.demo-confirmed__deco {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.demo-confirmed__checks {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  width: 720px;
+  aspect-ratio: 729 / 939;
+  background: url("/images/checked-bg.png") center / contain no-repeat;
+}
+.demo-confirmed__corner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 154px;
+  height: 398px;
+  background: $corner;
+}
+// While the booking goes through, or if it can't be shown.
+.demo-confirmed__status {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  min-height: calc(100dvh - 80px);
+  padding: 40px 24px;
+  text-align: center;
+  animation: demo-in 0.5s $ease both;
+
+  .demo-spinner {
+    width: 34px;
+    height: 34px;
+    border-width: 3px;
+    color: $orange;
+  }
+  h1 {
+    margin: 0;
+    font-family: $title-font;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  p {
+    max-width: 460px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #555555;
+  }
+}
+.demo-done__bar {
+  position: sticky;
+  z-index: 4;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 80px;
+  padding: 0 max(24px, 9.5%) 0 max(24px, 12.5%);
+  background: linear-gradient(90deg, #ffffff calc(100% - 190px), rgba(255, 255, 255, 0.5) calc(100% - 150px));
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
+  backdrop-filter: blur(10px);
+  animation: demo-fade 0.5s ease both;
+}
+.demo-done__logo {
+  width: 217px;
+  height: auto;
+}
+.demo-done__home.upstep-btn {
+  min-width: 290px;
+  height: 50px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.demo-done__inner {
+  position: relative;
+  padding: 52px 24px 72px max(24px, 13.2%);
+
+  .demo-main { max-width: 1016px; }
+  .demo-title { margin-top: 14px; }
+  .demo-illustration {
+    top: 115px;
+    left: 69.3%;
+    width: min(470px, 28.5cqw);
+  }
+}
+.demo-done__lead {
+  max-width: 760px;
+  margin-top: 22px;
+  font-size: 15px;
+  line-height: 23px;
+  color: #444444;
+  animation: demo-in 0.55s $ease 0.08s both;
+
+  b { font-weight: 600; color: $ink; }
+}
+.demo-ticket {
+  position: relative;
+  max-width: 657px;
+  margin-top: 52px;
+  padding: 24px 30px 32px 33px;
+  border: 1.5px solid $ticket-line;
+  border-radius: 28px;
+  background: $ticket;
+  animation: demo-in 0.6s $ease 0.12s both;
+}
+.demo-ticket__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 23px;
+}
+.demo-ticket__icon {
+  flex: none;
+  width: 62px;
+  height: auto;
+}
+.demo-ticket__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 15px;
+  color: #555555;
+
+  img { width: 21px; height: 21px; margin-right: -3px; }
+  span { color: $blue; }
+}
+.demo-ticket__date {
+  margin-top: 10px;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: #111111;
+}
+.demo-ticket__time {
+  margin-top: 6px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.demo-ticket__child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 40px;
+  padding-top: 28px;
+  border-top: 2px dashed #8db4e8;
+}
+.demo-ticket__avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 47px;
+  height: 47px;
+  border-radius: 50%;
+  background: #f2ab2c;
+  font-family: $title-font;
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffffff;
+}
+.demo-ticket__name {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.demo-ticket__child-meta {
+  margin-top: 3px;
+  font-size: 15px;
+  color: #555555;
+
+  span { color: $blue; }
+}
+.demo-cube--ticket {
+  top: 152px;
+  left: -44px;
+  width: 64px;
+  height: 64px;
+  background-image: url("/images/cubes/cube-14.png");
+}
+.demo-done__subtitle {
+  margin-top: 40px;
+  font-family: $title-font;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  animation: demo-in 0.55s $ease 0.18s both;
+}
+.demo-expect-wrap {
+  position: relative;
+  margin-top: 36px;
+}
+.demo-expect {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 325px));
+  gap: 19px;
+
+  li {
+    position: relative;
+    min-height: 182px;
+    padding: 28px 20px 30px;
+    border-radius: 18px;
+    background: linear-gradient(125deg, #ffffff 35%, rgba(255, 255, 255, 0.4));
+    box-shadow: -14px -10px 30px -20px rgba(16, 24, 40, 0.14);
+    animation: demo-in 0.55s $ease both;
+
+    &:nth-child(1) { animation-delay: 0.22s; }
+    &:nth-child(2) { animation-delay: 0.28s; }
+    &:nth-child(3) { animation-delay: 0.34s; }
+  }
+  h3 {
+    margin-top: 6px;
+    font-size: 20px;
+    font-weight: 500;
+    color: $ink;
+  }
+  p {
+    margin-top: 6px;
+    font-size: 16px;
+    line-height: 20px;
+    color: #555555;
+  }
+}
+.demo-expect__num {
+  display: block;
+  font-size: 42px;
+  font-weight: 400;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1.2px $amber;
+}
+.demo-cube--expect-a {
+  top: 94px;
+  left: -30px;
+  z-index: 1;
+  width: 38px;
+  height: 38px;
+  background-image: url("/images/cubes/cube-23.png");
+}
+.demo-cube--expect-b {
+  top: -20px;
+  right: max(-60px, calc(100% - 1035px));
+  z-index: 1;
+  width: 74px;
+  height: 74px;
+  background-image: url("/images/cubes/cube-2.png");
+}
+.demo-cube--done {
+  top: 188px;
+  left: 59%;
+  display: none;
+  z-index: 0;
+  width: 38px;
+  height: 38px;
+  background-image: url("/images/cubes/cube-12.png");
+}
+.demo-foot--done {
+  margin-top: 54px;
+  padding-left: 8px;
+}
+
+// ---------- Narrower panels ----------
+// Details: the illustration shrinks, then goes; phones get one column.
+@container demo-panel (max-width: 1100px) {
+  .demo-details .demo-illustration {
+    top: 300px;
+    right: 0;
+    width: 36cqw;
+  }
+}
+@container demo-panel (max-width: 880px) {
+  .demo-details .demo-illustration { display: none; }
+  .demo-details .demo-main { max-width: none; }
+}
+
+// Date and time: on wide panels the heading runs a little past the calendar,
+// as in the design.
+@container demo-panel (min-width: 1241px) {
+  .demo-slot .demo-title { margin-right: -110px; }
+}
+// The side gap closes and the illustration goes, then the
+// columns stack (slot summary under the calendar, before the button).
+@container demo-panel (max-width: 1640px) {
+  .demo-slot {
+    padding-left: 58px;
+
+    .demo-illustration { display: none; }
+  }
+}
+@container demo-panel (max-width: 1240px) {
+  .demo-slot {
+    grid-template-columns: 290px minmax(0, 1fr);
+    column-gap: 40px;
+  }
+  // Room for the corner: only the current step is named.
+  .demo-slot .demo-steps__item:not(.is-current) .demo-steps__label { display: none; }
+}
+@container demo-panel (max-width: 900px) {
+  .demo-slot {
+    grid-template-columns: minmax(0, 1fr);
+    padding-right: 58px;
+
+    .demo-main { display: contents; }
+    .demo-steps { order: 1; }
+    .demo-title { order: 2; }
+    .demo-tz { order: 3; }
+    .demo-cal-wrap { order: 4; }
+    .demo-info { order: 5; margin-top: 28px; }
+    .demo-foot__error { order: 6; }
+    .demo-foot { order: 7; }
+  }
+  .demo-cube--info { display: none; }
+}
+
+// The calendar's own room: times stack under the month when it's narrow.
+@container (max-width: 640px) {
+  .demo-cal,
+  .demo-cal.has-day {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+  }
+  .demo-cal__times {
+    display: none;
+
+    .has-day > & { display: block; }
+  }
+  .demo-times {
+    position: relative;
+    max-height: 380px;
+    margin-top: 22px;
+    padding: 20px 0 0;
+    border-top: 1px solid $rule;
+    border-left: 0;
+  }
+}
+
+// Confirmed: the diamond only fits beside the copy on wide screens; the
+// illustration gives way, then everything stacks.
+@container demo-panel (min-width: 1760px) {
+  .demo-cube--done { display: block; }
+}
+@container demo-panel (max-width: 1500px) {
+  .demo-done__inner .demo-illustration {
+    left: auto;
+    right: 2%;
+    width: 30cqw;
+  }
+}
+@container demo-panel (max-width: 1180px) {
+  .demo-done__inner .demo-illustration { display: none; }
+  .demo-confirmed__checks { opacity: 0.5; }
+}
+@container demo-panel (max-width: 900px) {
+  .demo-expect { grid-template-columns: minmax(0, 1fr); }
+  .demo-cube--expect-b { right: -40px; }
+}
+
+// ---------- Phones ----------
+@media (max-width: 640px) {
+  .demo-drawer { padding: 0 8px; }
+  .demo-drawer__panel { border-radius: 28px 28px 0 0; }
+  .demo-drawer__corner {
+    transform: scale(0.55);
+    transform-origin: top right;
+  }
+  .demo-drawer__close {
+    top: 6px;
+    right: 10px;
+
+    svg { width: 24px; height: 24px; }
+  }
+  .demo-drawer__checks { width: 420px; opacity: 0.55; }
+
+  .demo-steps__item {
+    gap: 8px;
+    font-size: 13px;
+
+    & + &::before { width: 16px; }
+  }
+  .demo-steps__dot { width: 24px; height: 24px; font-size: 12px; }
+  // Only the current step is named; the others are their numbers.
+  .demo-steps__item:not(.is-current) .demo-steps__label { display: none; }
+  .demo-confirmed .demo-steps__item:last-child .demo-steps__label { display: inline; }
+  .demo-title { margin-top: 28px; font-size: 30px; }
+  .demo-sub { margin-top: 10px; }
+
+  .demo-details { padding: 28px 16px 32px; }
+  .demo-form { padding: 24px 18px 28px; }
+  .demo-form__legend { font-size: 19px; }
+  .demo-form__row,
+  .demo-form__row--phone { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
+  .demo-form__row + .demo-form__row { margin-top: 14px; }
+  .demo-form__row--phone .demo-add { justify-self: start; height: auto; }
+  .demo-cube--form { display: none; }
+  // Each step's buttons stay at the bottom of the screen, on frosted white
+  // across the sheet's full width.
+  .demo-drawer .demo-foot {
+    position: sticky;
+    z-index: 5;
+    bottom: 0;
+    margin: 20px -16px 0;
+    padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(16, 24, 40, 0.06);
+    background: rgba(255, 255, 255, 0.88);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    box-shadow: 0 -10px 24px rgba(16, 24, 40, 0.08);
+  }
+  // An open list (age, level, country code) hangs over the bar.
+  .demo-drawer:has(.demo-pop) .demo-foot { z-index: 1; }
+  .demo-details .demo-foot {
+    order: 2;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  // The trust strip comes before the sticky button bar.
+  .demo-details .demo-main {
+    display: flex;
+    flex-direction: column;
+  }
+  .demo-details .demo-trust {
+    order: 1;
+    margin-top: 20px;
+  }
+  .demo-cta,
+  .demo-cta__btn.upstep-btn { width: 100%; min-width: 0; }
+  .demo-foot--slot .demo-cta__btn.upstep-btn { min-width: 0; }
+  .demo-trust {
+    justify-content: flex-start;
+    margin-left: 0;
+    padding: 12px 18px;
+    border-radius: 22px;
+  }
+
+  .demo-slot { padding: 28px 16px 32px; }
+  .demo-cal { padding: 22px 14px 18px; }
+  .demo-cal__head { padding-left: 6px; }
+  .demo-cal__cell,
+  .demo-day { height: 42px; }
+  .demo-cube--cal-a,
+  .demo-cube--cal-b { display: none; }
+  // Back and Confirm side by side, so the bar stays short.
+  .demo-foot--slot {
+    flex-direction: row;
+    align-items: center;
+    gap: 18px;
+
+    .demo-back { flex: none; font-size: 16px; }
+    .demo-cta { flex: 1; min-width: 0; }
+    .demo-cta__btn.upstep-btn { padding: 0 14px; font-size: 16px; }
+  }
+  .demo-info { padding: 24px 18px 20px; }
+
+  .demo-done__bar { height: 64px; }
+  .demo-done__logo { width: 140px; }
+  .demo-done__home.upstep-btn { min-width: 0; height: 42px; font-size: 15px; }
+  .demo-done__inner { padding: 28px 16px 48px; }
+  .demo-confirmed__corner { display: none; }
+  .demo-confirmed__checks { width: 420px; }
+  .demo-done__subtitle { font-size: 30px; }
+  .demo-ticket { padding: 22px 18px 24px; }
+  .demo-ticket__top { gap: 14px; }
+  .demo-ticket__icon { width: 44px; }
+  .demo-ticket__date { font-size: 20px; }
+  .demo-ticket__time { font-size: 17px; }
+  .demo-ticket__child { margin-top: 24px; padding-top: 20px; }
+  .demo-cube--ticket,
+  .demo-cube--expect-a,
+  .demo-cube--expect-b { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-drawer,
+  .demo-drawer *,
+  .demo-drawer::backdrop,
+  .demo-confirmed * {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+}
