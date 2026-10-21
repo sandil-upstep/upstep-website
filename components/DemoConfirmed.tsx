@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useLayoutEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Button from "./common/Button";
 import { Cta, Illustration, STEPS, Stepper } from "./DemoBookingParts";
 import {
@@ -18,6 +20,8 @@ import {
   type BookingSummary,
 } from "./demoBookingData";
 import "./demoBooking.scss";
+
+gsap.registerPlugin(ScrollTrigger);
 
 // The demo booking's confirmation (CTA-4), on its own page: the drawer opens
 // it in a new tab the moment "Confirm" is pressed, then hands it the booking
@@ -92,6 +96,28 @@ function Booked({ booking }: { booking: BookingSummary }) {
   const zone = zoneFor(booking.timeZone);
   const wall = wallClock(booking.slot, zone);
   const childName = [cap(booking.firstName), cap(booking.lastName)].filter(Boolean).join(" ") || "Your child";
+  const expectRef = useRef<HTMLOListElement>(null);
+
+  // The "what happens" cards rise one after another as they scroll into view;
+  // when they're on screen already, after the subtitle above them. A layout
+  // effect, so they're hidden before the first paint.
+  useLayoutEffect(() => {
+    const list = expectRef.current;
+    if (!list || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const ctx = gsap.context(() => {
+      gsap.from(list.children, {
+        y: 40,
+        autoAlpha: 0,
+        duration: 0.8,
+        ease: "power3.out",
+        stagger: 0.15,
+        delay: ScrollTrigger.isInViewport(list) ? 0.22 : 0,
+        scrollTrigger: { trigger: list, start: "top 85%", once: true },
+      });
+    }, list);
+    return () => ctx.revert();
+  }, []);
+
   return (
     <div className="demo-done__inner">
       <div className="demo-main">
@@ -135,7 +161,7 @@ function Booked({ booking }: { booking: BookingSummary }) {
         <div className="demo-expect-wrap">
           <span className="demo-cube demo-cube--expect-a" aria-hidden="true" />
           <span className="demo-cube demo-cube--expect-b" aria-hidden="true" />
-          <ol className="demo-expect">
+          <ol ref={expectRef} className="demo-expect">
             {EXPECT.map((e, i) => (
               <li key={e.title}>
                 <span className="demo-expect__num" aria-hidden="true">

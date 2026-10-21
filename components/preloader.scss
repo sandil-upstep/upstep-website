@@ -1,0 +1,114 @@
+// The site's dark navy (as in anandSection.scss); the reference uses pure black.
+$bg: #071025;
+$fg: #ededed;
+
+// Lock scrolling from the very first paint, before any script runs, until the
+// curtain starts to leave. Lenis is held separately (SmoothScroll.tsx), since
+// it scrolls the window itself and would ignore this.
+html:has(.preloader:not(.is-leaving)) {
+  overflow: hidden;
+}
+
+// Sits over everything, including the scroll-to-top veil (1100/1101). It's
+// 100vw wide rather than inset: 0 so it doesn't narrow, nudging the counter
+// off-centre, when the scrollbar comes back as the lock lifts. The wrapper
+// lets clicks through; only the halves block them, wherever they still are.
+.preloader {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+// The curtain's two halves meet at the progress bar across the middle and
+// open from it. The top one carries the counter and the bar, so it stacks
+// above the bottom one where they overlap. Each is a pixel over half the
+// height, so no hairline of the page shows between them.
+.preloader__half {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(50% + 1px);
+  background: $bg;
+  pointer-events: auto;
+  will-change: transform;
+
+  &--top {
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: clamp(1rem, 3vh, 2rem);
+    color: $fg;
+  }
+
+  &--bottom {
+    bottom: 0;
+  }
+}
+
+// Everything that moves is promoted to its own layer from the first paint, so
+// the animations start without a repaint hitch.
+.preloader__counter,
+.preloader__reel,
+.preloader__bar-fill {
+  will-change: transform;
+}
+
+.preloader__counter {
+  display: flex;
+  font-family: var(--font-sans);
+  font-size: 50px;
+  // Plus Jakarta Sans only goes down to 200, so this renders at 200.
+  font-weight: 100;
+  line-height: 1;
+  letter-spacing: -0.03em;
+
+  @media (max-width: 640px) {
+    font-size: 30px;
+  }
+}
+
+// One digit's window, with its reel of cells rolling up through it. Fixed at
+// the width of a "0" so the number never shifts sideways as digits change;
+// blank leading slots keep their width, and the counter's centring shift
+// (Preloader.tsx) makes up for them.
+.preloader__slot {
+  width: 1ch;
+  height: 1em;
+  overflow: hidden;
+  text-align: center;
+}
+
+.preloader__reel,
+.preloader__cell {
+  display: block;
+}
+
+.preloader__cell {
+  height: 1em;
+}
+
+// The thin white progress bar across the top half's lower edge, centred on
+// the screen's vertical middle (the half runs a pixel past it), filling from
+// the left as the counter climbs.
+.preloader__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: rgba(#fff, 0.15);
+}
+
+.preloader__bar-fill {
+  display: block;
+  height: 100%;
+  background: #fff;
+  transform: scaleX(0);
+  transform-origin: left;
+}

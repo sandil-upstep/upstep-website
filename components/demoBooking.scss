@@ -19,7 +19,7 @@ $blue: #3576cb;
 $blue-soft: #ebf4ff;
 $blue-ink: #1d4578;
 $tag: #1b66c4;
-$corner: #296ec8;
+$corner: #296EC8;
 $navy: #081126;
 $card: #f8f8f8;
 $strip: #c2d6f0;
@@ -27,6 +27,12 @@ $ticket: #fdf3e0;
 $ticket-line: #eadfcc;
 $ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 $title-font: var(--font-open-sans), system-ui, sans-serif;
+
+// Spacing that gives way on shorter windows: $max (the designs) when --fit is
+// 1, down to $min at 0. The drawer sets --fit (DemoBookingDrawer.tsx).
+@function fit($min, $max) {
+  @return calc($min + ($max - $min) * var(--fit, 1));
+}
 
 html.demo-drawer-lock {
   overflow: hidden;
@@ -109,13 +115,12 @@ html.demo-drawer-lock {
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     background: #ffffff;
   }
+  // Not its top: the drawer measures it to fit the details step.
   transition:
     max-width 0.6s $ease,
-    margin-top 0.6s $ease,
-    min-height 0.6s $ease,
     border-radius 0.6s $ease;
 
-  .is-slot & { max-width: 1700px; }
+  .is-slot & { max-width: 1100px; }
   .is-closing & { animation: demo-sink 0.45s cubic-bezier(0.5, 0, 0.75, 0) both; }
 }
 
@@ -150,10 +155,17 @@ html.demo-drawer-lock {
   position: absolute;
   top: 0;
   right: 0;
-  width: 224px;
-  height: 212px;
+  width: 204px;
+  height: 215px;
   background: $corner;
   clip-path: path("M0 0H224V198C214 206 200 212 186 212C170 212 158 204 148 192Z");
+  transition: translate 0.5s $ease;
+
+
+  // Slides 60px out past the edge while the close button spins.
+  @media (hover: hover) {
+    .demo-drawer__panel:has(.demo-drawer__close:hover) & { translate: 50px 0; height: 215px; }
+  }
 }
 .demo-drawer__close {
   position: absolute;
@@ -169,10 +181,16 @@ html.demo-drawer-lock {
   border-radius: 50%;
   background: none;
   color: #ffffff;
-  transition: background-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.5s $ease;
 
   svg { width: 30px; height: 30px; }
-  &:hover { background: rgba(255, 255, 255, 0.16); }
+  // A full turn on hover.
+  &:hover {
+    background: rgba(255, 255, 255, 0.16);
+    transform: rotate(360deg);
+  }
   &:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; }
 }
 
@@ -242,10 +260,11 @@ html.demo-drawer-lock {
   svg { width: 16px; height: 16px; }
 }
 
+// Scales with the panel: 30px on phones up to 40px from a ~960px panel.
 .demo-title {
-  margin-top: 44px;
+  margin-top: 0.9375rem;
   font-family: $title-font;
-  font-size: 48px;
+  font-size: clamp(1.875rem, 1rem + 2.5cqi, 2.5rem);
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.025em;
@@ -371,10 +390,11 @@ html.demo-drawer-lock {
   border: 0;
 }
 .demo-form__legend {
-  margin-bottom: 14px;
+  margin-bottom: 11px;
   padding: 0;
   font-size: 22px;
   font-weight: 500;
+  line-height: 1.25;
   letter-spacing: -0.01em;
   color: $ink;
 }
@@ -392,7 +412,7 @@ html.demo-drawer-lock {
 }
 .demo-form__rule {
   height: 1px;
-  margin: 27px 0;
+  margin: 27px 0 22px;
   border: 0;
   background: $rule;
 }
@@ -687,11 +707,13 @@ html.demo-drawer-lock {
     width: 452px;
   }
 }
+// By the card's bottom corner, in the 58px gutter beside it (clear of the
+// card), however tall the card is.
 .demo-cube--form {
-  top: 359px;
-  left: -40px;
-  width: 66px;
-  height: 66px;
+  bottom: -20px;
+  left: -52px;
+  width: 46px;
+  height: 46px;
   background-image: url("/images/cubes/cube-14.png");
 }
 .demo-consent {
@@ -736,7 +758,7 @@ html.demo-drawer-lock {
 // ---------- Step 2: date and time (CTA-2, CTA-3) ----------
 .demo-slot {
   display: grid;
-  grid-template-columns: 318px minmax(0, 766px);
+  // grid-template-columns: 318px minmax(0, 766px);
   align-items: start;
   column-gap: 69px;
   padding: 42px 58px 38px 179px;
@@ -757,6 +779,7 @@ html.demo-drawer-lock {
   border-radius: 28px;
   background: $card;
   animation: demo-in 0.55s $ease both;
+  display: none;
 }
 .demo-info__blob {
   position: absolute;
@@ -942,9 +965,10 @@ html.demo-drawer-lock {
   }
   &::after { display: none; }
 }
+// In the 58px gutters either side of the calendar, clear of it.
 .demo-cube--cal-a {
   top: -4px;
-  left: -19px;
+  left: -47px;
   z-index: 2;
   width: 36px;
   height: 36px;
@@ -952,7 +976,7 @@ html.demo-drawer-lock {
 }
 .demo-cube--cal-b {
   top: 96px;
-  right: -19px;
+  right: -46px;
   z-index: 2;
   width: 34px;
   height: 34px;
@@ -1210,6 +1234,22 @@ button.demo-day {
   &:focus-visible { outline: 2px solid $blue; outline-offset: 3px; border-radius: 6px; }
 }
 .demo-foot--slot .demo-cta__btn.upstep-btn { min-width: 290px; height: 50px; }
+// The picked slot, just left of the button (Back stays at the far left).
+.demo-foot__slot {
+  min-width: 0;
+  margin-left: auto;
+  font-size: 15px;
+  line-height: 1.35;
+  color: $text;
+  text-align: right;
+  animation: demo-fade 0.25s ease both;
+
+  b {
+    font-weight: 700;
+    color: $ink;
+    white-space: nowrap;
+  }
+}
 .demo-foot__error {
   justify-content: flex-end;
   margin: 14px 0 0;
@@ -1311,7 +1351,6 @@ button.demo-day {
   padding: 52px 24px 72px max(24px, 13.2%);
 
   .demo-main { max-width: 1016px; }
-  .demo-title { margin-top: 14px; }
   .demo-illustration {
     top: 115px;
     left: 69.3%;
@@ -1437,11 +1476,7 @@ button.demo-day {
     border-radius: 18px;
     background: linear-gradient(125deg, #ffffff 35%, rgba(255, 255, 255, 0.4));
     box-shadow: -14px -10px 30px -20px rgba(16, 24, 40, 0.14);
-    animation: demo-in 0.55s $ease both;
-
-    &:nth-child(1) { animation-delay: 0.22s; }
-    &:nth-child(2) { animation-delay: 0.28s; }
-    &:nth-child(3) { animation-delay: 0.34s; }
+    // Staggered in on scroll (DemoConfirmed.tsx).
   }
   h3 {
     margin-top: 6px;
@@ -1508,6 +1543,45 @@ button.demo-day {
   .demo-details .demo-main { max-width: none; }
 }
 
+// Shorter windows: the sheet rises higher and the details step's spacing
+// gives way, down to these minimums, so it all shows without scrolling.
+// (Phones scroll, with the buttons kept at the bottom; see below.)
+@media (min-width: 641px) {
+  // The gap above the sheet: 100px from a 900px-tall window, down to 24px.
+  .demo-drawer { --top: clamp(24px, (100dvh - 650px) * 0.4, 100px); }
+
+  .demo-details {
+    padding-top: fit(20px, 43px);
+    padding-bottom: fit(16px, 42px);
+
+    .demo-title { margin-top: fit(12px, 44px); }
+    .demo-sub { margin-top: fit(8px, 16px); }
+    .demo-form {
+      margin-top: fit(10px, 12px);
+      padding-top: fit(20px, 33px);
+      padding-bottom: fit(24px, 43px);
+    }
+    .demo-form__legend { margin-bottom: fit(8px, 11px); }
+    .demo-form__row + .demo-form__row { margin-top: fit(14px, 24px); }
+    .demo-form__rule { margin: fit(16px, 27px) 0 fit(14px, 22px); }
+    .demo-trust { margin-top: fit(18px, 27px); }
+    // The illustration rises and shrinks with it, inside the sheet.
+    .demo-illustration {
+      top: fit(230px, 255px);
+      max-width: fit(395px, 452px);
+    }
+    // A country list this near the foot opens upwards.
+    .demo-form__row--phone .demo-pop {
+      top: auto;
+      bottom: calc(100% + 8px);
+      transform-origin: bottom center;
+    }
+  }
+  @container demo-panel (max-width: 1100px) {
+    .demo-details .demo-illustration { top: fit(230px, 300px); }
+  }
+}
+
 // Date and time: on wide panels the heading runs a little past the calendar,
 // as in the design.
 @container demo-panel (min-width: 1241px) {
@@ -1518,13 +1592,12 @@ button.demo-day {
 @container demo-panel (max-width: 1640px) {
   .demo-slot {
     padding-left: 58px;
-
     .demo-illustration { display: none; }
   }
 }
 @container demo-panel (max-width: 1240px) {
   .demo-slot {
-    grid-template-columns: 290px minmax(0, 1fr);
+    // grid-template-columns: 290px minmax(0, 1fr);
     column-gap: 40px;
   }
   // Room for the corner: only the current step is named.
@@ -1616,7 +1689,6 @@ button.demo-day {
   // Only the current step is named; the others are their numbers.
   .demo-steps__item:not(.is-current) .demo-steps__label { display: none; }
   .demo-confirmed .demo-steps__item:last-child .demo-steps__label { display: inline; }
-  .demo-title { margin-top: 28px; font-size: 30px; }
   .demo-sub { margin-top: 10px; }
 
   .demo-details { padding: 28px 16px 32px; }
@@ -1678,10 +1750,19 @@ button.demo-day {
   // Back and Confirm side by side, so the bar stays short.
   .demo-foot--slot {
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 18px;
+    gap: 8px 18px;
 
     .demo-back { flex: none; font-size: 16px; }
+    // No room beside the button: the slot gets its own line above.
+    .demo-foot__slot {
+      order: -1;
+      flex-basis: 100%;
+      margin-left: 0;
+      font-size: 14px;
+      text-align: left;
+    }
     .demo-cta { flex: 1; min-width: 0; }
     .demo-cta__btn.upstep-btn { padding: 0 14px; font-size: 16px; }
   }

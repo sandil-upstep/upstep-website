@@ -5,6 +5,7 @@ import Lenis from "lenis";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import "lenis/dist/lenis.css";
+import { onPreloaderDone } from "./preloaderState";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -46,11 +47,16 @@ export default function SmoothScroll() {
     instance = lenis;
     lenis.on("scroll", ScrollTrigger.update);
 
+    // Hold the page still while the preloader is up.
+    lenis.stop();
+    const stopWaiting = onPreloaderDone(() => lenis.start());
+
     const tick = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(tick, false, true);
     gsap.ticker.lagSmoothing(0);
 
     return () => {
+      stopWaiting();
       gsap.ticker.remove(tick);
       if (instance === lenis) instance = null;
       lenis.destroy();

@@ -11,15 +11,16 @@ import "./heroSection.scss";
 import InteractivePersonalizedText from "./InteractivePersonalizedText";
 import Button from "./common/Button";
 import { openDemoBooking } from "./demoBooking";
+import { onPreloaderDone } from "./preloaderState";
 
 gsap.registerPlugin(ScrollTrigger, DrawSVGPlugin, SplitText);
 
-// CC0 sample clip and a local photo as stand-ins. Swap for the real hero clip
-// and its poster frame (the girl at the laptop in the design) when ready.
+// The poster is the clip's first frame, so nothing jumps when playback starts.
+// Re-extract it if the clip changes.
 const PLACEHOLDER_VIDEO_SRC =
   // "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
   "Child_learning_chess.mp4";
-const PLACEHOLDER_POSTER = "/images/wwo-photo.png";
+const PLACEHOLDER_POSTER = "/images/hero-video-poster.jpg";
 
 // The mask shape is measured off the 1072px-wide design frame: a big rounded
 // rect tilted 15deg clockwise, pivoting on its bottom-left corner. Only that
@@ -220,14 +221,19 @@ export default function HeroSection() {
     return () => observer.disconnect();
   }, []);
 
-  // Draw the guide line down from the header once the page has settled.
+  // Draw the guide line down from the header once the page has settled. This
+  // and the intros below wait for the preloader to step aside.
   useEffect(() => {
     const line = guideLineRef.current;
     if (!line) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const tween = gsap.from(line, { drawSVG: 0, duration: 1.6, ease: "power2.inOut", delay: 0.6 });
+    let tween: gsap.core.Tween | undefined;
+    const stopWaiting = onPreloaderDone(() => {
+      tween = gsap.from(line, { drawSVG: 0, duration: 1.6, ease: "power2.inOut", delay: 0.6 });
+    });
     return () => {
-      tween.revert();
+      stopWaiting();
+      tween?.revert();
     };
   }, []);
 
@@ -243,24 +249,28 @@ export default function HeroSection() {
       gsap.set(title, { autoAlpha: 1 });
       return;
     }
-    const split = SplitText.create(title, {
-      type: "lines",
-      mask: "lines",
-      linesClass: "hero-title-line",
-      autoSplit: true,
-      onSplit: (self) => {
-        gsap.set(title, { autoAlpha: 1 });
-        return gsap.from(self.lines, {
-          yPercent: 110,
-          duration: 1,
-          ease: "power4.out",
-          stagger: 0.12,
-          delay: 0.2,
-        });
-      },
+    let split: SplitText | undefined;
+    const stopWaiting = onPreloaderDone(() => {
+      split = SplitText.create(title, {
+        type: "lines",
+        mask: "lines",
+        linesClass: "hero-title-line",
+        autoSplit: true,
+        onSplit: (self) => {
+          gsap.set(title, { autoAlpha: 1 });
+          return gsap.from(self.lines, {
+            yPercent: 110,
+            duration: 1,
+            ease: "power4.out",
+            stagger: 0.12,
+            delay: 0.2,
+          });
+        },
+      });
     });
     return () => {
-      split.revert();
+      stopWaiting();
+      split?.revert();
     };
   }, []);
 
@@ -277,12 +287,15 @@ export default function HeroSection() {
   // hidden: its mask is sized from the measured box, so before hydration it
   // would show at the design size and visibly snap into place.
   useEffect(() => {
-    if (!videoContainerRef.current) return;
-    gsap.fromTo(
-      videoContainerRef.current,
-      { xPercent: 20, autoAlpha: 0, delay: 0.2 },
-      { xPercent: 0, autoAlpha: 1, duration: 1, ease: "power3.out" }
-    );
+    const container = videoContainerRef.current;
+    if (!container) return;
+    return onPreloaderDone(() => {
+      gsap.fromTo(
+        container,
+        { xPercent: 20, autoAlpha: 0, delay: 0.2 },
+        { xPercent: 0, autoAlpha: 1, duration: 1, ease: "power3.out" }
+      );
+    });
   }, []);
 
   // Spin the ring text around the circle path forever. Rotating the whole

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { onOpenDemoBooking } from "./demoBooking";
@@ -133,10 +133,34 @@ export default function DemoBookingDrawer() {
     [],
   );
 
+  // On shorter windows the details step's spacing gives way (fit() in
+  // demoBooking.scss) so it all shows in the sheet without scrolling: --fit is
+  // the share of the designs' spacing there's room for, 1 down to 0.
+  const fitDetails = useCallback(() => {
+    const dialog = dialogRef.current;
+    const panel = dialog?.querySelector<HTMLElement>(".demo-drawer__panel");
+    const details = panel?.querySelector<HTMLElement>(".demo-details");
+    if (!dialog?.open || !panel || !details) return;
+    const heightAt = (fit: number) => {
+      details.style.setProperty("--fit", String(fit));
+      return details.getBoundingClientRect().height;
+    };
+    const tight = heightAt(0);
+    const full = heightAt(1);
+    const room = dialog.clientHeight - panel.offsetTop - 1; // a pixel spare for rounding
+    if (full > tight) details.style.setProperty("--fit", String(Math.min(1, Math.max(0, (room - tight) / (full - tight)))));
+  }, []);
+  useEffect(() => {
+    if (!open) return;
+    window.addEventListener("resize", fitDetails);
+    return () => window.removeEventListener("resize", fitDetails);
+  }, [open, fitDetails]);
+
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!open || !dialog || dialog.open) return;
     dialog.showModal();
+    fitDetails();
     dialog.scrollTop = 0;
     headingRef.current?.focus({ preventScroll: true });
     // The page stays put underneath.
@@ -190,6 +214,9 @@ export default function DemoBookingDrawer() {
   const valid = Object.keys(errors).length === 0;
   const err = tried ? errors : {};
   const set = (k: keyof Details) => (v: string) => setF((prev) => ({ ...prev, [k]: v }));
+  // Fitted again as the step comes in, and as rows or error lines come and go.
+  const errKey = Object.keys(err).join();
+  useLayoutEffect(() => fitDetails(), [fitDetails, step, showPhone2, errKey]);
 
   const goSlot = () => {
     if (!valid) {
@@ -794,6 +821,11 @@ export default function DemoBookingDrawer() {
                       </svg>
                       Back
                     </button>
+                    {slotWall && (
+                      <p className="demo-foot__slot">
+                        {dayShort(slotWall.day)}, <b>{timeLabel(slotWall.minutes)}</b>
+                      </p>
+                    )}
                     <Cta onClick={submit} disabled={selSlot == null || submitting} dim={selSlot == null || submitting}>
                       {submitting ? (
                         <>
