@@ -1,0 +1,507 @@
+// The GAP page (app/(site)/gap): its grid, section heads and the controls its
+// sections share. Each section's own layout lives in its stylesheet beside it
+// (gapHero.scss, gapProgram.scss…). Fields and lists in the registration form
+// are the demo drawer's (demoBooking.scss).
+
+@use "tokens" as *;
+
+@keyframes gap-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes gap-pulse {
+  0%,
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
+}
+
+// ---------- Page ----------
+// The page is the size container its sections measure against (1cqw = 1% of
+// its width), on the home page's grid: an inner column (--w) with a pair of
+// guide lines either side of it, --off apart. Below 1200px the column widens
+// (lines 28px / 48px in from each edge), and phones pin them at 12px / 28px,
+// as on the home page.
+// Its containment makes it the containing block of anything fixed inside it,
+// so the floating "Register" pill sits outside it (page.tsx).
+// Like the home page's cover (anandSection.scss), the page turns navy while
+// the schedule is on screen (GapSchedule adds .main-cover--dark through
+// coverTheme.ts): the background and what sits on it outside the cards fade
+// across with it. Cards keep their own colours.
+.gap {
+  --off: 4.64cqw;
+  --w: 69.18cqw;
+  --radius: clamp(18px, 1.46cqw, 28px);
+  --gap-bg: #ffffff;
+  --gap-fg: #{$ink};
+  --gap-line: #{$line};
+  --gap-eyebrow: #{$text};
+  --gap-stroke: #{$outline};
+  --gap-muted: #{$muted};
+
+  position: relative;
+  container-type: inline-size;
+  overflow-x: clip;
+  background: var(--gap-bg);
+  color: var(--gap-fg);
+  font-family: $body-font;
+  transition:
+    background-color $theme-transition,
+    color $theme-transition;
+
+  &.main-cover--dark {
+    --gap-bg: #{$navy};
+    --gap-fg: #ffffff;
+    --gap-line: #{$dark-line};
+    --gap-eyebrow: #ffffff;
+    --gap-stroke: #{$dark-stroke};
+    --gap-muted: #{$dark-muted};
+  }
+
+  @media (max-width: 1199.98px) {
+    --off: 20px;
+    --w: calc(100cqw - 96px);
+  }
+  @media (max-width: 767.98px) {
+    --off: 16px;
+    --w: calc(100cqw - 56px);
+  }
+}
+
+:where(.gap) :where(button) {
+  cursor: pointer;
+}
+:where(.gap) :where(button:disabled) {
+  cursor: default;
+}
+
+.gap-section {
+  position: relative;
+  padding: clamp(72px, 6.25cqw, 120px) 0;
+}
+
+.gap-lines span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--gap-line);
+  pointer-events: none;
+  transition: background-color $theme-transition;
+
+  &:nth-child(1) { left: calc((100% - var(--w)) / 2 - var(--off)); }
+  &:nth-child(2) { left: calc((100% - var(--w)) / 2); }
+  &:nth-child(3) { right: calc((100% - var(--w)) / 2); }
+  &:nth-child(4) { right: calc((100% - var(--w)) / 2 - var(--off)); }
+}
+.gap-lines--dark span {
+  background: $dark-line;
+}
+
+.gap-inner {
+  position: relative;
+  z-index: 2;
+  width: var(--w);
+  margin: 0 auto;
+}
+
+// ---------- Section heads ----------
+// Eyebrow on the outer grid line, then the outlined headline.
+.gap-head {
+  margin-bottom: clamp(32px, 2.6cqw, 52px);
+}
+// A head with something beside it (the schedule's time zone).
+.gap-head--split {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px 40px;
+}
+
+.gap-eyebrow {
+  position: relative;
+  margin: 0 0 clamp(14px, 1.1cqw, 22px) calc(-1 * var(--off));
+  padding-left: 15px;
+  font-family: $title-font;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  color: var(--gap-eyebrow);
+  transition: color $theme-transition;
+}
+.gap-eyebrow__box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid $eyebrow-box;
+}
+
+// The site's outlined headline (_outlineTitle.scss) at 56% of its size, as
+// GAP's heads run to a sentence where the home page's are two words. Capped
+// by the window's height the same way, and never under 36px.
+.gap-title {
+  margin: 0;
+  font-family: $title-font;
+  font-size: clamp(2.25rem, min(4.75vw, 7.6vh), 5.75rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  @include outlined(var(--gap-stroke), 2px);
+  transition: -webkit-text-stroke-color $theme-transition;
+
+  @media (max-width: 767.98px) {
+    -webkit-text-stroke-width: 1.5px;
+  }
+}
+
+.gap-lead {
+  max-width: 38em;
+  margin: clamp(16px, 1.25cqw, 24px) 0 0;
+  font-size: clamp(16px, 1.04cqw, 20px);
+  line-height: 1.55;
+  color: var(--gap-muted);
+  text-wrap: pretty;
+  transition: color $theme-transition;
+}
+
+.gap-head--dark {
+  .gap-eyebrow { color: #ffffff; }
+  .gap-title { -webkit-text-stroke-color: $dark-stroke; }
+  .gap-lead { color: $dark-muted; }
+}
+
+.gap-kicker {
+  margin: 0;
+  @include kicker;
+  color: $muted;
+}
+.gap-kicker--dark {
+  color: $dark-muted;
+}
+
+// ---------- Buttons ----------
+// The secondary action beside the site's orange button (DemoBookingParts'
+// Cta), at the same height and corner.
+.gap-ghost {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 49px;
+  padding: 0 24px;
+  border: 1px solid rgba($ink, 0.2);
+  border-radius: 10px;
+  background: transparent;
+  color: $ink;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover {
+    border-color: rgba($ink, 0.45);
+    background: $cream;
+  }
+  &:focus-visible { @include focus-ring; }
+
+  @media (max-width: 640px) {
+    width: 100%;
+  }
+}
+.gap-ghost--dark {
+  border-color: $dark-stroke;
+  color: #ffffff;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.08);
+  }
+  &:focus-visible { outline-color: #ffffff; }
+}
+
+// An inline action in running text ("Book a free demo class").
+.gap-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  color: $orange-ink;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s ease;
+
+  &:hover { text-decoration-color: currentColor; }
+  &:focus-visible {
+    @include focus-ring;
+    border-radius: 4px;
+  }
+}
+
+// ---------- Choices ----------
+// One of a few (currency, rating site): the drawer's blue for the pick.
+.gap-seg {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #f4f4f4;
+}
+.gap-seg__opt {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: $text;
+  white-space: nowrap;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+
+  &:hover { background: #ffffff; }
+  &[aria-pressed="true"] {
+    background: $blue;
+    color: #ffffff;
+  }
+  &:focus-visible { @include focus-ring; }
+}
+.gap-seg--dark {
+  background: rgba(255, 255, 255, 0.08);
+
+  .gap-seg__opt {
+    color: $dark-text;
+
+    &:hover { background: rgba(255, 255, 255, 0.08); }
+    &[aria-pressed="true"] {
+      background: #ffffff;
+      color: $navy;
+    }
+    &:focus-visible { outline-color: #ffffff; }
+  }
+}
+
+// A commitment to tick (the outcome's study and tournaments).
+.gap-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 18px;
+  border: 1px solid $field-line;
+  border-radius: 16px;
+  background: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: $ink;
+  text-align: left;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover { border-color: #cfd5de; }
+  &[aria-pressed="true"] {
+    border-color: $blue;
+    background: $blue-soft;
+    color: $blue-ink;
+  }
+  &:focus-visible { @include focus-ring; }
+}
+.gap-check__box {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid #c9c9c9;
+  border-radius: 50%;
+  background: #ffffff;
+  color: transparent;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+
+  svg { width: 14px; height: 14px; }
+
+  [aria-pressed="true"] > & {
+    border-color: $blue;
+    background: $blue;
+    color: #ffffff;
+  }
+}
+
+// A batch (the schedule and the form both pick one).
+.gap-batch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 20px;
+  border: 1.5px solid $card-line;
+  border-radius: 20px;
+  background: #ffffff;
+  color: $ink;
+  text-align: left;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover { border-color: #cfd5de; }
+  &[aria-pressed="true"] {
+    border-color: $blue;
+    background: $blue-soft;
+  }
+  &:focus-visible { @include focus-ring; }
+}
+.gap-batch__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gap-batch__name {
+  font-family: $title-font;
+  font-size: clamp(18px, 1.15cqw, 22px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.gap-batch__note {
+  font-size: 13px;
+  line-height: 1.4;
+  color: $muted;
+}
+.gap-batch__dot {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid $blue;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 4px #ffffff;
+  transition: background-color 0.15s ease;
+
+  [aria-pressed="true"] > & { background: $blue; }
+}
+
+// On/off (the FIDE discount), on the dark fee card.
+.gap-switch {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: left;
+  transition: background-color 0.2s ease;
+
+  &:hover { background: rgba(255, 255, 255, 0.12); }
+  &:focus-visible { @include focus-ring(#ffffff); }
+
+  b { font-weight: 700; color: $gold; }
+}
+.gap-switch__track {
+  position: relative;
+  flex: none;
+  width: 46px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  transition: background-color 0.2s ease;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    transition: transform 0.2s $ease;
+  }
+  [aria-checked="true"] > & {
+    background: $amber;
+
+    &::after { transform: translateX(18px); }
+  }
+}
+
+// ---------- Floating "Register" ----------
+// Comes up once the hero's button has scrolled away, and steps aside while
+// the form (or the closing call to action) is on screen. Clear of the
+// scroll-to-top button at the bottom right.
+.gap-pill {
+  position: fixed;
+  z-index: 40;
+  bottom: 24px;
+  left: 50%;
+  translate: -50% 0;
+  transition:
+    opacity 0.3s ease,
+    transform 0.35s $ease,
+    visibility 0s linear 0s;
+
+  &:not(.is-shown) {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(24px) scale(0.95);
+    pointer-events: none;
+    transition:
+      opacity 0.3s ease,
+      transform 0.35s $ease,
+      visibility 0s linear 0.35s;
+  }
+
+  .upstep-btn {
+    height: 52px;
+    padding: 0 24px 0 20px;
+    border-radius: 999px;
+    font-size: 16px;
+  }
+
+  @media (max-width: 480px) {
+    left: 16px;
+    right: 88px;
+    translate: none;
+
+    .upstep-btn { width: 100%; }
+  }
+}
+.gap-pill__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+  animation: gap-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gap,
+  .gap *,
+  .gap-pill,
+  .gap-pill * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

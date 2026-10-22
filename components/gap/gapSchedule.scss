@@ -1,0 +1,205 @@
+// "Days & timings": the time zone beside the head, the two batches, and the
+// week as seven columns, which turn into rows below 900px. The zone button
+// and its list are the demo drawer's (.demo-tz__btn, .demo-pop).
+
+@use "tokens" as *;
+
+.gap-schedule__tz {
+  position: relative;
+  z-index: 5; // its list hangs over the week
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  font-size: 15px;
+  color: $text;
+
+  // Opens under the button's right edge, the side it sits on.
+  .demo-pop {
+    left: auto;
+    right: 0;
+  }
+}
+
+.gap-schedule__batches {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: clamp(16px, 1.25cqw, 24px);
+}
+
+.gap-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gap-week__day {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: clamp(170px, 12cqw, 220px);
+  padding: 14px 10px;
+  border: 1.5px solid transparent;
+  border-radius: 22px;
+  background: $card;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+
+  &.has-sessions {
+    border-color: $card-line;
+    background: #ffffff;
+  }
+}
+.gap-week__name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #8a8a8a;
+  text-align: center;
+
+  .has-sessions & { color: $ink; }
+}
+.gap-week__slots {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+.gap-week__session {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 10px;
+  border-radius: 16px;
+  animation: gap-in 0.35s $ease both;
+
+  span {
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.85;
+  }
+  b {
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+}
+.gap-week__session--gm {
+  background: $navy;
+  color: #ffffff;
+}
+.gap-week__session--booster {
+  background: $amber;
+  color: $ink;
+}
+.gap-week__rest {
+  margin: auto 0;
+  font-size: 12px;
+  color: #8a8a8a;
+  text-align: center;
+}
+
+.gap-schedule__note {
+  margin: 16px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: $muted;
+}
+
+// ---------- Dark ----------
+// While the page is navy (GapSchedule.tsx), the batches and days turn to
+// faint white glass, as the home page's cards do over its dark sections.
+// GM Live goes cobalt, as navy would vanish on navy.
+.gap-schedule {
+  .gap-schedule__tz,
+  .gap-schedule__note,
+  .gap-batch,
+  .gap-batch__note,
+  .gap-week__day,
+  .gap-week__name,
+  .gap-week__rest,
+  .gap-week__session {
+    transition:
+      color $theme-transition,
+      background-color $theme-transition,
+      border-color $theme-transition;
+  }
+
+  .main-cover--dark & {
+    .gap-schedule__tz { color: $dark-text; }
+    .gap-schedule__note,
+    .gap-batch__note,
+    .gap-week__rest { color: $dark-muted; }
+
+    .gap-batch {
+      border-color: $dark-border;
+      background: rgba(255, 255, 255, 0.04);
+      color: #ffffff;
+
+      &:hover { border-color: rgba(255, 255, 255, 0.24); }
+      &[aria-pressed="true"] {
+        border-color: $cobalt;
+        background: rgba($cobalt, 0.18);
+      }
+      &:focus-visible { outline-color: #ffffff; }
+    }
+    .gap-batch__dot {
+      border-color: $cobalt;
+      background: transparent;
+      box-shadow: inset 0 0 0 4px $navy;
+    }
+    [aria-pressed="true"] > .gap-batch__dot { background: $cobalt; }
+
+    .gap-week__day {
+      border-color: transparent;
+      background: rgba(255, 255, 255, 0.03);
+
+      &.has-sessions {
+        border-color: $dark-border;
+        background: rgba(255, 255, 255, 0.07);
+      }
+    }
+    .gap-week__name { color: rgba(255, 255, 255, 0.4); }
+    .has-sessions .gap-week__name { color: #ffffff; }
+    .gap-week__session--gm { background: $cobalt; }
+  }
+}
+
+// A row a day: the name, then that day's classes.
+@media (max-width: 899.98px) {
+  .gap-week { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .gap-week__day {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: center;
+    min-height: 0;
+    padding: 10px 14px;
+    border-radius: 18px;
+  }
+  .gap-week__name { text-align: left; }
+  .gap-week__slots { flex-flow: row wrap; }
+  .gap-week__session {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+    padding: 8px 12px;
+    border-radius: 12px;
+  }
+  .gap-week__rest { text-align: left; }
+}
+
+@media (max-width: 767.98px) {
+  .gap-schedule__batches { grid-template-columns: minmax(0, 1fr); }
+  // Under a button at the column's left edge, the list opens rightwards.
+  .gap-schedule__tz .demo-pop {
+    left: 0;
+    right: auto;
+    width: min(300px, calc(100vw - 56px));
+  }
+}

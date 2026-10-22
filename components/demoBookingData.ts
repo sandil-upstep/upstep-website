@@ -143,20 +143,21 @@ export type DetailErrors = Partial<
 const NAME = /^\p{L}[\p{L}\p{M}' .’-]*$/u;
 // One @, a dotted domain with no empty parts, and a top-level domain of letters.
 const EMAIL = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.\p{L}{2,}$/u;
+export const isName = (v: string) => NAME.test(v);
+export const isEmail = (v: string) => EMAIL.test(v);
 const check = (value: string, ok: (v: string) => boolean, required: boolean): FieldError | undefined => {
   const v = value.trim();
   if (!v) return required ? "missing" : undefined;
   return ok(v) ? undefined : "invalid";
 };
 export function validate(f: Details): DetailErrors {
-  const name = (v: string) => NAME.test(v);
   const e: DetailErrors = {
-    firstName: check(f.firstName, name, true),
-    lastName: check(f.lastName, name, false),
+    firstName: check(f.firstName, isName, true),
+    lastName: check(f.lastName, isName, false),
     age: f.age ? undefined : "missing",
     level: f.level ? undefined : "missing",
-    parentName: check(f.parentName, name, true),
-    email: check(f.email, (v) => EMAIL.test(v), true),
+    parentName: check(f.parentName, isName, true),
+    email: check(f.email, isEmail, true),
     phone: check(f.phone, (v) => nationalNumber(v, countryFor(f.code)) != null, true),
     phone2: check(f.phone2, (v) => nationalNumber(v, countryFor(f.code2)) != null, false),
   };

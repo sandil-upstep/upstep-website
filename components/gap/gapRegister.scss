@@ -1,0 +1,162 @@
+// The registration form: the demo drawer's card, fields and button
+// (demoBooking.scss), with the drawer's illustration beside it on wide
+// screens. Below 1200px it's the form alone.
+
+@use "tokens" as *;
+
+@keyframes gap-ring {
+  0%,
+  100% { box-shadow: 0 0 0 0 rgba($orange, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba($orange, 0); }
+}
+@keyframes gap-pop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.15); }
+}
+
+.gap-register__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 640px) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(24px, 3cqw, 64px);
+}
+.gap-register__main {
+  position: relative;
+  min-width: 0;
+}
+
+// In the gutter beside the card's bottom corner, as in the drawer.
+.gap-register__cube {
+  bottom: -20px;
+  left: -52px;
+  width: 46px;
+  height: 46px;
+  background-image: url("/images/cubes/cube-14.png");
+}
+
+.gap-register__fee {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: $orange-ink;
+}
+.gap-register__pulse {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $orange;
+  animation: gap-ring 2s ease-in-out infinite;
+}
+// The drawer's step title (.demo-title), a size down.
+.gap-register__title {
+  margin: 8px 0 22px;
+  font-family: $title-font;
+  font-size: clamp(1.75rem, 1rem + 1.6cqw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: $ink;
+  outline: none;
+}
+.gap-register__tz {
+  font-size: 14px;
+  font-weight: 500;
+  color: $muted;
+}
+
+.gap-register__batches {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+
+  .gap-batch { padding: 12px 16px; }
+  .gap-batch__name { font-size: 17px; }
+}
+
+// Lined up with the form's fields, like the drawer's foot.
+.gap-register__foot {
+  margin-top: 16px;
+  padding-left: 43px;
+}
+.gap-register__error {
+  justify-content: flex-end;
+  margin: 14px 0 0;
+}
+.gap-register__alt {
+  margin: 22px 0 0;
+  padding-left: 43px;
+  font-size: 15px;
+  color: $muted;
+}
+
+// ---------- Sent ----------
+.gap-register__done {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 40px 43px 44px;
+  animation: gap-in 0.4s $ease both;
+
+  .gap-register__title { margin: 4px 0 0; }
+}
+.gap-register__tick {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: $blue;
+  color: #ffffff;
+  animation: gap-pop 0.45s $ease both;
+
+  svg { width: 30px; height: 30px; }
+}
+.gap-register__text {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.55;
+  color: #444444;
+
+  b {
+    font-weight: 600;
+    color: $ink;
+    white-space: nowrap;
+  }
+}
+
+// ---------- Illustration ----------
+.gap-register__art {
+  position: relative;
+  min-width: 0;
+
+  // The drawer's, in the flow here rather than pinned to its sheet.
+  .demo-illustration {
+    position: relative;
+    max-width: 520px;
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .gap-register__layout { grid-template-columns: minmax(0, 1fr); }
+  .gap-register__main { max-width: 680px; }
+  .gap-register__art,
+  .gap-register__cube { display: none; }
+}
+
+@media (max-width: 640px) {
+  .gap-register__batches { grid-template-columns: minmax(0, 1fr); }
+  .gap-register__foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding-left: 8px; // the button's offset outline
+  }
+  .gap-register__alt { padding-left: 0; }
+  .gap-register__done { padding: 28px 18px 32px; }
+}
