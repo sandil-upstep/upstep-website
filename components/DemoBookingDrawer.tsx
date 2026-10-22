@@ -47,6 +47,7 @@ type Step = "details" | "slot";
 type Pop = "age" | "level" | "code" | "code2" | "tz";
 const HOLD_MS = 10 * 60e3;
 const LEAVE_MS = 230; // a step fading out before the next comes in
+const RISE_MS = 600;
 const CLOSE_MS = 450;
 
 const NEEDS = [
@@ -67,6 +68,7 @@ export default function DemoBookingDrawer() {
   const timers = useRef<number[]>([]);
 
   const [open, setOpen] = useState(false);
+  const [rising, setRising] = useState(false);
   const [closing, setClosing] = useState(false);
   const [step, setStep] = useState<Step>("details");
   const [leaving, setLeaving] = useState(false);
@@ -128,6 +130,7 @@ export default function DemoBookingDrawer() {
         setOpenedAt(Date.now());
         setNow(Date.now());
         setClosing(false);
+        setRising(true);
         setOpen(true);
       }),
     [],
@@ -161,12 +164,20 @@ export default function DemoBookingDrawer() {
     if (!open || !dialog || dialog.open) return;
     dialog.showModal();
     fitDetails();
+    // It opens at the top. While the sheet rises from below, the dialog can't
+    // scroll (is-rising), so focusing in it can't scroll it down either; and
+    // it's put back at the top once risen, for browsers that scroll it anyway
+    // (no overflow: clip, or Safari's focus scroll landing after this).
     dialog.scrollTop = 0;
     headingRef.current?.focus({ preventScroll: true });
+    later(() => {
+      dialog.scrollTop = 0;
+      setRising(false);
+    }, RISE_MS);
     // The page stays put underneath.
     getLenis()?.stop();
     document.documentElement.classList.add("demo-drawer-lock");
-  }, [open]);
+  }, [open, fitDetails, later]);
 
   const finishClose = useCallback(() => {
     dialogRef.current?.close();
@@ -339,7 +350,7 @@ export default function DemoBookingDrawer() {
   return (
     <dialog
       ref={dialogRef}
-      className={`demo-drawer is-${step}${closing ? " is-closing" : ""}`}
+      className={`demo-drawer is-${step}${rising ? " is-rising" : ""}${closing ? " is-closing" : ""}`}
       aria-labelledby="demo-drawer-title"
       data-lenis-prevent
       onCancel={(e) => {

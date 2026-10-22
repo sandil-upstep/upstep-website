@@ -69,6 +69,13 @@ html.demo-drawer-lock {
   overscroll-behavior: contain;
   transition: padding 0.6s $ease;
 
+  // No scrolling while the sheet rises from below: nothing can scroll the
+  // dialog down to it, and no scrollbar flashes up.
+  &.is-rising {
+    overflow: hidden;
+    overflow: clip;
+  }
+
   &::backdrop {
     background: rgba(24, 30, 42, 0.32);
     animation: demo-fade 0.35s ease both;
@@ -1784,6 +1791,17 @@ button.demo-day {
   .demo-cube--ticket,
   .demo-cube--expect-a,
   .demo-cube--expect-b { display: none; }
+}
+
+// Touch screens (iOS Safari) zoom in on a focused field whose text is under
+// 16px, so the fields' text is 16px there.
+@media (pointer: coarse) {
+  .demo-field,
+  .demo-field input,
+  .demo-code,
+  .demo-pop__search input {
+    font-size: 16px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
