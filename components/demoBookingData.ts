@@ -236,6 +236,13 @@ export function slotsOn(day: Day, zone: Zone, now: number): Slot[] {
   return out.sort((a, b) => a.at - b.at);
 }
 
+// The first day in `zone` with an open slot, from `now`'s day on.
+export function firstOpenDay(zone: Zone, now: number): Day | null {
+  let day = wallClock(now, zone).day;
+  for (let i = 0; i <= HOLD_DAYS + 1; i++, day = addDays(day, 1)) if (slotsOn(day, zone, now).length) return day;
+  return null;
+}
+
 // ---- Labels ----
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"];

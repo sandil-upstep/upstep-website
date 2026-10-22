@@ -20,6 +20,7 @@ import {
   dayShort,
   detectZone,
   digitsLabel,
+  firstOpenDay,
   newBookingId,
   sameDay,
   saveBooking,
@@ -255,7 +256,14 @@ export default function DemoBookingDrawer() {
       requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLElement>("[aria-invalid='true'], [data-invalid]")?.focus());
       return;
     }
-    go("slot");
+    // The first day with a time open comes picked, unless one already is.
+    go("slot", () => {
+      if (selDay || !zone || !openedAt) return;
+      const day = firstOpenDay(zone, openedAt);
+      if (!day) return;
+      setMonth(day.m === wallClock(openedAt, zone).day.m ? 0 : 1);
+      setSelDay(day);
+    });
   };
 
   // ---- Calendar ----
