@@ -13,10 +13,13 @@ import {
   LEVELS,
   MONTHS,
   bookDemo,
+  cleanDetails,
+  countryFor,
   dayKey,
   dayLong,
   dayShort,
   detectZone,
+  digitsLabel,
   newBookingId,
   sameDay,
   saveBooking,
@@ -225,8 +228,24 @@ export default function DemoBookingDrawer() {
   const valid = Object.keys(errors).length === 0;
   const err = tried ? errors : {};
   const set = (k: keyof Details) => (v: string) => setF((prev) => ({ ...prev, [k]: v }));
+  // What each field's error says.
+  const letters = "Use letters only";
+  const validNumber = (iso: string) => {
+    const c = countryFor(iso);
+    return `Enter a valid number: ${digitsLabel(c)} for ${c.name}`;
+  };
+  const msg = {
+    firstName: err.firstName && (err.firstName === "missing" ? "Add a first name" : letters),
+    lastName: err.lastName && letters,
+    age: err.age && "Pick an age",
+    level: err.level && "Pick the closest match. There are no wrong answers.",
+    parentName: err.parentName && (err.parentName === "missing" ? "Add your name" : letters),
+    email: err.email && (err.email === "missing" ? "Add an email for the Zoom link" : "Enter a valid email for the Zoom link"),
+    phone: err.phone && (err.phone === "missing" ? "Add a WhatsApp number" : validNumber(f.code)),
+    phone2: err.phone2 && validNumber(f.code2),
+  };
   // Fitted again as the step comes in, and as rows or error lines come and go.
-  const errKey = Object.keys(err).join();
+  const errKey = Object.values(msg).join("|");
   useLayoutEffect(() => fitDetails(), [fitDetails, step, showPhone2, errKey]);
 
   const goSlot = () => {
@@ -291,7 +310,8 @@ export default function DemoBookingDrawer() {
   const submit = () => {
     if (selSlot == null || submitting || !zone) return;
     if (!valid) return go("details", () => setTried(true));
-    const { firstName, lastName, age, level, email } = f;
+    const details = cleanDetails(f);
+    const { firstName, lastName, age, level, email } = details;
     const summary = { firstName, lastName, age, level, email, slot: selSlot, timeZone: zone.id };
     const id = newBookingId();
     const url = `/book-demo/confirmed?id=${id}`;
@@ -303,7 +323,7 @@ export default function DemoBookingDrawer() {
     setSubmitting(true);
     setFailed(false);
     setPop(null);
-    bookDemo({ ...f, slot: selSlot, timeZone: zone.id }).then(
+    bookDemo({ ...details, slot: selSlot, timeZone: zone.id }).then(
       () => {
         saveBooking(id, { status: "booked", booking: summary });
         // Pop-ups blocked: the confirmation opens here instead.
@@ -403,7 +423,8 @@ export default function DemoBookingDrawer() {
                           label="First Name"
                           value={f.firstName}
                           onChange={set("firstName")}
-                          error={err.firstName && "Add a first name"}
+                          error={msg.firstName}
+                          maxLength={50}
                           autoComplete="off"
                         />
                         <TextField
@@ -412,6 +433,8 @@ export default function DemoBookingDrawer() {
                           optional
                           value={f.lastName}
                           onChange={set("lastName")}
+                          error={msg.lastName}
+                          maxLength={50}
                           autoComplete="off"
                         />
                       </div>
@@ -422,7 +445,7 @@ export default function DemoBookingDrawer() {
                           onToggle={() => toggle("age")}
                           label="Select Age"
                           value={f.age && `${f.age} years`}
-                          error={err.age && "Pick an age"}
+                          error={msg.age}
                         >
                           <div className="demo-pop demo-pop--ages" role="group" aria-label="Child’s age">
                             <span className="demo-pop__title">Child’s age</span>
@@ -450,7 +473,7 @@ export default function DemoBookingDrawer() {
                           onToggle={() => toggle("level")}
                           label="Chess Level"
                           value={f.level}
-                          error={err.level && "Pick the closest match. There are no wrong answers."}
+                          error={msg.level}
                         >
                           <div className="demo-pop demo-pop--list" role="group" aria-label="How much chess do they know?">
                             {LEVELS.map((l) => (
@@ -483,7 +506,8 @@ export default function DemoBookingDrawer() {
                           label="Parent’s Name"
                           value={f.parentName}
                           onChange={set("parentName")}
-                          error={err.parentName && "Add your name"}
+                          error={msg.parentName}
+                          maxLength={50}
                           autoComplete="name"
                         />
                         <TextField
@@ -492,7 +516,8 @@ export default function DemoBookingDrawer() {
                           type="email"
                           value={f.email}
                           onChange={set("email")}
-                          error={err.email && "Enter a valid email for the Zoom link"}
+                          error={msg.email}
+                          maxLength={254}
                           autoComplete="email"
                         />
                       </div>
@@ -510,7 +535,7 @@ export default function DemoBookingDrawer() {
                           q={q}
                           onQ={setQ}
                           close={() => setPop(null)}
-                          error={err.phone && "Enter a valid phone number"}
+                          error={msg.phone}
                         />
                         {!showPhone2 && (
                           <button type="button" className="demo-add" onClick={() => setShowPhone2(true)}>
@@ -545,6 +570,7 @@ export default function DemoBookingDrawer() {
                             q={q}
                             onQ={setQ}
                             close={() => setPop(null)}
+                            error={msg.phone2}
                             autoFocus
                           />
                         </div>
@@ -830,7 +856,7 @@ export default function DemoBookingDrawer() {
                       >
                         <path d="M19 12H5M11 6l-6 6 6 6" />
                       </svg>
-                      Back
+                      <span className="demo-back__label">Back</span>
                     </button>
                     {slotWall && (
                       <p className="demo-foot__slot">
@@ -896,6 +922,7 @@ function TextField({
   error,
   optional,
   type = "text",
+  maxLength,
   autoComplete,
   autoFocus,
 }: {
@@ -906,6 +933,7 @@ function TextField({
   error?: string | false;
   optional?: boolean;
   type?: string;
+  maxLength?: number;
   autoComplete?: string;
   autoFocus?: boolean;
 }) {
@@ -921,6 +949,7 @@ function TextField({
           aria-required={!optional}
           aria-invalid={!!error}
           aria-describedby={error ? `${id}-error` : undefined}
+          maxLength={maxLength}
           autoComplete={autoComplete}
           autoFocus={autoFocus}
           onChange={(e) => onChange(e.target.value)}
@@ -1004,7 +1033,7 @@ function PhoneField({
   error?: string | false;
   autoFocus?: boolean;
 }) {
-  const cc = COUNTRIES.find((c) => c.iso === code) ?? COUNTRIES[0];
+  const cc = countryFor(code);
   const ql = q.trim().toLowerCase();
   const list = COUNTRIES.filter((c) => !ql || c.name.toLowerCase().includes(ql) || c.dial.includes(ql) || c.iso.toLowerCase() === ql);
   return (
@@ -1030,6 +1059,7 @@ function PhoneField({
           aria-required={!optional}
           aria-invalid={!!error}
           aria-describedby={error ? `${id}-error` : undefined}
+          maxLength={20}
           autoComplete={optional ? "off" : "tel-national"}
           autoFocus={autoFocus}
           onChange={(e) => onChange(e.target.value)}

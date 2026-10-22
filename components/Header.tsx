@@ -28,9 +28,15 @@ const TRAILING_LINKS: NavLink[] = [{ label: "Tournament Finder", href: "/tournam
 const NAV_LINK_CLASS =
   "text-[15px] font-medium text-(--nav-fg) transition-colors hover:text-[#f8661a]";
 
+// The floating frosted bar and its row, shared with the demo confirmation
+// page's slim header (DemoConfirmed.tsx) so the two match.
+export const NAV_BAR_CLASS =
+  "site-nav mx-auto max-w-285 lg:max-w-[max(71.25rem,78vw)] rounded-[10px] border backdrop-blur-xl backdrop-saturate-150";
+export const NAV_ROW_CLASS = "flex h-16 items-center justify-between gap-6 px-5 lg:px-6";
+
 // Stand-in wordmark until the real logo SVG lands in /public/images — then
 // replace this with a next/image of it.
-function Logo() {
+export function Logo() {
   return (
     <Link href="/" aria-label="Upstep Academy home" className="flex shrink-0 flex-col leading-none py-2 h-full">
       <Image src="/images/main-logo.svg" alt="Upstep Academy" width={120} height={40} className="site-nav__logo w-auto h-full" />
@@ -266,11 +272,8 @@ export default function Header() {
       }`}
     >
       {/* Glass colours and shadow live in header.scss (.site-nav), per theme. */}
-      <div
-        data-theme={theme}
-        className="site-nav mx-auto max-w-285 lg:max-w-[max(71.25rem,78vw)] rounded-[10px] border backdrop-blur-xl backdrop-saturate-150"
-      >
-        <div ref={barRowRef} className="flex h-16 items-center justify-between gap-6 px-5 lg:px-6">
+      <div data-theme={theme} className={NAV_BAR_CLASS}>
+        <div ref={barRowRef} className={NAV_ROW_CLASS}>
           <Logo />
 
           <nav aria-label="Main" className="hidden items-center gap-9 lg:flex">

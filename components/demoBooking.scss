@@ -168,7 +168,11 @@ html.demo-drawer-lock {
   clip-path: path("M0 0H224V198C214 206 200 212 186 212C170 212 158 204 148 192Z");
   transition: translate 0.5s $ease;
 
-
+  @media (max-width: 640px) {
+    
+    width: 160px;
+    height: 210px;
+  }
   // Slides 60px out past the edge while the close button spins.
   @media (hover: hover) {
     .demo-drawer__panel:has(.demo-drawer__close:hover) & { translate: 50px 0; height: 215px; }
@@ -231,6 +235,7 @@ html.demo-drawer-lock {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-right:12px;
   font-size: 15px;
   font-weight: 500;
   color: $ink;
@@ -241,7 +246,7 @@ html.demo-drawer-lock {
     height: 2px;
     margin: 0 4px 0 2px;
     border-radius: 2px;
-    background: #d6d6d6;
+    background: #c9c9c9; // the todo ring's grey
   }
 }
 .demo-steps__dot {
@@ -254,8 +259,11 @@ html.demo-drawer-lock {
   font-size: 13px;
   font-weight: 600;
 
+  // A white disc with its ring: the frosted sheet behind it is greyer than
+  // white (most on iPhones), and a light ring alone fades into it.
   .is-todo & {
-    border: 1.5px solid #d9d9d9;
+    border: 1.5px solid #c9c9c9;
+    background: #ffffff;
     color: #333333;
   }
   .is-current &,
@@ -435,7 +443,7 @@ html.demo-drawer-lock {
   width: 100%;
   height: 40px;
   padding: 0 16px;
-  border: 1px solid $line;
+  border: 1px solid #dddddd;
   border-radius: 999px;
   background: #ffffff;
   font-size: 13px;
@@ -455,12 +463,13 @@ html.demo-drawer-lock {
     border: 0;
     outline: none;
     background: transparent;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 700;
 
+    // Lighter than what's typed, so a filled field reads apart from an empty one.
     &::placeholder {
-      color: $ink;
-      opacity: 0.92;
+      color: $muted;
+      opacity: 1;
     }
     // The browser's autofill paints its own (blue) fill and text colour on
     // the input's square box; cover it with the pill's cream instead, and
@@ -508,6 +517,8 @@ html.demo-drawer-lock {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  // Nothing picked yet: its label is a placeholder, like the inputs'.
+  &:not(.is-filled) span { color: $muted; }
 }
 .demo-chevron {
   flex: none;
@@ -1328,30 +1339,14 @@ button.demo-day {
     color: #555555;
   }
 }
+// The home header's floating bar (Header.tsx sets its look), held at the top
+// as the page scrolls. 80px tall in all, as the status screens expect.
 .demo-done__bar {
   position: sticky;
   z-index: 4;
   top: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  height: 80px;
-  padding: 0 max(24px, 9.5%) 0 max(24px, 12.5%);
-  background: linear-gradient(90deg, #ffffff calc(100% - 190px), rgba(255, 255, 255, 0.5) calc(100% - 150px));
-  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
-  backdrop-filter: blur(10px);
+  padding: 16px 16px 0;
   animation: demo-fade 0.5s ease both;
-}
-.demo-done__logo {
-  width: 217px;
-  height: auto;
-}
-.demo-done__home.upstep-btn {
-  min-width: 290px;
-  height: 50px;
-  font-size: 20px;
-  font-weight: 600;
 }
 .demo-done__inner {
   position: relative;
@@ -1761,23 +1756,36 @@ button.demo-day {
     align-items: center;
     gap: 8px 18px;
 
-    .demo-back { flex: none; font-size: 16px; }
+    // Just the arrow, in a full-size tap target that keeps it at the left edge;
+    // the label stays for screen readers.
+    .demo-back {
+      flex: none;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      margin-left: -13px;
+    }
+    .demo-back__label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
     // No room beside the button: the slot gets its own line above.
     .demo-foot__slot {
       order: -1;
       flex-basis: 100%;
       margin-left: 0;
       font-size: 14px;
-      text-align: left;
+      text-align: center;
     }
     .demo-cta { flex: 1; min-width: 0; }
     .demo-cta__btn.upstep-btn { padding: 0 14px; font-size: 16px; }
   }
   .demo-info { padding: 24px 18px 20px; }
 
-  .demo-done__bar { height: 64px; }
-  .demo-done__logo { width: 140px; }
-  .demo-done__home.upstep-btn { min-width: 0; height: 42px; font-size: 15px; }
   .demo-done__inner { padding: 28px 16px 48px; }
   .demo-confirmed__corner { display: none; }
   .demo-confirmed__checks { width: 420px; }

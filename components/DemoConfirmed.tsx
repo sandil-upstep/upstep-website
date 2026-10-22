@@ -2,10 +2,10 @@
 
 import { useLayoutEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Button from "./common/Button";
+import { Logo, NAV_BAR_CLASS, NAV_ROW_CLASS } from "./Header";
 import { Cta, Illustration, STEPS, Stepper } from "./DemoBookingParts";
 import {
   DEMO_MINUTES,
@@ -60,13 +60,17 @@ export default function DemoConfirmed({ id }: { id: string | null }) {
         <span className="demo-confirmed__checks" />
         <span className="demo-confirmed__corner" />
       </div>
-      <header className="demo-done__bar">
-        <Link href="/" aria-label="Upstep Academy home">
-          <Image src="/images/main-logo.svg" width={227} height={65} alt="Upstep Academy" className="demo-done__logo" />
-        </Link>
-        <Button size="sm" className="demo-done__home" href="/">
-          Go To Homepage
-        </Button>
+      {/* The home header's bar (Header.tsx), with just the logo and a way home. */}
+      <header className="demo-done__bar font-sans">
+        <div data-theme="light" className={NAV_BAR_CLASS}>
+          <div className={NAV_ROW_CLASS}>
+            <Logo />
+            <Button size="sm" className="h-11.5" href="/">
+              <span className="sm:hidden">Home</span>
+              <span className="max-sm:hidden">Go To Homepage</span>
+            </Button>
+          </div>
+        </div>
       </header>
 
       {record === undefined || record?.status === "pending" ? (

@@ -65,26 +65,43 @@ export function zoneLabel(zone: Zone, at = Date.now()) {
   return `${zone.region} · ${zoneShort(zone, at)} (${off === "UTC" ? "UTC+0" : off})`;
 }
 
-export type Country = { iso: string; name: string; dial: string };
+// digits: how long the number is after the country code, without a trunk 0.
+export type Country = { iso: string; name: string; dial: string; digits: readonly [number, number] };
 export const COUNTRIES: Country[] = (
   [
-    ["IN", "India", "+91"],
-    ["AE", "United Arab Emirates", "+971"],
-    ["GB", "United Kingdom", "+44"],
-    ["US", "United States / Canada", "+1"],
-    ["SG", "Singapore", "+65"],
-    ["AU", "Australia", "+61"],
-    ["DE", "Germany", "+49"],
-    ["QA", "Qatar", "+974"],
-    ["SA", "Saudi Arabia", "+966"],
-    ["OM", "Oman", "+968"],
-    ["KW", "Kuwait", "+965"],
-    ["MY", "Malaysia", "+60"],
-    ["NZ", "New Zealand", "+64"],
-    ["ZA", "South Africa", "+27"],
-    ["HK", "Hong Kong", "+852"],
+    ["IN", "India", "+91", 10, 10],
+    ["AE", "United Arab Emirates", "+971", 8, 9],
+    ["GB", "United Kingdom", "+44", 9, 10],
+    ["US", "United States / Canada", "+1", 10, 10],
+    ["SG", "Singapore", "+65", 8, 8],
+    ["AU", "Australia", "+61", 9, 9],
+    ["DE", "Germany", "+49", 7, 11],
+    ["QA", "Qatar", "+974", 8, 8],
+    ["SA", "Saudi Arabia", "+966", 9, 9],
+    ["OM", "Oman", "+968", 8, 8],
+    ["KW", "Kuwait", "+965", 8, 8],
+    ["MY", "Malaysia", "+60", 8, 10],
+    ["NZ", "New Zealand", "+64", 8, 10],
+    ["ZA", "South Africa", "+27", 9, 9],
+    ["HK", "Hong Kong", "+852", 8, 8],
   ] as const
-).map(([iso, name, dial]) => ({ iso, name, dial }));
+).map(([iso, name, dial, min, max]) => ({ iso, name, dial, digits: [min, max] as const }));
+export const countryFor = (iso: string) => COUNTRIES.find((c) => c.iso === iso) ?? COUNTRIES[0];
+// "10 digits", "8–9 digits"
+export const digitsLabel = ({ digits: [min, max] }: Country) => `${min === max ? min : `${min}–${max}`} digits`;
+
+// The number's digits after the country code, however it was typed: "98765
+// 43210", "+91 98765 43210", "0091…", "919876543210", or with a trunk 0
+// ("07700 900123" in the UK). Null when it isn't a phone number.
+export function nationalNumber(value: string, c: Country): string | null {
+  if (!/^[\d\s+\-().]*$/.test(value)) return null;
+  const dial = c.dial.slice(1);
+  let d = value.replace(/\D/g, "");
+  if (d.startsWith("00")) d = d.slice(2).startsWith(dial) ? d.slice(2 + dial.length) : d.slice(2);
+  else if ((value.trim().startsWith("+") || d.length > c.digits[1]) && d.startsWith(dial)) d = d.slice(dial.length);
+  d = d.replace(/^0/, "");
+  return d.length >= c.digits[0] && d.length <= c.digits[1] ? d : null;
+}
 
 export const AGES = ["4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16+"];
 export const LEVELS = [
@@ -117,17 +134,47 @@ export const EMPTY_DETAILS: Details = {
   code2: "IN",
   phone2: "",
 };
-export type DetailErrors = Partial<Record<"firstName" | "age" | "level" | "parentName" | "email" | "phone", boolean>>;
+// Each field's problem: left empty (when it's needed), or not valid.
+export type FieldError = "missing" | "invalid";
+export type DetailErrors = Partial<
+  Record<"firstName" | "lastName" | "age" | "level" | "parentName" | "email" | "phone" | "phone2", FieldError>
+>;
+// Letters in any script, with the spaces, apostrophes, hyphens and dots names have.
+const NAME = /^\p{L}[\p{L}\p{M}' .’-]*$/u;
+// One @, a dotted domain with no empty parts, and a top-level domain of letters.
+const EMAIL = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.\p{L}{2,}$/u;
+const check = (value: string, ok: (v: string) => boolean, required: boolean): FieldError | undefined => {
+  const v = value.trim();
+  if (!v) return required ? "missing" : undefined;
+  return ok(v) ? undefined : "invalid";
+};
 export function validate(f: Details): DetailErrors {
+  const name = (v: string) => NAME.test(v);
   const e: DetailErrors = {
-    firstName: !f.firstName.trim(),
-    age: !f.age,
-    level: !f.level,
-    parentName: !f.parentName.trim(),
-    email: !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim()),
-    phone: f.phone.replace(/\D/g, "").length < 7,
+    firstName: check(f.firstName, name, true),
+    lastName: check(f.lastName, name, false),
+    age: f.age ? undefined : "missing",
+    level: f.level ? undefined : "missing",
+    parentName: check(f.parentName, name, true),
+    email: check(f.email, (v) => EMAIL.test(v), true),
+    phone: check(f.phone, (v) => nationalNumber(v, countryFor(f.code)) != null, true),
+    phone2: check(f.phone2, (v) => nationalNumber(v, countryFor(f.code2)) != null, false),
   };
   return Object.fromEntries(Object.entries(e).filter(([, v]) => v));
+}
+
+// The details as they're sent: trimmed, single-spaced, numbers as bare digits.
+export function cleanDetails(f: Details): Details {
+  const text = (v: string) => v.trim().replace(/\s+/g, " ");
+  return {
+    ...f,
+    firstName: text(f.firstName),
+    lastName: text(f.lastName),
+    parentName: text(f.parentName),
+    email: f.email.trim(),
+    phone: nationalNumber(f.phone, countryFor(f.code)) ?? "",
+    phone2: nationalNumber(f.phone2, countryFor(f.code2)) ?? "",
+  };
 }
 
 // ---- Calendar ----
