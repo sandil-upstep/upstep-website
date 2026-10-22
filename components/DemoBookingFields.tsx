@@ -1,10 +1,26 @@
-import type { ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import { COUNTRIES, countryFor } from "./demoBookingData";
 
 // Form fields shared by the demo booking drawer (DemoBookingDrawer.tsx) and
 // the GAP registration form (gap/GapRegister.tsx). Styled in demoBooking.scss.
 // A field that opens a list (PopField, PhoneField's country code) is wrapped
 // in [data-pop={name}], so its owner can close the list on a click outside.
+// Each field calls onLeave when the visitor moves on from it (see useTouched).
+
+// Which fields the visitor has left. A field's error shows once it's been
+// left, then follows every change; a failed submit shows them all.
+export function useTouched<K extends string>() {
+  const [touched, setTouched] = useState<Partial<Record<K, true>>>({});
+  const touch = useCallback((k: K) => () => setTouched((t) => (t[k] ? t : { ...t, [k]: true })), []);
+  const clear = useCallback(() => setTouched({}), []);
+  // The errors to show: every one after a submit, otherwise those of fields left.
+  const shown = useCallback(
+    <E extends Partial<Record<K, unknown>>>(errors: E, all: boolean): E =>
+      all ? errors : (Object.fromEntries(Object.entries(errors).filter(([k]) => touched[k as K])) as E),
+    [touched]
+  );
+  return { touch, clear, shown };
+}
 
 function ChevronCircle() {
   return (
@@ -39,6 +55,7 @@ export function TextField({
   maxLength,
   autoComplete,
   autoFocus,
+  onLeave,
 }: {
   id: string;
   label: string;
@@ -50,6 +67,7 @@ export function TextField({
   maxLength?: number;
   autoComplete?: string;
   autoFocus?: boolean;
+  onLeave?: () => void;
 }) {
   return (
     <div className="demo-form__cell">
@@ -67,6 +85,7 @@ export function TextField({
           autoComplete={autoComplete}
           autoFocus={autoFocus}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={onLeave}
         />
       </div>
       <FieldError id={id} text={error} />
@@ -74,7 +93,8 @@ export function TextField({
   );
 }
 
-// A field that opens a list under it (age, chess level, region).
+// A field that opens a list under it (age, chess level, region). It's left
+// when its list closes, picked from or not.
 export function PopField({
   name,
   open,
@@ -83,6 +103,7 @@ export function PopField({
   value,
   error,
   children,
+  onLeave,
 }: {
   name: string;
   open: boolean;
@@ -91,8 +112,14 @@ export function PopField({
   value: string;
   error?: string | false;
   children: ReactNode;
+  onLeave?: () => void;
 }) {
   const id = `demo-${name}`;
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (wasOpen.current && !open) onLeave?.();
+    wasOpen.current = open;
+  }, [open, onLeave]);
   return (
     <div className="demo-form__cell demo-pop-root" data-pop={name}>
       <button
@@ -130,6 +157,7 @@ export function PhoneField({
   close,
   error,
   autoFocus,
+  onLeave,
 }: {
   id: string;
   name: string;
@@ -146,8 +174,15 @@ export function PhoneField({
   close: () => void;
   error?: string | false;
   autoFocus?: boolean;
+  onLeave?: () => void;
 }) {
   const cc = countryFor(code);
+  // Going to the country code, or its list, isn't leaving the field.
+  const blur = (e: FocusEvent) => {
+    const to = e.relatedTarget;
+    if (to instanceof Node && e.currentTarget.closest("[data-pop]")?.contains(to)) return;
+    onLeave?.();
+  };
   const ql = q.trim().toLowerCase();
   const list = COUNTRIES.filter((c) => !ql || c.name.toLowerCase().includes(ql) || c.dial.includes(ql) || c.iso.toLowerCase() === ql);
   return (
@@ -177,6 +212,7 @@ export function PhoneField({
           autoComplete={optional ? "off" : "tel-national"}
           autoFocus={autoFocus}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={blur}
         />
       </div>
       {open && (

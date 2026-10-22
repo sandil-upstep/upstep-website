@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { onOpenDemoBooking } from "./demoBooking";
-import { PhoneField, PopField, TextField } from "./DemoBookingFields";
+import { PhoneField, PopField, TextField, useTouched } from "./DemoBookingFields";
 import { Arrow, Cta, Illustration, STEPS, Stepper } from "./DemoBookingParts";
 import {
   AGES,
@@ -79,6 +79,7 @@ export default function DemoBookingDrawer() {
 
   const [f, setF] = useState<Details>(EMPTY_DETAILS);
   const [tried, setTried] = useState(false);
+  const { touch, clear: clearTouched, shown } = useTouched<keyof Details>();
   const [showPhone2, setShowPhone2] = useState(false);
   const [pop, setPop] = useState<Pop | null>(null);
   const [q, setQ] = useState("");
@@ -107,6 +108,7 @@ export default function DemoBookingDrawer() {
     setStep("details");
     setF((prev) => ({ ...EMPTY_DETAILS, code: prev.code, code2: prev.code }));
     setTried(false);
+    clearTouched();
     setShowPhone2(false);
     setMonth(0);
     setSelDay(null);
@@ -114,7 +116,7 @@ export default function DemoBookingDrawer() {
     setHoldUntil(null);
     setSubmitting(false);
     setFailed(false);
-  }, []);
+  }, [clearTouched]);
 
   // ---- Opening and closing ----
   const zoneFound = useRef(false);
@@ -227,7 +229,7 @@ export default function DemoBookingDrawer() {
 
   const errors = useMemo(() => validate(f), [f]);
   const valid = Object.keys(errors).length === 0;
-  const err = tried ? errors : {};
+  const err = shown(errors, tried);
   const set = (k: keyof Details) => (v: string) => setF((prev) => ({ ...prev, [k]: v }));
   // What each field's error says.
   const letters = "Use letters only";
@@ -432,6 +434,7 @@ export default function DemoBookingDrawer() {
                           value={f.firstName}
                           onChange={set("firstName")}
                           error={msg.firstName}
+                          onLeave={touch("firstName")}
                           maxLength={50}
                           autoComplete="off"
                         />
@@ -442,6 +445,7 @@ export default function DemoBookingDrawer() {
                           value={f.lastName}
                           onChange={set("lastName")}
                           error={msg.lastName}
+                          onLeave={touch("lastName")}
                           maxLength={50}
                           autoComplete="off"
                         />
@@ -454,6 +458,7 @@ export default function DemoBookingDrawer() {
                           label="Select Age"
                           value={f.age && `${f.age} years`}
                           error={msg.age}
+                          onLeave={touch("age")}
                         >
                           <div className="demo-pop demo-pop--ages" role="group" aria-label="Child’s age">
                             <span className="demo-pop__title">Child’s age</span>
@@ -482,6 +487,7 @@ export default function DemoBookingDrawer() {
                           label="Chess Level"
                           value={f.level}
                           error={msg.level}
+                          onLeave={touch("level")}
                         >
                           <div className="demo-pop demo-pop--list" role="group" aria-label="How much chess do they know?">
                             {LEVELS.map((l) => (
@@ -515,6 +521,7 @@ export default function DemoBookingDrawer() {
                           value={f.parentName}
                           onChange={set("parentName")}
                           error={msg.parentName}
+                          onLeave={touch("parentName")}
                           maxLength={50}
                           autoComplete="name"
                         />
@@ -525,6 +532,7 @@ export default function DemoBookingDrawer() {
                           value={f.email}
                           onChange={set("email")}
                           error={msg.email}
+                          onLeave={touch("email")}
                           maxLength={254}
                           autoComplete="email"
                         />
@@ -544,6 +552,7 @@ export default function DemoBookingDrawer() {
                           onQ={setQ}
                           close={() => setPop(null)}
                           error={msg.phone}
+                          onLeave={touch("phone")}
                         />
                         {!showPhone2 && (
                           <button type="button" className="demo-add" onClick={() => setShowPhone2(true)}>
@@ -579,6 +588,7 @@ export default function DemoBookingDrawer() {
                             onQ={setQ}
                             close={() => setPop(null)}
                             error={msg.phone2}
+                            onLeave={touch("phone2")}
                             autoFocus
                           />
                         </div>

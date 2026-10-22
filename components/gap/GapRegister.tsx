@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { openDemoBooking } from "../demoBooking";
-import { PhoneField, PopField, TextField } from "../DemoBookingFields";
+import { PhoneField, PopField, TextField, useTouched } from "../DemoBookingFields";
 import { Arrow, Cta, Illustration } from "../DemoBookingParts";
 import { countryFor, digitsLabel, isEmail, isName, nationalNumber, zoneShort } from "../demoBookingData";
 import { useGap } from "./GapContext";
@@ -43,6 +43,7 @@ export default function GapRegister() {
   const { batch, setBatch, zone, now, ready, currency, setCurrency, fide, country } = useGap();
   const [f, setF] = useState<Fields>(EMPTY);
   const [tried, setTried] = useState(false);
+  const { touch, clear: clearTouched, shown } = useTouched<keyof Fields>();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const [sent, setSent] = useState<Sent | null>(null);
@@ -56,7 +57,7 @@ export default function GapRegister() {
   const code = f.code || country || "IN";
   const errors = useMemo(() => problems(f, code), [f, code]);
   const valid = Object.keys(errors).length === 0;
-  const err = tried ? errors : {};
+  const err = shown(errors, tried);
   const set = (k: keyof Fields) => (v: string) => setF((prev) => ({ ...prev, [k]: v }));
 
   // The confirmation takes the focus once it's shown.
@@ -100,6 +101,7 @@ export default function GapRegister() {
   const reset = () => {
     setF((prev) => ({ ...EMPTY, code: prev.code }));
     setTried(false);
+    clearTouched();
     setFailed(false);
     setSent(null);
   };
@@ -159,6 +161,7 @@ export default function GapRegister() {
                         value={f.name}
                         onChange={set("name")}
                         error={err.name}
+                        onLeave={touch("name")}
                         maxLength={80}
                         autoComplete="off"
                       />
@@ -169,6 +172,7 @@ export default function GapRegister() {
                         label="Region"
                         value={f.region}
                         error={err.region}
+                        onLeave={touch("region")}
                       >
                         <div className="demo-pop demo-pop--list" role="group" aria-label="Region">
                           {REGIONS.map((r) => (
@@ -199,6 +203,7 @@ export default function GapRegister() {
                         value={f.email}
                         onChange={set("email")}
                         error={err.email}
+                        onLeave={touch("email")}
                         maxLength={254}
                         autoComplete="email"
                       />
@@ -219,6 +224,7 @@ export default function GapRegister() {
                         onQ={setQ}
                         close={() => setPop(null)}
                         error={err.phone}
+                        onLeave={touch("phone")}
                       />
                     </div>
                   </fieldset>
