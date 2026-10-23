@@ -17,8 +17,6 @@
   color: #ffffff;
 
   .gap-head { margin-bottom: clamp(24px, 2cqw, 40px); }
-  // The eyebrow sits on the card's edge here, not out on the grid line.
-  .gap-eyebrow { margin-left: 0; }
   .gap-title { max-width: 13em; }
 }
 

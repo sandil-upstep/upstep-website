@@ -1,6 +1,6 @@
-// The registration form: the demo drawer's card, fields and button
-// (demoBooking.scss), with the drawer's illustration beside it on wide
-// screens. Below 1200px it's the form alone.
+// The registration drawer: a white panel fading in from the right over the
+// dimmed, blurred page, its fields stacked one to a row. The fields, lists
+// and button are the demo drawer's (demoBooking.scss). Full width on phones.
 
 @use "tokens" as *;
 
@@ -13,25 +13,105 @@
   0% { transform: scale(0); }
   60% { transform: scale(1.15); }
 }
+@keyframes gap-reg-fade { from { opacity: 0; } }
+@keyframes gap-reg-fade-out { to { opacity: 0; } }
+@keyframes gap-reg-in { from { opacity: 0; transform: translateX(48px); } }
+@keyframes gap-reg-out { to { opacity: 0; transform: translateX(48px); } }
 
-.gap-register__layout {
-  display: grid;
-  grid-template-columns: minmax(0, 640px) minmax(0, 1fr);
-  align-items: center;
-  gap: clamp(24px, 3cqw, 64px);
+// The dialog is the whole window (a click on it, beside the panel, closes it);
+// the panel sits at its right.
+.gap-reg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 10px;
+  border: 0;
+  background: transparent;
+  color: $ink;
+  font-family: $body-font;
+  overflow: hidden;
+
+  &[open] { display: flex; justify-content: flex-end; }
+
+  &::backdrop {
+    background: rgba($navy, 0.45);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    animation: gap-reg-fade 0.35s ease both;
+  }
+  &.is-closing::backdrop { animation: gap-reg-fade-out 0.38s ease both; }
 }
-.gap-register__main {
+
+.gap-reg__panel {
   position: relative;
-  min-width: 0;
+  width: min(540px, 100%);
+  height: 100%;
+  padding: 0 40px 32px; // the top is the head's
+  overflow-y: auto;
+  scroll-padding-top: 150px; // a field tabbed to lands below the head, not under it
+  overscroll-behavior: contain;
+  // It still scrolls (wheel, touch, keys), with no scrollbar showing; with
+  // none, nothing narrows and reflows when the form outgrows the window.
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: -24px 0 60px -20px rgba($navy, 0.45);
+  animation: gap-reg-in 0.45s $ease both;
+
+  .is-closing & { animation: gap-reg-out 0.38s ease-in both; }
 }
 
-// In the gutter beside the card's bottom corner, as in the drawer.
-.gap-register__cube {
-  bottom: -20px;
-  left: -52px;
-  width: 46px;
-  height: 46px;
-  background-image: url("/images/cubes/cube-14.png");
+// The fee, title and close button, pinned to the top as the form scrolls under
+// it, with a hairline once it has.
+.gap-reg__head {
+  position: sticky;
+  z-index: 25; // over the lists, which scroll under it too
+  top: 0;
+  margin: 0 -40px;
+  padding: 36px 40px 16px;
+  background: #ffffff;
+  box-shadow: 0 1px 0 transparent;
+  transition: box-shadow 0.2s ease;
+
+  &.is-scrolled { box-shadow: 0 1px 0 $card-line, 0 10px 20px -16px rgba($navy, 0.25); }
+}
+
+.gap-reg__close {
+  position: absolute;
+  z-index: 3;
+  top: 18px;
+  right: 18px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f1f3;
+  color: $ink;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+
+  svg { width: 20px; height: 20px; }
+  &:hover { background: #e6e6ea; }
+  &:active { transform: scale(0.94); }
+  &:focus-visible { @include focus-ring; }
+}
+
+// The demo form, without its card's padding, one field to a row.
+.gap-register__form.demo-form { margin-top: 6px; padding: 0; }
+.gap-reg {
+  .demo-form__row,
+  .demo-form__row--phone { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
+  .demo-form__legend { font-size: 18px; }
+  .demo-form__rule { margin: 22px 0 18px; }
 }
 
 .gap-register__fee {
@@ -39,6 +119,7 @@
   align-items: center;
   gap: 8px;
   margin: 0;
+  padding-right: 52px; // clear of the close button
   font-size: 13px;
   font-weight: 700;
   color: $orange-ink;
@@ -53,9 +134,10 @@
 }
 // The drawer's step title (.demo-title), a size down.
 .gap-register__title {
-  margin: 8px 0 22px;
+  margin: 8px 0 0;
+  padding-right: 52px;
   font-family: $title-font;
-  font-size: clamp(1.75rem, 1rem + 1.6cqw, 2.25rem);
+  font-size: clamp(1.75rem, 1.4rem + 1vw, 2.25rem);
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.025em;
@@ -77,19 +159,26 @@
   .gap-batch__name { font-size: 17px; }
 }
 
-// Lined up with the form's fields, like the drawer's foot.
-.gap-register__foot {
-  margin-top: 16px;
-  padding-left: 43px;
+// The button full width, the consent and the way to a demo under it.
+.gap-reg__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 26px;
+  padding-left: 8px; // the button's offset outline
+
+  .demo-cta,
+  .demo-cta__btn.upstep-btn { width: 100%; min-width: 0; }
+  .demo-consent { margin: 4px 0 0; text-align: center; }
 }
 .gap-register__error {
-  justify-content: flex-end;
-  margin: 14px 0 0;
+  justify-content: center;
+  margin: 0;
 }
 .gap-register__alt {
-  margin: 22px 0 0;
-  padding-left: 43px;
+  margin: 0;
   font-size: 15px;
+  text-align: center;
   color: $muted;
 }
 
@@ -99,7 +188,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 14px;
-  padding: 40px 43px 44px;
+  padding-top: 24px;
   animation: gap-in 0.4s $ease both;
 
   .gap-register__title { margin: 4px 0 0; }
@@ -129,34 +218,19 @@
   }
 }
 
-// ---------- Illustration ----------
-.gap-register__art {
-  position: relative;
-  min-width: 0;
-
-  // The drawer's, in the flow here rather than pinned to its sheet.
-  .demo-illustration {
-    position: relative;
-    max-width: 520px;
-    margin-left: auto;
-  }
-}
-
-@media (max-width: 1199.98px) {
-  .gap-register__layout { grid-template-columns: minmax(0, 1fr); }
-  .gap-register__main { max-width: 680px; }
-  .gap-register__art,
-  .gap-register__cube { display: none; }
-}
-
 @media (max-width: 640px) {
-  .gap-register__batches { grid-template-columns: minmax(0, 1fr); }
-  .gap-register__foot {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
-    padding-left: 8px; // the button's offset outline
+  .gap-reg { padding: 0; }
+  .gap-reg__panel {
+    width: 100%;
+    padding: 0 18px calc(24px + env(safe-area-inset-bottom));
+    border-radius: 0;
   }
-  .gap-register__alt { padding-left: 0; }
-  .gap-register__done { padding: 28px 18px 32px; }
+  .gap-reg__head { margin: 0 -18px; padding: 28px 18px 14px; }
+  .gap-reg__close { top: 14px; right: 12px; }
+  .gap-register__batches { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gap-reg::backdrop,
+  .gap-reg__panel { animation: none; }
 }

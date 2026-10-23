@@ -102,12 +102,13 @@
 .gap-inner {
   position: relative;
   z-index: 2;
-  width: var(--w);
+  // Out to the outer guide lines, where the eyebrows sit.
+  width: calc(var(--w) + 2 * var(--off));
   margin: 0 auto;
 }
 
 // ---------- Section heads ----------
-// Eyebrow on the outer grid line, then the outlined headline.
+// Eyebrow, then the outlined headline, both on the outer grid line.
 .gap-head {
   margin-bottom: clamp(32px, 2.6cqw, 52px);
 }
@@ -122,7 +123,7 @@
 
 .gap-eyebrow {
   position: relative;
-  margin: 0 0 clamp(14px, 1.1cqw, 22px) calc(-1 * var(--off));
+  margin: 0 0 clamp(14px, 1.1cqw, 22px);
   padding-left: 15px;
   font-family: $title-font;
   font-size: 20px;
@@ -448,8 +449,8 @@
 
 // ---------- Floating "Register" ----------
 // Comes up once the hero's button has scrolled away, and steps aside while
-// the form (or the closing call to action) is on screen. Clear of the
-// scroll-to-top button at the bottom right.
+// the closing call to action is on screen. Centred, or at the right on
+// desktop; clear of the scroll-to-top button at the bottom right.
 .gap-pill {
   position: fixed;
   z-index: 40;
@@ -485,6 +486,12 @@
     translate: none;
 
     .upstep-btn { width: 100%; }
+  }
+  // Desktop: at the right, beside the scroll-to-top button (52px, 24px in).
+  @media (min-width: 1024px) {
+    left: auto;
+    right: 88px;
+    translate: none;
   }
 }
 .gap-pill__dot {

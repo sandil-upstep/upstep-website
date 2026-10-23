@@ -9,7 +9,7 @@ import "./gapClosing.scss";
 
 // The last word: a navy card with both ways in, registering or a free demo.
 export default function GapClosing() {
-  const { goToRegister } = useGap();
+  const { openRegister } = useGap();
   const ref = useReveal<HTMLElement>();
 
   return (
@@ -42,7 +42,7 @@ export default function GapClosing() {
             lead="Train like a Grandmaster. Think like one too."
           />
           <div className="gap-closing__ctas">
-            <Cta onClick={goToRegister}>
+            <Cta onClick={openRegister}>
               Register now <Arrow />
             </Cta>
             <button type="button" className="gap-ghost gap-ghost--dark" onClick={openDemoBooking}>

@@ -34,10 +34,6 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   @return calc($min + ($max - $min) * var(--fit, 1));
 }
 
-html.demo-drawer-lock {
-  overflow: hidden;
-}
-
 @keyframes demo-fade { from { opacity: 0; } }
 @keyframes demo-fade-out { to { opacity: 0; } }
 @keyframes demo-rise { from { transform: translateY(100%); } }
@@ -67,13 +63,17 @@ html.demo-drawer-lock {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
+  // The scrollbar's room is kept from the start, so the sheet (sized in cqw)
+  // doesn't narrow and reflow when one appears after the rise or on a taller
+  // step. It sits where the page's hidden scrollbar was, over the backdrop.
+  scrollbar-gutter: stable;
   transition: padding 0.6s $ease;
 
-  // No scrolling while the sheet rises from below: nothing can scroll the
-  // dialog down to it, and no scrollbar flashes up.
+  // No scrolling while the sheet rises from below, and no scrollbar flashes
+  // up. Hidden, not clip: a gutter needs hidden to hold its room; a focus
+  // scroll during the rise is put back by the drawer (DemoBookingDrawer.tsx).
   &.is-rising {
     overflow: hidden;
-    overflow: clip;
   }
 
   &::backdrop {
@@ -1693,7 +1693,9 @@ button.demo-day {
   .demo-confirmed .demo-steps__item:last-child .demo-steps__label { display: inline; }
   .demo-sub { margin-top: 10px; }
 
-  .demo-details { padding: 28px 16px 32px; }
+  // No padding under the sticky button bar: it ends the sheet, flush with the
+  // screen's bottom, with nothing showing through below it.
+  .demo-details { padding: 28px 16px 0; }
   .demo-form { padding: 24px 18px 28px; }
   .demo-form__legend { font-size: 19px; }
   .demo-form__row,
@@ -1742,7 +1744,8 @@ button.demo-day {
     border-radius: 22px;
   }
 
-  .demo-slot { padding: 28px 16px 32px; }
+  // As on the details step: the sticky bar ends the sheet, flush with the bottom.
+  .demo-slot { padding: 28px 16px 0; }
   .demo-cal { padding: 22px 14px 18px; }
   .demo-cal__head { padding-left: 6px; }
   .demo-cal__cell,

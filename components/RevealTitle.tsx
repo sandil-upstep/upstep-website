@@ -35,10 +35,12 @@ function withoutBreaks(children: ReactNode): ReactNode[] {
 export default function RevealTitle({
   className,
   id,
+  start = "top 75%",
   children,
 }: {
   className: string;
   id?: string;
+  start?: string; // where the reveal begins (a ScrollTrigger start)
   children: ReactNode;
 }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -86,14 +88,14 @@ export default function RevealTitle({
           // masks when scrolling up past it again.
           scrollTrigger: {
             trigger: title,
-            start: "top 50%",
+            start,
             toggleActions: "play none none reverse",
           },
         });
       },
     });
     return () => split.revert();
-  }, [compact]);
+  }, [compact, start]);
 
   // Keyed so React swaps in a fresh <h2> rather than reconciling children
   // that SplitText has already rewritten.

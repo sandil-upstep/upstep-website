@@ -266,7 +266,7 @@ export default function Header() {
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node)) setFocusWithin(false);
       }}
-      className={`fixed inset-x-0 top-0 z-50 px-4 pt-4 font-sans transition-transform duration-300 ease-out motion-reduce:transition-none ${
+      className={`site-header fixed inset-x-0 top-0 z-50 px-4 pt-4 font-sans transition-transform duration-300 ease-out motion-reduce:transition-none ${
         // Extra 2rem so the card's drop shadow doesn't peek in at the top edge.
         hidden ? "-translate-y-[calc(100%+2rem)]" : "translate-y-0"
       }`}

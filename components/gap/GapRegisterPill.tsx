@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import Button from "../common/Button";
 import { useGap } from "./GapContext";
 
-// A floating "Register for GAP" once the hero has scrolled away. It steps
-// aside while the form or the closing card (which have their own) are on
-// screen. Styled in gap.scss.
+// A floating "Register for GAP" once the hero has scrolled away; it opens the
+// registration drawer. It steps aside while the closing card (which has its
+// own) is on screen. Styled in gap.scss.
 export default function GapRegisterPill() {
-  const { goToRegister } = useGap();
+  const { openRegister } = useGap();
   const [past, setPast] = useState(false);
   const [covered, setCovered] = useState(false);
 
@@ -18,15 +18,9 @@ export default function GapRegisterPill() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
 
-    const onScreen = new Set<Element>();
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((e) => (e.isIntersecting ? onScreen.add(e.target) : onScreen.delete(e.target)));
-      setCovered(onScreen.size > 0);
-    });
-    ["register", "gap-closing"].forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
+    const observer = new IntersectionObserver(([e]) => setCovered(e.isIntersecting));
+    const closing = document.getElementById("gap-closing");
+    if (closing) observer.observe(closing);
 
     return () => {
       window.removeEventListener("scroll", onScroll);
@@ -37,7 +31,7 @@ export default function GapRegisterPill() {
   const shown = past && !covered;
   return (
     <div className={`gap-pill${shown ? " is-shown" : ""}`} inert={!shown}>
-      <Button size="sm" onClick={goToRegister}>
+      <Button size="sm" onClick={openRegister}>
         <span className="gap-pill__dot" aria-hidden="true" />
         Register for GAP
       </Button>

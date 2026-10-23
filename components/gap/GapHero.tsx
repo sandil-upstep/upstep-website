@@ -26,7 +26,7 @@ const JUMPS = [
 ];
 
 export default function GapHero() {
-  const { goToRegister } = useGap();
+  const { openRegister } = useGap();
   const rootRef = useRef<HTMLElement>(null);
 
   // The copy rises in line by line once the preloader has stepped aside, with
@@ -92,7 +92,7 @@ export default function GapHero() {
             months.
           </p>
           <div className="gap-hero__ctas" data-hero-in>
-            <Cta onClick={goToRegister}>
+            <Cta onClick={openRegister}>
               Register for GAP <Arrow />
             </Cta>
             <a href="#eligibility" className="gap-ghost gap-ghost--dark">

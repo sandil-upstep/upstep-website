@@ -19,9 +19,9 @@ export const metadata: Metadata = {
 };
 
 // The Grandmaster Accelerator Program, linked from the header's GAP badge.
-// The sections share the time zone, batch, currency and the way down to the
-// form through GapProvider. The pill sits outside <main>, whose containment
-// would otherwise pin it to the page rather than the window.
+// The sections share the time zone, batch, currency and the registration
+// drawer through GapProvider. The pill and the drawer sit outside <main>,
+// whose containment would otherwise pin them to the page, not the window.
 export default function GapPage() {
   return (
     <GapProvider>
@@ -32,11 +32,11 @@ export default function GapPage() {
         <GapOutcome />
         <GapSchedule />
         <GapFees />
-        <GapRegister />
         <GapClosing />
       </main>
       <Footer />
       <GapRegisterPill />
+      <GapRegister />
       <CubeParallax />
     </GapProvider>
   );

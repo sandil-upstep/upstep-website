@@ -36,7 +36,7 @@ import {
   type Slot,
   type Zone,
 } from "./demoBookingData";
-import { getLenis } from "./SmoothScroll";
+import { lockPage, unlockPage } from "./pageLock";
 import "./demoBooking.scss";
 
 // The "Book a FREE demo" drawer: a sheet that slides up over the page with
@@ -69,6 +69,7 @@ export default function DemoBookingDrawer() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const returnFocus = useRef<Element | null>(null);
+  const locked = useRef(false); // this drawer holds the page lock
   const timers = useRef<number[]>([]);
 
   const [open, setOpen] = useState(false);
@@ -181,19 +182,19 @@ export default function DemoBookingDrawer() {
       setRising(false);
     }, RISE_MS);
     // The page stays put underneath.
-    getLenis()?.stop();
-    document.documentElement.classList.add("demo-drawer-lock");
+    lockPage();
+    locked.current = true;
   }, [open, fitDetails, later]);
 
   const finishClose = useCallback(() => {
     dialogRef.current?.close();
-    getLenis()?.start();
-    document.documentElement.classList.remove("demo-drawer-lock");
+    const el = returnFocus.current as HTMLElement | null;
+    if (el?.isConnected) el.focus({ preventScroll: true });
+    locked.current = false;
+    unlockPage();
     setOpen(false);
     setClosing(false);
     setPop(null);
-    const el = returnFocus.current as HTMLElement | null;
-    if (el?.isConnected) el.focus({ preventScroll: true });
   }, []);
 
   const close = useCallback(() => {
@@ -205,8 +206,7 @@ export default function DemoBookingDrawer() {
 
   useEffect(
     () => () => {
-      getLenis()?.start();
-      document.documentElement.classList.remove("demo-drawer-lock");
+      if (locked.current) unlockPage();
     },
     [],
   );
@@ -258,13 +258,13 @@ export default function DemoBookingDrawer() {
       requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLElement>("[aria-invalid='true'], [data-invalid]")?.focus());
       return;
     }
-    // The first day with a time open comes picked, unless one already is.
+    // No day comes picked; the calendar opens on the month of the first day
+    // with a time open, unless one is already picked.
     go("slot", () => {
       if (selDay || !zone || !openedAt) return;
       const day = firstOpenDay(zone, openedAt);
       if (!day) return;
       setMonth(day.m === wallClock(openedAt, zone).day.m ? 0 : 1);
-      setSelDay(day);
     });
   };
 

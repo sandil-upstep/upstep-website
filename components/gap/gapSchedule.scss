@@ -15,9 +15,12 @@
   color: $text;
 
   // Opens under the button's right edge, the side it sits on.
+  // The list stays white over navy too, so it keeps dark ink rather than
+  // inheriting the section's light text.
   .demo-pop {
     left: auto;
     right: 0;
+    color: $ink;
   }
 }
 
@@ -117,6 +120,7 @@
 // GM Live goes cobalt, as navy would vanish on navy.
 .gap-schedule {
   .gap-schedule__tz,
+  .gap-schedule__tz .demo-tz__btn,
   .gap-schedule__note,
   .gap-batch,
   .gap-batch__note,
@@ -132,6 +136,15 @@
 
   .main-cover--dark & {
     .gap-schedule__tz { color: $dark-text; }
+    .gap-schedule__tz .demo-tz__btn {
+      border-color: $dark-border;
+      background: rgba(255, 255, 255, 0.07);
+      color: #ffffff;
+
+      &:hover,
+      &[aria-expanded="true"] { border-color: rgba(255, 255, 255, 0.24); }
+      &:focus-visible { outline-color: #ffffff; }
+    }
     .gap-schedule__note,
     .gap-batch__note,
     .gap-week__rest { color: $dark-muted; }

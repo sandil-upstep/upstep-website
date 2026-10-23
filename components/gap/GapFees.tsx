@@ -25,7 +25,7 @@ import "./gapFees.scss";
 // FIDE player's discount) on the navy card, and beside it a check of the
 // player's rating against GAP's range, pointing to the form or a free demo.
 export default function GapFees() {
-  const { currency, setCurrency, fide, setFide, goToRegister } = useGap();
+  const { currency, setCurrency, fide, setFide, openRegister } = useGap();
   const [platform, setPlatform] = useState<Platform>("FIDE");
   const [rating, setRating] = useState("");
   const ref = useReveal<HTMLElement>();
@@ -82,7 +82,7 @@ export default function GapFees() {
             </button>
 
             <div className="gap-fee__cta">
-              <Cta onClick={goToRegister}>
+              <Cta onClick={openRegister}>
                 Reserve my seat <Arrow />
               </Cta>
             </div>
@@ -116,7 +116,7 @@ export default function GapFees() {
               <p className="gap-elig__verdict">{verdict.title}</p>
               <p>{verdict.body}</p>
               {verdict.next && (
-                <Button size="sm" onClick={verdict.next === "register" ? goToRegister : openDemoBooking}>
+                <Button size="sm" onClick={verdict.next === "register" ? openRegister : openDemoBooking}>
                   {verdict.nextLabel}
                 </Button>
               )}

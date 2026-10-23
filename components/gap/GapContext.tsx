@@ -2,13 +2,13 @@
 
 import { createContext, useCallback, useContext, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { ZONES, detectZone, type Zone } from "../demoBookingData";
-import { getLenis } from "../SmoothScroll";
 import { currencyFor, type BatchId, type Currency } from "./gapData";
 import "./gap.scss";
 
 // What the GAP page's sections share: the time zone the schedule is shown in,
 // the batch picked (in the schedule or the form), the currency and FIDE
-// discount the fees are shown with, and the way down to the registration form.
+// discount the fees are shown with, and the registration drawer every Register
+// button opens.
 
 type Visitor = { zone: Zone; zones: Zone[]; detected: boolean; now: number };
 
@@ -31,7 +31,9 @@ type GapState = {
   setCurrency: (currency: Currency) => void;
   fide: boolean;
   setFide: (fide: boolean) => void;
-  goToRegister: () => void;
+  registerOpen: boolean;
+  openRegister: () => void;
+  closeRegister: () => void;
 };
 
 const GapContext = createContext<GapState | null>(null);
@@ -48,26 +50,13 @@ export function GapProvider({ children }: { children: ReactNode }) {
   const [pickedCurrency, setCurrency] = useState<Currency | null>(null);
   const [batch, setBatch] = useState<BatchId>(1);
   const [fide, setFide] = useState(false);
+  const [registerOpen, setRegisterOpen] = useState(false);
+  const openRegister = useCallback(() => setRegisterOpen(true), []);
+  const closeRegister = useCallback(() => setRegisterOpen(false), []);
 
   const zone = pickedZone ?? seen?.zone ?? ZONES[0];
   // Rupees for India, dollars elsewhere, until a currency or region is picked.
   const currency = pickedCurrency ?? (seen?.detected ? currencyFor(seen.zone.country) : "INR");
-
-  // Down to the form; once there, its heading takes the focus so keyboard and
-  // screen reader users land in it too.
-  const goToRegister = useCallback(() => {
-    const target = document.getElementById("register");
-    if (!target) return;
-    const focus = () => target.querySelector<HTMLElement>("[data-register-focus]")?.focus({ preventScroll: true });
-    const lenis = getLenis();
-    if (lenis) {
-      lenis.scrollTo(target, { onComplete: focus });
-      return;
-    }
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    target.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
-    window.setTimeout(focus, reduced ? 0 : 700);
-  }, []);
 
   const value = useMemo<GapState>(
     () => ({
@@ -83,9 +72,11 @@ export function GapProvider({ children }: { children: ReactNode }) {
       setCurrency,
       fide,
       setFide,
-      goToRegister,
+      registerOpen,
+      openRegister,
+      closeRegister,
     }),
-    [seen, zone, batch, currency, fide, goToRegister]
+    [seen, zone, batch, currency, fide, registerOpen, openRegister, closeRegister]
   );
 
   return <GapContext.Provider value={value}>{children}</GapContext.Provider>;

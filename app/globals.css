@@ -60,3 +60,31 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/* The page held still under a modal drawer (components/pageLock.ts). Hiding
+   the scrollbar widens the page by its width (--page-sbw, measured on
+   locking; 0 for overlay scrollbars), so the page and its fixed bars are
+   padded by that much and nothing moves sideways. (scrollbar-gutter would
+   leave a bare strip there: a drawer and its backdrop can't cover a gutter.) */
+html.page-lock {
+  overflow: hidden;
+}
+html.page-lock body {
+  padding-right: var(--page-sbw, 0px);
+}
+html.page-lock .site-header {
+  right: var(--page-sbw, 0px);
+}
+html.page-lock .scroll-top-btn {
+  right: calc(24px + var(--page-sbw, 0px));
+}
+html.page-lock .gap-pill {
+  margin-left: calc(var(--page-sbw, 0px) / -2);
+}
+@media (min-width: 1024px) {
+  /* At the right on desktop (gap.scss), so it moves in by the whole width. */
+  html.page-lock .gap-pill {
+    margin-left: 0;
+    margin-right: var(--page-sbw, 0px);
+  }
+}
