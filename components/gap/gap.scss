@@ -21,8 +21,8 @@
 // The page is the size container its sections measure against (1cqw = 1% of
 // its width), on the home page's grid: an inner column (--w) with a pair of
 // guide lines either side of it, --off apart. Below 1200px the column widens
-// (lines 28px / 48px in from each edge), and phones pin them at 12px / 28px,
-// as on the home page.
+// (lines 28px / 48px in from each edge), and phones pin them at 16px / 32px,
+// so content keeps a 16px margin from the screen's edges.
 // Its containment makes it the containing block of anything fixed inside it,
 // so the floating "Register" pill sits outside it (page.tsx).
 // Like the home page's cover (anandSection.scss), the page turns navy while
@@ -65,7 +65,7 @@
   }
   @media (max-width: 767.98px) {
     --off: 16px;
-    --w: calc(100cqw - 56px);
+    --w: calc(100cqw - 64px);
   }
 }
 
@@ -79,6 +79,9 @@
 .gap-section {
   position: relative;
   padding: clamp(72px, 6.25cqw, 120px) 0;
+
+  // Phones: less between sections, where the screen is mostly content.
+  @media (max-width: 767.98px) { padding: 56px 0; }
 }
 // A rule across the page between sections, in the guide lines' colour, so
 // the two meet in a grid. None under the hero, which isn't a .gap-section.
@@ -267,7 +270,7 @@
 }
 .gap-seg__opt {
   min-height: 40px;
-  padding: 0 16px;
+  padding: 0 5px;
   border: 0;
   border-radius: 999px;
   background: transparent;

@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef } from "react";
 import Image from "next/image";
-import { Cinzel } from "next/font/google";
+import { Cinzel, Tinos } from "next/font/google";
 import gsap from "gsap";
 import { Observer } from "gsap/Observer";
 import { lockPage, unlockPage } from "../pageLock";
@@ -12,10 +12,14 @@ import "./gapParallaxHero.scss";
 gsap.registerPlugin(Observer);
 
 const cinzel = Cinzel({ variable: "--font-cinzel", subsets: ["latin"] });
+// On phones "Meet your Panelists" and the names are set in a book serif.
+const tinos = Tinos({ variable: "--font-tinos", subsets: ["latin"], weight: ["400", "700"] });
 
 // The GAP page's opening: a sky over the title, and the first scroll plays the
-// scene in. The sky slides up, the palace terrace, the masters and the board
-// rise in front of it, and only then does the page scroll on. Scrolling back
+// scene in. The sky slides up, the stone archway, the two monuments that flank
+// it, the panelists and the board rise in front of it (on phones a navy band
+// under the panelists instead of the board), "Meet your panelists"
+// and their names come in, and only then does the page scroll on. Scrolling back
 // up at the top of the page rewinds it.
 
 type HeroState = "start" | "playing" | "revealed";
@@ -34,13 +38,29 @@ const INPUT_QUIET_MS = 220;
 const POINTER_DEPTH = {
   landscape: 0.012,
   copy: 0.018,
-  architecture: 0.02,
-  masters: 0.03,
-  chessboard: 0.045,
+  arch: 0.02,
+  "monument-left": 0.038,
+  "monument-right": 0.038,
+  masters: 0.045,
+  names: 0.045,
+  chessboard: 0.055,
 } as const;
+
+// Left to right as they stand in masters.png; x is each one's centre, as a
+// share of the image's width (desktop). On phones the lead (Anand) heads the
+// list and the other four sit in two columns under him.
+const PANELISTS = [
+  { title: "GM", name: "Farrukh Amonatov", x: 18.5 },
+  { title: "GM", name: "Swayams Mishra", x: 34 },
+  { title: "GM", name: "Viswanathan Anand", note: "Five-time World Champion", x: 51, lead: true },
+  { title: "GM", name: "Sahaj Grover", x: 69 },
+  { title: "IM", name: "Rakesh Kulkarni", x: 86 },
+];
 const POINTER_Y_SCALE = 0.5;
 // The glide after the pointer, standing in for Parallax.js's friction.
 const POINTER_FRICTION = { duration: 1.2, ease: "power2.out" };
+// Off for now; set to true to bring the mouse parallax back.
+const POINTER_PARALLAX = false;
 
 const NEXT_KEYS = new Set(["ArrowDown", "PageDown", " "]);
 const PREV_KEYS = new Set(["ArrowUp", "PageUp", "Home"]);
@@ -58,8 +78,7 @@ export default function GapParallaxHero() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       gsap.set(q("[data-layer='landscape']"), { yPercent: LANDSCAPE_END_Y });
       gsap.set(foreground, { visibility: "visible" });
-      gsap.set(q("[data-layer='copy']"), { top: "4%" });
-      gsap.set(q("[data-layer='copy'] button"), { display: "none" });
+      gsap.set(q("[data-layer='copy']"), { autoAlpha: 0 });
       gsap.set(q("[data-layer='panelists']"), { autoAlpha: 1 });
       return;
     }
@@ -74,15 +93,25 @@ export default function GapParallaxHero() {
           { yPercent: LANDSCAPE_END_Y, scale: 1, duration: 1.7 },
           0,
         )
-        .fromTo(q("[data-layer='architecture']"), { yPercent: 100 }, { yPercent: 0, duration: 1.5, ease: "power3.out" }, 0.1)
-        .fromTo(q("[data-layer='masters']"), { yPercent: 100 }, { yPercent: 0, duration: 1.35, ease: "power3.out" }, 0.3)
-        .fromTo(q("[data-layer='chessboard']"), { yPercent: 100 }, { yPercent: 0, duration: 1.15, ease: "power3.out" }, 0.5)
-        .fromTo(q("[data-layer='panelists']"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6, ease: "power1.out" }, 1.1)
+        // The archway waits until the opening title has all but gone; it
+        // stands high on the screen, so it comes into view early in its rise.
+        .fromTo(q("[data-layer='arch']"), { yPercent: 100 }, { yPercent: 0, duration: 1.4, ease: "power3.out" }, 1.05)
+        .fromTo(q("[data-layer='monument-left']"), { yPercent: 100 }, { yPercent: 0, duration: 1.25, ease: "power3.out" }, 1)
+        .fromTo(q("[data-layer='monument-right']"), { yPercent: 100 }, { yPercent: 0, duration: 1.25, ease: "power3.out" }, 1)
+        .fromTo(q("[data-layer='masters']"), { yPercent: 100 }, { yPercent: 0, duration: 1.2, ease: "power3.out" }, 1.1)
+        .fromTo(q("[data-layer='chessboard']"), { yPercent: 100 }, { yPercent: 0, duration: 1.1, ease: "power3.out" }, 1.25)
+        .fromTo(q("[data-layer='panelists']"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6, ease: "power1.out" }, 1.7)
         .fromTo(
           q("[data-layer='panelists'] [data-title]"),
-          { yPercent: 60 },
-          { yPercent: 0, duration: 0.8, ease: "power3.out" },
-          1.1,
+          { y: 28 },
+          { y: 0, duration: 0.8, ease: "power3.out" },
+          1.7,
+        )
+        .fromTo(
+          q("[data-layer='names'] li"),
+          { y: 16, autoAlpha: 0 },
+          { y: 0, autoAlpha: 1, duration: 0.6, ease: "power2.out", stagger: 0.07 },
+          1.9,
         );
 
       gsap.set(foreground, { visibility: "visible" });
@@ -163,7 +192,7 @@ export default function GapParallaxHero() {
       // scale, so the two effects stack instead of fighting.
       let onPointerMove: ((event: PointerEvent) => void) | null = null;
       let onPointerLeave: (() => void) | null = null;
-      if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+      if (POINTER_PARALLAX && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
         const movers = Object.entries(POINTER_DEPTH).map(([layer, depth]) => {
           const el = q(`[data-layer='${layer}']`);
           return { depth, x: gsap.quickTo(el, "x", POINTER_FRICTION), y: gsap.quickTo(el, "y", POINTER_FRICTION) };
@@ -231,13 +260,13 @@ export default function GapParallaxHero() {
   return (
     <section
       ref={rootRef}
-      className={`gap-px-hero ${cinzel.variable}`}
+      className={`gap-px-hero ${cinzel.variable} ${tinos.variable}`}
       data-nav-theme="dark"
       aria-label="Grandmaster Accelerator Program"
     >
       <div data-layer="landscape" className="gap-px-hero__landscape">
         <Image
-          src="/images/gap-hero/landscape.png"
+          src="/images/gap-hero/sky.png"
           alt=""
           fill
           sizes="100vw"
@@ -255,18 +284,33 @@ export default function GapParallaxHero() {
         </button>
       </div>
 
-      <div data-layer="architecture" data-foreground className="gap-px-hero__layer gap-px-hero__layer--architecture">
-        <div className="gap-px-hero__architecture-wide">
-          <Image src="/images/gap-hero/architecture.png" alt="Gothic palace terrace" fill sizes="100vw" />
+      <div data-layer="arch" data-foreground className="gap-px-hero__layer gap-px-hero__layer--arch">
+        <div className="gap-px-hero__arch">
+          <Image
+            src="/images/gap-hero/arch.png"
+            alt="A stone archway carved with a chess king"
+            fill
+            sizes="(min-width: 768px) 74vw, 111vw"
+            loading="eager"
+          />
         </div>
-        {/* Narrow screens show only the outer towers so they still frame the scene. */}
-        <div className="gap-px-hero__architecture-narrow">
-          <div>
-            <Image src="/images/gap-hero/architecture.png" alt="Gothic palace terrace" fill sizes="280vw" />
-          </div>
-          <div>
-            <Image src="/images/gap-hero/architecture.png" alt="" fill sizes="280vw" />
-          </div>
+      </div>
+
+      <div data-layer="monument-left" data-foreground className="gap-px-hero__layer gap-px-hero__layer--monument">
+        <div className="gap-px-hero__monument gap-px-hero__monument--left">
+          <Image
+            src="/images/gap-hero/monument-left.png"
+            alt="A warrior's statue beside a banner bearing a chess king"
+            fill
+            sizes="(min-width: 768px) 56vw, 65vw"
+            loading="eager"
+          />
+        </div>
+      </div>
+
+      <div data-layer="monument-right" data-foreground className="gap-px-hero__layer gap-px-hero__layer--monument">
+        <div className="gap-px-hero__monument gap-px-hero__monument--right">
+          <Image src="/images/gap-hero/monument-right.png" alt="" fill sizes="(min-width: 768px) 56vw, 65vw" loading="eager" />
         </div>
       </div>
 
@@ -274,37 +318,53 @@ export default function GapParallaxHero() {
         <div className="gap-px-hero__masters">
           <Image
             src="/images/gap-hero/masters.png"
-            alt="Five chess masters, GM Viswanathan Anand in front holding a white king"
+            alt="The five GAP panelists, GM Viswanathan Anand in front holding a white king"
             fill
-            sizes="(min-width: 768px) 125vw, 190vw"
+            sizes="(min-width: 768px) 91vw, 116vw"
             loading="eager"
           />
         </div>
+        {/* Phones: navy rising out of the panelists' waists, under their names. */}
+        <div className="gap-px-hero__band" />
       </div>
 
+      {/* Desktop only. */}
       <div data-layer="chessboard" data-foreground className="gap-px-hero__layer gap-px-hero__layer--chessboard">
+        {/* The board image only reaches across the right; a mirrored copy underneath fills the left. */}
+        <div className="gap-px-hero__chessboard gap-px-hero__chessboard--mirror">
+          <Image src="/images/gap-hero/chessboard.png" alt="" fill sizes="(min-width: 768px) 142vw, 1px" />
+        </div>
         <div className="gap-px-hero__chessboard">
-          <Image
-            src="/images/gap-hero/chessboard.png"
-            alt="Chess pieces on a marble board"
-            fill
-            sizes="(min-width: 768px) 100vw, 230vw"
-            loading="eager"
-          />
+          <Image src="/images/gap-hero/chessboard.png" alt="" fill sizes="(min-width: 768px) 142vw, 1px" />
         </div>
       </div>
 
       <div data-layer="panelists" className="gap-px-hero__panelists">
-        <div className="gap-px-hero__panelists-inner">
+        <div className="gap-px-hero__panelists-frame">
           <h2 data-title className="gap-px-hero__panelists-title">
-            <span aria-hidden="true" className="gap-px-hero__rule" />
-            <span>
-              Meet your
-              <br />
-              panelists
+            <span className="gap-px-hero__panelists-kicker">Meet your</span>
+            <span className="gap-px-hero__panelists-word">Panelists</span>
+            <span aria-hidden="true" className="gap-px-hero__panelists-mark">
+              <svg viewBox="0 0 24 32" width="18" height="24">
+                <path d="M11 0h2v2.5h2.5v2H13V7h-2V4.5H8.5v-2H11zM7 9h10l-1.5 4h-7zM8.5 14h7l1.5 11H7zM5 26h14v2.5H5zM4 29.5h16V32H4z" />
+              </svg>
             </span>
           </h2>
         </div>
+      </div>
+
+      {/* Desktop: each name sits under its master, in the masters image's own box. */}
+      <div data-layer="names" data-foreground className="gap-px-hero__layer gap-px-hero__layer--names">
+        <ul className="gap-px-hero__names">
+          {PANELISTS.map((p) => (
+            <li key={p.name} className={p.lead ? "is-lead" : undefined} style={{ left: `${p.x}%` }}>
+              <span className="gap-px-hero__name">
+                <span className="gap-px-hero__name-title">{p.title}</span> {p.name}
+              </span>
+              {p.note && <span className="gap-px-hero__name-note">{p.note}</span>}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

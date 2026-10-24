@@ -16,6 +16,12 @@
   font-size: 14px;
   font-weight: 700;
   color: $muted;
+
+  // With the bar hidden, the two lines stack and read a size up.
+  @media (max-width: 640px) {
+    flex-direction: column;
+    font-size: 16px;
+  }
 }
 .gap-hours__bar {
   display: flex;
@@ -148,7 +154,7 @@
   flex-direction: column;
   min-height: clamp(360px, 25cqw, 480px);
   overflow: hidden;
-  padding: clamp(26px, 2.4cqw, 48px);
+  padding: clamp(20px, 2.4cqw, 48px);
   border-radius: var(--radius);
   background: $navy;
   color: #ffffff;

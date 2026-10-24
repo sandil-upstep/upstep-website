@@ -8,7 +8,19 @@ import "./gapPreview.scss";
 
 // "Inside a session": a slider of GM classes with arrows, swipe and a strip
 // of thumbnails under it. A slide's still shows until it's played, as in What
-// We Offer; moving to another slide stops the one playing.
+// We Offer; moving to another slide stops the one playing. Two slides either
+// side of the active one peek out from behind it, smaller and fainter;
+// clicking one brings it to the centre.
+const SIDE_SLIDES = 2;
+
+// Where slide i sits relative to the active one, wrapping around so the
+// first and last videos are neighbours: 0 is centre, -1 just left, and so on.
+function slideOffset(i: number, active: number, count: number) {
+  let d = (i - active + count) % count;
+  if (d > count / 2) d -= count;
+  return d;
+}
+
 export default function GapPreview() {
   const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -71,42 +83,50 @@ export default function GapPreview() {
             }}
             onPointerCancel={() => (swipeX.current = null)}
           >
-            <div className="gap-preview__track" style={{ transform: `translateX(-${active * 100}%)` }}>
-              {VIDEOS.map((v, i) => (
-                <div
-                  key={v.title}
-                  className="gap-preview__slide"
-                  role="group"
-                  aria-roledescription="slide"
-                  aria-label={`${i + 1} of ${count}`}
-                  aria-hidden={i !== active}
-                  inert={i !== active}
-                >
-                  {playing && i === active ? (
-                    <iframe
-                      src={ytEmbed(v.videoId)}
-                      title={v.title}
-                      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                      allowFullScreen
-                    />
-                  ) : (
-                    <button
-                      type="button"
-                      className="gap-preview__poster"
-                      aria-label={`Play video: ${v.title}`}
-                      onClick={() => setPlaying(true)}
-                    >
-                      <Image src={ytThumb(v.videoId)} alt="" fill sizes="(max-width: 1199px) 92vw, 80vw" />
-                      <span className="gap-preview__play" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                          <path d="M8 5.5v13l11-6.5z" />
-                        </svg>
-                      </span>
-                      <span className="gap-preview__caption">{v.title}</span>
-                    </button>
-                  )}
-                </div>
-              ))}
+            <div className="gap-preview__track">
+              {VIDEOS.map((v, i) => {
+                const offset = slideOffset(i, active, count);
+                const isActive = offset === 0;
+                const isSide = !isActive && Math.abs(offset) <= SIDE_SLIDES;
+                return (
+                  <div
+                    key={v.title}
+                    className="gap-preview__slide"
+                    // Slides further out than the side ones park just beyond them, hidden.
+                    data-offset={Math.max(-SIDE_SLIDES - 1, Math.min(SIDE_SLIDES + 1, offset))}
+                    role="group"
+                    aria-roledescription="slide"
+                    aria-label={`${i + 1} of ${count}`}
+                    aria-hidden={!isActive}
+                    inert={!isActive && !isSide}
+                  >
+                    {playing && isActive ? (
+                      <iframe
+                        src={ytEmbed(v.videoId)}
+                        title={v.title}
+                        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        className="gap-preview__poster"
+                        aria-label={`Play video: ${v.title}`}
+                        tabIndex={isActive ? undefined : -1}
+                        onClick={() => (isActive ? setPlaying(true) : go(i))}
+                      >
+                        <Image src={ytThumb(v.videoId)} alt="" fill sizes="(max-width: 767px) 80vw, 60vw" />
+                        <span className="gap-preview__play" aria-hidden="true">
+                          <svg viewBox="0 0 24 24">
+                            <path d="M8 5.5v13l11-6.5z" />
+                          </svg>
+                        </span>
+                        <span className="gap-preview__caption">{v.title}</span>
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {!playing && (

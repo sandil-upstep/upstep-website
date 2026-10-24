@@ -17,7 +17,7 @@
   flex-direction: column;
   gap: clamp(20px, 1.6cqw, 30px);
   overflow: hidden;
-  padding: clamp(26px, 2.6cqw, 52px);
+  padding: clamp(20px, 2.6cqw, 52px);
   border-radius: var(--radius);
   background: $navy;
   color: #ffffff;
@@ -83,7 +83,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: clamp(24px, 2.4cqw, 44px);
+  padding: clamp(20px, 2.4cqw, 44px);
   scroll-margin-top: 24px; // the hero's "Check if I qualify" lands here
   @include light-card;
 }

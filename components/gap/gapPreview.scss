@@ -9,26 +9,104 @@
   gap: clamp(12px, 1.1cqw, 20px);
 }
 
+// A coverflow: the active slide sits in the middle at --slide-w of the
+// stage's width, with two slides each side, smaller and flat, behind it. The
+// stage clips them at its sides (but not top and bottom, for the shadows).
+// Phones show only the active slide, at the full width.
 .gap-preview__stage {
+  --slide-w: 0.56;
+
   position: relative;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: calc(16 / 9 / var(--slide-w));
+  clip-path: inset(-48px 0);
+  touch-action: pan-y;
+
+  @media (max-width: 767.98px) {
+    --slide-w: 1;
+  }
+}
+
+// Flat on purpose: z-index decides the stacking, so the active slide is
+// always on top.
+.gap-preview__track {
+  position: absolute;
+  inset: 0;
+}
+
+.gap-preview__slide {
+  // Per offset: --x moves it sideways (in its own widths), --s shrinks it.
+  --x: 0%;
+  --s: 1;
+
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 3;
+  width: calc(var(--slide-w) * 100%);
+  height: 100%;
   overflow: hidden;
   border-radius: var(--radius);
   background: $navy;
   box-shadow: 0 24px 48px -24px rgba($navy, 0.45);
-  touch-action: pan-y;
-}
+  transform: translateX(calc(-50% + var(--x))) scale(var(--s));
+  transition:
+    transform 0.55s $ease,
+    filter 0.55s $ease,
+    opacity 0.4s ease;
 
-.gap-preview__track {
-  display: flex;
-  height: 100%;
-  transition: transform 0.55s $ease;
-}
+  // Further back means darker and fainter (--o), one step per layer down;
+  // hover lifts it a little.
+  &:not([data-offset="0"]) {
+    filter: brightness(0.55) saturate(0.85);
+    opacity: var(--o);
 
-.gap-preview__slide {
-  position: relative;
-  flex: 0 0 100%;
-  height: 100%;
+    .gap-preview__play,
+    .gap-preview__caption {
+      opacity: 0;
+    }
+    &:hover {
+      filter: brightness(0.75) saturate(0.95);
+      opacity: calc(var(--o) + 0.15);
+    }
+  }
+
+  &[data-offset="-1"],
+  &[data-offset="1"] {
+    --s: 0.8;
+    --o: 0.3;
+    z-index: 2;
+  }
+  &[data-offset="-2"],
+  &[data-offset="2"] {
+    --s: 0.64;
+    --o: 0.1;
+    z-index: 1;
+  }
+  &[data-offset="-3"],
+  &[data-offset="3"] {
+    --s: 0.5;
+    --o: 0;
+    z-index: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &[data-offset="-1"] { --x: -32%; }
+  &[data-offset="1"] { --x: 32%; }
+  &[data-offset="-2"] { --x: -54%; }
+  &[data-offset="2"] { --x: 54%; }
+  &[data-offset="-3"] { --x: -62%; }
+  &[data-offset="3"] { --x: 62%; }
+
+  // Phones: the side slides fade right out as they move aside (the hover
+  // selector too, as a tap leaves it applied).
+  @media (max-width: 767.98px) {
+    &:not([data-offset="0"]),
+    &:not([data-offset="0"]):hover {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
 
   iframe {
     position: absolute;
@@ -86,7 +164,9 @@
   background: linear-gradient(110deg, #ff7a2b 0%, $orange 45%, #ec5a0f 100%);
   color: #ffffff;
   box-shadow: 0 10px 30px -6px rgba($orange, 0.45);
-  transition: transform 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    opacity 0.3s ease;
 
   svg {
     width: 40%;
@@ -106,12 +186,13 @@
   font-weight: 700;
   line-height: 1.3;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.3s ease;
 }
 
-// Glass circles over the slide's sides; orange on hover, like the play button.
+// Glass circles over the active slide's sides; orange on hover, like the play button.
 .gap-preview__arrow {
   position: absolute;
-  z-index: 2;
+  z-index: 4;
   top: 50%;
   display: grid;
   place-items: center;
@@ -148,15 +229,16 @@
     outline-offset: 2px;
   }
 
-  &--prev { left: clamp(12px, 1.4cqw, 24px); }
-  &--next { right: clamp(12px, 1.4cqw, 24px); }
+  &--prev { left: calc((1 - var(--slide-w)) * 50% + clamp(12px, 1.4cqw, 24px)); }
+  &--next { right: calc((1 - var(--slide-w)) * 50% + clamp(12px, 1.4cqw, 24px)); }
 }
 
+// Pinned to the active slide's top-right corner, not the stage's.
 .gap-preview__count {
   position: absolute;
-  z-index: 2;
+  z-index: 4;
   top: clamp(12px, 1.4cqw, 24px);
-  right: clamp(12px, 1.4cqw, 24px);
+  right: calc((1 - var(--slide-w)) * 50% + clamp(12px, 1.4cqw, 24px));
   padding: 4px 12px;
   border-radius: 999px;
   background: rgba($navy, 0.55);

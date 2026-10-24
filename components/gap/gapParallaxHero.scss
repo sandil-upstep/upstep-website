@@ -1,15 +1,52 @@
 // GAP parallax hero (GapParallaxHero.tsx): a screen-tall scene of stacked
-// layers. The sky (landscape) sits behind the title; the palace terrace, the
-// masters and the board wait below the fold and rise in, in that order, when
-// the scene plays. The layers start hidden (visibility) until the script has
-// placed them, so they never flash in before it runs.
+// layers. The sky (landscape) sits behind the title; the stone archway, the
+// two monuments flanking it, the panelists and the board wait below the fold
+// and rise in, in that order, when the scene plays, then "Meet your panelists"
+// and the names come in. Phones drop the board: the panelists fade into a navy
+// band that carries the names. The layers start hidden (visibility) until the
+// script has placed them, so they never flash in before it runs.
 
 $display-font: var(--font-cinzel), Georgia, serif;
+$serif-font: var(--font-tinos), "Times New Roman", Times, serif;
 $amber-pale: #fde68a;
 $amber-cream: #fef3c7;
 $amber-white: #fffbeb;
+// The panelists title's navy and gold, deeper than the site's tokens so they
+// hold up on the bright sky.
+$navy-deep: #14244a;
+$gold: #c39237;
+// Phones: the band's navy under the names, and its golds.
+$band-navy: #0c1431;
+$band-gold: #d4a64a;
+$band-gold-soft: #f1d48c;
+
+$phone: "(max-width: 767.98px)";
 
 .gap-px-hero {
+  // The scene is laid out in --u, after the panelists poster, so it keeps its
+  // composition on any screen. On landscape screens --u is 1svh and the scene
+  // fills the height; wide screens get more sky and board at the sides. On
+  // anything squarer than 5:4 (tablets) it's a share of the width instead, so
+  // the scene scales down whole and sits at the bottom with more sky above.
+  // Phones stack the scene over a tall navy band holding the names (Anand
+  // first, the other four in two columns), the outer panelists' arms cropped
+  // at the sides.
+  --u: min(1svh, 0.8vw);
+  // The masters image's width, shared with the names' row: Anand's head about
+  // 44% of the scene down, as in the poster.
+  --masters-w: calc(114 * var(--u));
+  // At least 1.11 screens wide so the mouse parallax (5.5% of the width either
+  // way) never shows the board's sides, and at least a 16:9 scene wide.
+  --board-w: max(116vw, calc(177.7 * var(--u)));
+
+  @media #{$phone} {
+    --u: min(1svh, 1vw);
+    --masters-w: calc(116 * var(--u));
+    // The band: solid navy this high, fading up over the panelists' waists.
+    --band: calc(67 * var(--u));
+    --band-fade: calc(10 * var(--u));
+  }
+
   position: relative;
   width: 100%;
   height: 100svh;
@@ -101,110 +138,383 @@ $amber-white: #fffbeb;
 }
 
 // ---------- Foreground layers ----------
+// The settled scene follows the panelists poster: the title over the sky, the
+// archway small in the middle distance between the two monuments, the
+// panelists in front of it, the board across the bottom with their names on it.
 .gap-px-hero__layer {
   position: absolute;
   inset: 0;
   visibility: hidden;
   will-change: transform;
 
-  &--architecture { z-index: 10; }
-  &--masters { z-index: 20; }
-  &--chessboard { z-index: 30; }
+  &--arch { z-index: 10; }
+  &--monument { z-index: 20; }
+  &--masters { z-index: 30; }
+  &--chessboard {
+    z-index: 35;
+
+    @media #{$phone} { display: none; }
+  }
+  &--names {
+    z-index: 45;
+    pointer-events: none;
+  }
 }
 
-// The terrace keeps its proportions, at least as wide as the screen and wide
-// enough to fill its height.
-.gap-px-hero__architecture-wide {
+// Centred, its top just under the title (about 23% of the scene down), a
+// little larger than in the poster; its foot is behind the panelists. On
+// phones it stands higher, its top a little above Anand's head.
+.gap-px-hero__arch {
+  position: absolute;
+  bottom: calc(26 * var(--u));
+  left: 50%;
+  width: calc(92 * var(--u));
+  aspect-ratio: 1672 / 941;
+  transform: translateX(-50%);
+  // The paving fades out rather than ending in a hard edge over the valley.
+  -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent);
+  mask-image: linear-gradient(to bottom, #000 82%, transparent);
+
+  @media #{$phone} {
+    bottom: calc(83 * var(--u));
+    width: calc(111 * var(--u));
+  }
+}
+
+// Either side of the archway, each statue facing in towards it, the banners on
+// the outside. Placed from the centre: each statue's middle 48u out, just
+// outside the outer panelists' heads, or a third of the width on squarer
+// screens so the banners stay in. The statue sits 63% across the left image
+// and 50.5% across the right one. On wide screens the outer ends are held at
+// least 4vw past the screen's edges, so neither the screen nor the mouse
+// parallax (3.8% of the width) shows where the ruins stop. Low enough that
+// their stone bases run down behind the board instead of ending over the
+// valley. On phones the banners run off the screen's edges.
+.gap-px-hero__monument {
+  --statue-x: min(calc(48 * var(--u)), 33vw);
+  --monument-w: calc(70 * var(--u));
+
+  position: absolute;
+  bottom: calc(24 * var(--u));
+  width: var(--monument-w);
+
+  img { object-fit: contain; }
+
+  &--left {
+    left: min(calc(50% - var(--statue-x) - var(--monument-w) * 0.63), -4vw);
+    aspect-ratio: 1523 / 996;
+  }
+  &--right {
+    left: max(calc(50% + var(--statue-x) - var(--monument-w) * 0.505), calc(100% + 4vw - var(--monument-w)));
+    aspect-ratio: 1566 / 953;
+  }
+
+  @media #{$phone} {
+    --statue-x: calc(31.5 * var(--u));
+    --monument-w: calc(65 * var(--u));
+
+    bottom: calc(90 * var(--u));
+
+    &--left { left: calc(50% - var(--statue-x) - var(--monument-w) * 0.63); }
+    &--right { left: calc(50% + var(--statue-x) - var(--monument-w) * 0.505); }
+  }
+}
+
+// The panelists stand across the scene in front of the archway. The cutout
+// ends at their waists, so it sits on the bottom edge, where the board covers
+// it (on phones, the band). --masters-w (on the section) also sizes the
+// names' row.
+.gap-px-hero__masters {
   position: absolute;
   bottom: 0;
   left: 50%;
-  display: none;
-  width: max(calc(100% + 5vw), 177.7svh);
-  aspect-ratio: 1672 / 941;
-  transform: translateX(-50%);
-
-  @media (min-width: 768px) { display: block; }
-}
-.gap-px-hero__architecture-narrow {
-  position: absolute;
-  inset: auto 0 0;
-  display: flex;
-  height: 72%;
-
-  > div {
-    position: relative;
-    width: 50%;
-    height: 100%;
-  }
-  img { object-fit: cover; }
-  > div:first-child img { object-position: left; }
-  > div:last-child img { object-position: right; }
-
-  @media (min-width: 768px) { display: none; }
-}
-
-.gap-px-hero__masters {
-  position: absolute;
-  bottom: 6%;
-  left: 50%;
-  height: 46%;
+  width: var(--masters-w);
   aspect-ratio: 1671 / 941;
   transform: translateX(-50%);
 
-  @media (min-width: 768px) { height: 70%; }
+  @media #{$phone} { bottom: calc(64 * var(--u)); }
 }
 
+// Phones only: rises with the panelists, so the opening sky has no band
+// across it.
+.gap-px-hero__band {
+  display: none;
+
+  @media #{$phone} {
+    position: absolute;
+    inset: auto 0 0;
+    display: block;
+    height: calc(var(--band) + var(--band-fade));
+    background: linear-gradient(
+      to top,
+      $band-navy 0,
+      $band-navy var(--band),
+      rgba($band-navy, 0.85) calc(var(--band) + var(--band-fade) * 0.35),
+      rgba($band-navy, 0) 100%
+    );
+  }
+}
+
+// The board runs across the foreground, its near edge off the bottom, with the
+// pieces up in front of the panelists' chests. Its far edge (halfway down the
+// image) stays 22u up from the bottom whatever the width: the image is 0.5628
+// as tall as it is wide, so its bottom sits 22u - half that height up.
+// The image's board only covers its right side, so a mirrored copy underneath
+// turns that half onto the left, solid past the middle, and the main copy
+// fades in over it there, so the seam never thins.
 .gap-px-hero__chessboard {
   position: absolute;
-  right: -40%;
-  bottom: -10%;
-  width: 230%;
+  bottom: calc(22 * var(--u) - var(--board-w) * 0.2814);
+  left: 50%;
+  width: var(--board-w);
   aspect-ratio: 1672 / 941;
+  transform: translateX(-50%);
+  -webkit-mask-image: linear-gradient(to right, transparent 46%, #000 54%);
+  mask-image: linear-gradient(to right, transparent 46%, #000 54%);
 
-  @media (min-width: 768px) {
-    right: auto;
-    bottom: -22%;
-    left: 50%;
-    width: max(calc(100% + 10vw), 177.7svh);
-    transform: translateX(-50%);
+  &--mirror {
+    transform: translateX(-50%) scaleX(-1);
+    -webkit-mask-image: linear-gradient(to right, transparent 38%, #000 46%);
+    mask-image: linear-gradient(to right, transparent 38%, #000 46%);
   }
 }
 
 // ---------- Panelists ----------
 .gap-px-hero__panelists {
   position: absolute;
-  inset: auto 0 0;
+  inset: 0;
   z-index: 40;
-  height: 40%;
   visibility: hidden;
   pointer-events: none;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.3), transparent);
+
+  // Darkens the board a little under the names.
+  &::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: calc(26 * var(--u));
+    background: linear-gradient(to top, rgba(8, 14, 32, 0.7), rgba(8, 14, 32, 0));
+
+    @media #{$phone} { display: none; }
+  }
 }
-.gap-px-hero__panelists-inner {
+
+// The title sits on the archway: the frame runs from under the floating header
+// down to just above the arch's top (77u up), and the title settles at its
+// foot. Where the scene is shorter than the screen (tablets) that keeps it
+// with the scene rather than floating in the sky; where the frame is too short
+// for it, `safe` puts it under the header instead. Phones put it high in the
+// sky, clear of the header.
+.gap-px-hero__panelists-frame {
   position: absolute;
-  bottom: 7%;
-  left: 5%;
-  overflow: hidden;
-  padding: 12px 24px 12px 0;
+  inset: max(96px, calc(9 * var(--u))) 16px calc(78.5 * var(--u));
+  display: flex;
+  flex-direction: column;
+  justify-content: safe flex-end;
+  align-items: center;
+
+  @media #{$phone} {
+    inset: max(104px, 15.5%) 16px auto;
+    justify-content: flex-start;
+  }
 }
+
+// Navy on the bright sky, on a soft haze.
 .gap-px-hero__panelists-title {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100%;
+  margin: 0;
+  font-family: $display-font;
+  color: $navy-deep;
+  text-align: center;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -30% -25%;
+    z-index: -1;
+    background: radial-gradient(ellipse closest-side, rgba($amber-white, 0.6), rgba($amber-white, 0));
+  }
+
+  @media #{$phone} {
+    font-family: $serif-font;
+
+    &::before {
+      inset: -40% -30%;
+      background: radial-gradient(ellipse closest-side, rgba($amber-white, 0.4), rgba($amber-white, 0));
+    }
+  }
+}
+// The kicker and the king sit between short gold rules (phones: just the
+// kicker, between navy rules).
+.gap-px-hero__panelists-kicker,
+.gap-px-hero__panelists-mark {
   display: flex;
   align-items: center;
-  gap: 16px;
-  font-family: $display-font;
-  font-size: 30px;
-  font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: 0.025em;
-  color: #ffffff;
-  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.6));
+  gap: clamp(12px, 1.4vw, 24px);
 
-  @media (min-width: 640px) { font-size: 48px; }
+  &::before,
+  &::after {
+    content: "";
+    width: clamp(36px, 7vw, 120px);
+    height: 1px;
+    background: $gold;
+  }
 }
-.gap-px-hero__rule {
-  width: 40px;
-  height: 1px;
-  background: rgba($amber-pale, 0.8);
+.gap-px-hero__panelists-kicker {
+  font-size: clamp(13px, 1.2vw, 20px);
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
 
-  @media (min-width: 640px) { width: 64px; }
+  @media #{$phone} {
+    gap: 14px;
+    font-size: calc(4 * var(--u));
+    font-weight: 700;
+    letter-spacing: 0.32em;
+    text-transform: none;
+
+    &::before,
+    &::after {
+      width: 32px;
+      background: rgba($navy-deep, 0.7);
+    }
+    // Matches the trailing letter-spacing after the text, keeping it centred.
+    &::before { margin-right: 0.32em; }
+  }
+}
+.gap-px-hero__panelists-word {
+  // Capped by height too, so the title stays above the archway.
+  font-size: clamp(36px, min(5.4vw, 7 * var(--u)), 92px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+
+  @media #{$phone} {
+    font-size: calc(11 * var(--u));
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    text-transform: none;
+  }
+}
+.gap-px-hero__panelists-mark {
+  margin-top: 4px;
+
+  svg {
+    display: block;
+    fill: $gold;
+  }
+
+  @media #{$phone} { display: none; }
+}
+
+// ---------- Names ----------
+// A row the width of the masters image, centred like it, each name placed at
+// its master's centre (set inline). Phones: Anand on top, larger, over a thin
+// gold rule, and the other four in two columns under him.
+.gap-px-hero__names {
+  position: absolute;
+  bottom: calc(5 * var(--u));
+  left: 50%;
+  width: var(--masters-w);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform: translateX(-50%);
+
+  li {
+    position: absolute;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    // Narrow enough that the longer names wrap onto two lines.
+    width: 14%;
+    text-align: center;
+    transform: translateX(-50%);
+
+    &::after {
+      content: "";
+      width: clamp(24px, 2.4vw, 44px);
+      height: 2px;
+      margin-top: clamp(8px, 0.8vw, 14px);
+      background: $gold;
+    }
+  }
+
+  @media #{$phone} {
+    top: calc(100% - 66 * var(--u));
+    bottom: auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    align-items: start;
+    row-gap: calc(6 * var(--u));
+    width: calc(100% - 10 * var(--u));
+    font-family: $serif-font;
+
+    li {
+      position: static;
+      width: auto;
+      transform: none;
+
+      &::after { display: none; }
+    }
+
+    li.is-lead {
+      order: -1;
+      grid-column: 1 / -1;
+      padding-bottom: calc(4.5 * var(--u));
+      border-bottom: 1px solid rgba($band-gold, 0.35);
+    }
+  }
+}
+.gap-px-hero__name {
+  font-size: clamp(11px, min(1.3vw, 2.3 * var(--u)), 24px);
+  font-weight: 500;
+  line-height: 1.2;
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  text-wrap: balance;
+
+  @media #{$phone} {
+    font-size: calc(4.1 * var(--u));
+    font-weight: 700;
+    color: #f7f3ea;
+    text-shadow: none;
+
+    .is-lead & { font-size: calc(5.6 * var(--u)); }
+  }
+}
+// Desktop: inline before the name ("GM Farrukh Amonatov"). Phones: a small
+// gold line of its own above it.
+.gap-px-hero__name-title {
+  @media #{$phone} {
+    display: block;
+    margin-bottom: 2px;
+    font-size: calc(3.4 * var(--u));
+    letter-spacing: 0.12em;
+    color: $band-gold;
+
+    .is-lead & { margin-bottom: calc(1 * var(--u)); }
+  }
+}
+.gap-px-hero__name-note {
+  margin-top: 4px;
+  font-size: clamp(9px, 0.85vw, 15px);
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+
+  @media #{$phone} {
+    margin-top: calc(1 * var(--u));
+    font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
+    font-size: calc(3.7 * var(--u));
+    color: $band-gold-soft;
+    text-shadow: none;
+  }
 }
