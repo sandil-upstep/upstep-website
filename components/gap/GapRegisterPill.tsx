@@ -13,7 +13,7 @@ export default function GapRegisterPill() {
   const [covered, setCovered] = useState(false);
 
   useEffect(() => {
-    const hero = document.querySelector<HTMLElement>(".gap-hero");
+    const hero = document.querySelector<HTMLElement>(".gap-px-hero, .gap-hero");
     const onScroll = () => setPast(window.scrollY > (hero?.offsetHeight ?? 600) * 0.8);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });

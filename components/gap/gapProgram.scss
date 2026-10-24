@@ -21,6 +21,11 @@
   display: flex;
   gap: 6px;
   height: 36px;
+
+  // Too narrow for its labels; the module list below picks a module.
+  @media (max-width: 640px) {
+    display: none;
+  }
 }
 // A pale tint of its colour until it's the module picked.
 .gap-hours__seg {
@@ -241,6 +246,8 @@
 
 @media (max-width: 1199.98px) {
   .gap-program__body { grid-template-columns: minmax(0, 1fr); }
+  // Stacked, the detail panel comes first and the list under it.
+  .gap-modules { order: 2; }
   .gap-module { min-height: 0; }
   .gap-module__big { margin-top: 12px; }
 }

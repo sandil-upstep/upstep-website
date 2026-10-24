@@ -211,6 +211,73 @@
   color: $dark-muted;
 }
 
+// ---------- Dark ----------
+// While the page is navy (GapSchedule.tsx), the card and its controls turn to
+// faint white glass, as the schedule's do; the projection panel keeps its
+// navy, lifted by a pale rim and a touch of white.
+.gap-outcome {
+  .gap-outcome__card,
+  .gap-outcome__label output,
+  .gap-outcome__ends,
+  .gap-outcome__panel,
+  .gap-check,
+  .gap-check__box {
+    transition:
+      color $theme-transition,
+      background $theme-transition,
+      border-color $theme-transition;
+  }
+
+  .main-cover--dark & {
+    .gap-outcome__card {
+      border-color: $dark-border;
+      background: rgba(255, 255, 255, 0.04);
+      color: #ffffff;
+    }
+    .gap-outcome__label output { color: #ffffff; }
+    .gap-outcome__ends { color: $dark-muted; }
+
+    .gap-outcome__rating input[type="range"] {
+      &::-webkit-slider-runnable-track {
+        background: linear-gradient(90deg, $cobalt var(--fill), rgba(255, 255, 255, 0.14) var(--fill));
+      }
+      &::-moz-range-track {
+        background: linear-gradient(90deg, $cobalt var(--fill), rgba(255, 255, 255, 0.14) var(--fill));
+      }
+      &::-webkit-slider-thumb { border-color: $cobalt; }
+      &::-moz-range-thumb { border-color: $cobalt; }
+    }
+
+    .gap-check {
+      border-color: $dark-border;
+      background: rgba(255, 255, 255, 0.04);
+      color: #ffffff;
+
+      &:hover { border-color: rgba(255, 255, 255, 0.24); }
+      &[aria-pressed="true"] {
+        border-color: $cobalt;
+        background: rgba($cobalt, 0.18);
+      }
+      &:focus-visible { outline-color: #ffffff; }
+    }
+    .gap-check__box {
+      border-color: rgba(255, 255, 255, 0.3);
+      background: transparent;
+    }
+    [aria-pressed="true"] > .gap-check__box {
+      border-color: $cobalt;
+      background: $cobalt;
+    }
+
+    .gap-outcome__panel {
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: inset 0 0 0 1px $dark-border;
+    }
+  }
+}
+
 @media (max-width: 1199.98px) {
   .gap-outcome__card { grid-template-columns: minmax(0, 1fr); }
+  // Stacked, the projection comes first and the controls under it.
+  .gap-outcome__controls { order: 2; }
 }

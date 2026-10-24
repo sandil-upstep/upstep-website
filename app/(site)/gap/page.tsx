@@ -4,7 +4,8 @@ import Footer from "@/components/Footer";
 import { GapProvider } from "@/components/gap/GapContext";
 import GapClosing from "@/components/gap/GapClosing";
 import GapFees from "@/components/gap/GapFees";
-import GapHero from "@/components/gap/GapHero";
+// import GapHero from "@/components/gap/GapHero"; // hidden: replaced by GapParallaxHero
+import GapParallaxHero from "@/components/gap/GapParallaxHero";
 import GapOutcome from "@/components/gap/GapOutcome";
 import GapPreview from "@/components/gap/GapPreview";
 import GapProgram from "@/components/gap/GapProgram";
@@ -26,7 +27,8 @@ export default function GapPage() {
   return (
     <GapProvider>
       <main className="gap flex-1">
-        <GapHero />
+        {/* <GapHero /> */}
+        <GapParallaxHero />
         <GapPreview />
         <GapProgram />
         <GapOutcome />

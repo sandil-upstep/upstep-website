@@ -1,0 +1,210 @@
+// GAP parallax hero (GapParallaxHero.tsx): a screen-tall scene of stacked
+// layers. The sky (landscape) sits behind the title; the palace terrace, the
+// masters and the board wait below the fold and rise in, in that order, when
+// the scene plays. The layers start hidden (visibility) until the script has
+// placed them, so they never flash in before it runs.
+
+$display-font: var(--font-cinzel), Georgia, serif;
+$amber-pale: #fde68a;
+$amber-cream: #fef3c7;
+$amber-white: #fffbeb;
+
+.gap-px-hero {
+  position: relative;
+  width: 100%;
+  height: 100svh;
+  overflow: hidden;
+  background: #1d3b6e;
+  color: #ffffff;
+}
+
+// ---------- Sky ----------
+.gap-px-hero__landscape {
+  position: absolute;
+  // Bleeds past the top and sides so the mouse parallax never shows an edge.
+  inset: -1vh -1.5vw auto;
+  height: 135%;
+  transform-origin: top;
+  will-change: transform;
+
+  img {
+    object-fit: cover;
+    object-position: top;
+  }
+}
+
+// ---------- Title ----------
+.gap-px-hero__copy {
+  position: absolute;
+  inset: 16% 0 auto;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 24px;
+  text-align: center;
+  will-change: transform;
+}
+.gap-px-hero__eyebrow {
+  margin-bottom: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+
+  @media (min-width: 640px) { font-size: 14px; }
+}
+.gap-px-hero__title {
+  max-width: 64rem;
+  font-family: $display-font;
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.025em;
+  text-wrap: balance;
+  filter: drop-shadow(0 4px 24px rgba(10, 20, 50, 0.55));
+
+  @media (min-width: 640px) { font-size: 48px; }
+  @media (min-width: 1024px) { font-size: 60px; }
+}
+.gap-px-hero__lead {
+  max-width: 36rem;
+  margin-top: 20px;
+  font-size: 16px;
+  line-height: 28px;
+  color: rgba(255, 255, 255, 0.85);
+  filter: drop-shadow(0 2px 12px rgba(10, 20, 50, 0.6));
+
+  @media (min-width: 640px) { font-size: 18px; }
+}
+.gap-px-hero__explore {
+  margin-top: 36px;
+  padding: 12px 32px;
+  border: 1px solid rgba($amber-pale, 0.6);
+  border-radius: 999px;
+  background: rgba($amber-cream, 0.15);
+  color: $amber-white;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover { background: rgba($amber-cream, 0.3); }
+  &:focus-visible {
+    outline: 2px solid $amber-pale;
+    outline-offset: 4px;
+  }
+}
+
+// ---------- Foreground layers ----------
+.gap-px-hero__layer {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  will-change: transform;
+
+  &--architecture { z-index: 10; }
+  &--masters { z-index: 20; }
+  &--chessboard { z-index: 30; }
+}
+
+// The terrace keeps its proportions, at least as wide as the screen and wide
+// enough to fill its height.
+.gap-px-hero__architecture-wide {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  display: none;
+  width: max(calc(100% + 5vw), 177.7svh);
+  aspect-ratio: 1672 / 941;
+  transform: translateX(-50%);
+
+  @media (min-width: 768px) { display: block; }
+}
+.gap-px-hero__architecture-narrow {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  height: 72%;
+
+  > div {
+    position: relative;
+    width: 50%;
+    height: 100%;
+  }
+  img { object-fit: cover; }
+  > div:first-child img { object-position: left; }
+  > div:last-child img { object-position: right; }
+
+  @media (min-width: 768px) { display: none; }
+}
+
+.gap-px-hero__masters {
+  position: absolute;
+  bottom: 6%;
+  left: 50%;
+  height: 46%;
+  aspect-ratio: 1671 / 941;
+  transform: translateX(-50%);
+
+  @media (min-width: 768px) { height: 70%; }
+}
+
+.gap-px-hero__chessboard {
+  position: absolute;
+  right: -40%;
+  bottom: -10%;
+  width: 230%;
+  aspect-ratio: 1672 / 941;
+
+  @media (min-width: 768px) {
+    right: auto;
+    bottom: -22%;
+    left: 50%;
+    width: max(calc(100% + 10vw), 177.7svh);
+    transform: translateX(-50%);
+  }
+}
+
+// ---------- Panelists ----------
+.gap-px-hero__panelists {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 40;
+  height: 40%;
+  visibility: hidden;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.3), transparent);
+}
+.gap-px-hero__panelists-inner {
+  position: absolute;
+  bottom: 7%;
+  left: 5%;
+  overflow: hidden;
+  padding: 12px 24px 12px 0;
+}
+.gap-px-hero__panelists-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: $display-font;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.025em;
+  color: #ffffff;
+  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.6));
+
+  @media (min-width: 640px) { font-size: 48px; }
+}
+.gap-px-hero__rule {
+  width: 40px;
+  height: 1px;
+  background: rgba($amber-pale, 0.8);
+
+  @media (min-width: 640px) { width: 64px; }
+}

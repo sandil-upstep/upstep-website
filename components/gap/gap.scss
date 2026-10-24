@@ -80,6 +80,12 @@
   position: relative;
   padding: clamp(72px, 6.25cqw, 120px) 0;
 }
+// A rule across the page between sections, in the guide lines' colour, so
+// the two meet in a grid. None under the hero, which isn't a .gap-section.
+.gap-section + .gap-section {
+  border-top: 1px solid var(--gap-line);
+  transition: border-color $theme-transition;
+}
 
 .gap-lines span {
   position: absolute;
