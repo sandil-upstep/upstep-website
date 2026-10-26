@@ -270,7 +270,7 @@
 }
 .gap-seg__opt {
   min-height: 2.5rem;
-  padding: 0 0.3125rem;
+  padding: 0 1rem;
   border: 0;
   border-radius: 62.4375rem;
   background: transparent;
@@ -289,8 +289,12 @@
   }
   &:focus-visible { @include focus-ring; }
 }
+// Sits on the fee card's checker, so the track is frosted to stay readable.
 .gap-seg--dark {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(7, 16, 37, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 
   .gap-seg__opt {
     color: $dark-text;

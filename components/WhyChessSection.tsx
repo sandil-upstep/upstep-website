@@ -506,7 +506,8 @@ export default function WhyChessSection() {
         el.style.setProperty("--fly", fly.toFixed(3));
         el.classList.toggle("is-in", fly > 0.5);
         // Out of focus while far back or in the background, as in the design.
-        cardEl.style.filter = blur > 0.01 ? `blur(${blur.toFixed(2)}px)` : "";
+        // In tenths of a pixel: finer steps don't show, but each one repaints.
+        cardEl.style.filter = blur > 0.05 ? `blur(${blur.toFixed(1)}px)` : "";
         // Behind the king while on the orbit; above the window once flying to it.
         el.style.zIndex = fly > 0.001 ? "7" : "1";
       });
@@ -615,9 +616,9 @@ export default function WhyChessSection() {
       if (!S.card && !S.bg && S.side === home && sts.every((st) => !st.fly)) return done();
       clickTl = gsap
         .timeline({ onUpdate: markDirty, onComplete: done })
-        .to(S, { card: 0, duration: 0.3 * D, ease: "power2.in" })
-        .to(sts, { fly: 0, duration: 0.6 * D, ease: "power3.inOut" }, ">-0.05")
-        .to(S, { bg: 0, side: home, duration: 0.6 * D, ease: "power2.inOut" }, "<");
+        .to(S, { card: 0, duration: 0.5 * D, ease: "power3.inOut" })
+        .to(sts, { fly: 0, duration: 0.8 * D, ease: "power3.inOut" }, ">-0.2")
+        .to(S, { bg: 0, side: home, duration: 0.8 * D, ease: "power2.inOut" }, "<");
     }
 
     // Open item i's window where the card sits: the card settles into the
@@ -672,11 +673,14 @@ export default function WhyChessSection() {
         fill(DEFAULT_ITEM);
         dirty = true;
       } else {
+        // The window folds back into its icon, easing in and out rather than
+        // snapping shut, and the card sets off home before the fold ends so
+        // the two read as one motion.
         clickTl = gsap
           .timeline({ onUpdate: markDirty })
-          .to(S, { card: 0, duration: 0.3 * D, ease: "power2.in" })
-          .to(sts, { fly: 0, duration: 0.7 * D, ease: "power3.inOut" }, ">-0.05")
-          .to(S, { bg: 0, duration: 0.7 * D, ease: "power2.inOut" }, "<");
+          .to(S, { card: 0, duration: 0.5 * D, ease: "power3.inOut" })
+          .to(sts, { fly: 0, duration: 0.8 * D, ease: "power3.inOut" }, ">-0.2")
+          .to(S, { bg: 0, duration: 0.8 * D, ease: "power2.inOut" }, "<");
       }
       if (restoreFocus && lastFocus) lastFocus.focus({ preventScroll: true });
       lastFocus = null;
@@ -802,7 +806,9 @@ export default function WhyChessSection() {
             trigger: pin,
             start: "top top",
             end: "bottom bottom",
-            scrub: true,
+            // Catches up with the scroll over 0.6s instead of jumping with
+            // each wheel step, so the cards glide.
+            scrub: 0.6,
             onUpdate: (self) => {
               // Back above the window: one the visitor opened (or closed)
               // gives way, and the scroll's own window takes over again.

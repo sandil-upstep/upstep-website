@@ -288,7 +288,10 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
     rgba(24, 31, 49, calc(0.78 * var(--chrome)))
   );
   box-shadow: 0 14px 32px rgba(0, 0, 0, calc(0.35 * var(--chrome)));
-  transition: transform 0.4s $ease-out, box-shadow 0.4s, background 0.4s, filter 0.3s;
+  // Only transform eases here: the script rewrites the blur (filter) and,
+  // through --fly, the shadow every frame, and a transition on either would
+  // restart each frame and make the cards trail and shudder behind the scroll.
+  transition: transform 0.4s $ease-out;
 
   img {
     display: block;
@@ -330,6 +333,8 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 .why-item:not(.is-in):hover .why-item__card,
 .why-item:not(.is-in):focus-visible .why-item__card {
   filter: none !important;
+  // Eases into the hover state only (the script isn't moving these then).
+  transition: transform 0.4s $ease-out, box-shadow 0.4s, filter 0.3s;
   transform: translateY(-10px) scale(1.14);
   background: linear-gradient(160deg, rgba(64, 80, 116, 0.95), rgba(32, 42, 68, 0.95));
   box-shadow:

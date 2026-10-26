@@ -6,6 +6,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { cubeScroll } from "./CubeParallax";
+import { LEVELS } from "./courses/courseData";
 import Eyebrow from "./Eyebrow";
 import RevealTitle from "./RevealTitle";
 import { getLenis, onFrame, onScrollFrame } from "./SmoothScroll";
@@ -33,8 +34,8 @@ const STEPS: Step[] = [
     h: 0.58,
     yaw: 0,
     props: ["bulb", "books"],
-    title: "1. Beginner Level",
-    desc: "Introduce your child to chess and its incredible possibilities. By the end, they’ll know how to play by international chess rules and apply basic chess strategies.",
+    title: `1. ${LEVELS[0].name}`,
+    desc: LEVELS[0].desc,
   },
   {
     id: "knight",
@@ -42,8 +43,8 @@ const STEPS: Step[] = [
     h: 0.7,
     yaw: 1.05,
     props: ["puzzle", "board"],
-    title: "2. Advanced Beginner Level",
-    desc: "Practical guidance to defeat amateur players. Students will master chess tactics and openings to gain a strong foundation.",
+    title: `2. ${LEVELS[1].name}`,
+    desc: LEVELS[1].desc,
   },
   {
     id: "bishop",
@@ -51,8 +52,8 @@ const STEPS: Step[] = [
     h: 0.78,
     yaw: 0,
     props: ["shield", "clock"],
-    title: "3. Intermediate Level",
-    desc: "Students learn to defend under pressure, manage the clock and turn small advantages into winning positions.",
+    title: `3. ${LEVELS[2].name}`,
+    desc: LEVELS[2].desc,
   },
   {
     id: "rook",
@@ -60,8 +61,8 @@ const STEPS: Step[] = [
     h: 0.758,
     yaw: 0,
     props: ["medal", "map"],
-    title: "4. Advanced Level",
-    desc: "Long-term planning and endgame technique prepare students to compete in rated tournaments with confidence.",
+    title: `4. ${LEVELS[3].name}`,
+    desc: LEVELS[3].desc,
   },
   {
     id: "queen",
@@ -69,8 +70,8 @@ const STEPS: Step[] = [
     h: 0.93,
     yaw: 0,
     props: ["target", "clipboard"],
-    title: "5. Expert Level",
-    desc: "Deep game analysis and opening preparation sharpen accuracy, so every move is played with a clear purpose.",
+    title: `5. ${LEVELS[4].name}`,
+    desc: LEVELS[4].desc,
   },
   {
     id: "king",
@@ -78,8 +79,8 @@ const STEPS: Step[] = [
     h: 1.0,
     yaw: 0,
     props: ["trophy", "mountain"],
-    title: "6. Master & Pro Master Level",
-    desc: "Elite coaching for title-level play: advanced strategy, psychology and preparation for national and international events.",
+    title: `6. ${LEVELS[5].name}`,
+    desc: LEVELS[5].desc,
   },
 ];
 

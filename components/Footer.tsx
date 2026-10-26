@@ -12,7 +12,7 @@ const SOCIALS = [
   { label: "YouTube", href: "https://www.youtube.com/@upstepacademy.official" },
 ];
 
-const COUNTRIES = [
+export const COUNTRIES = [
   "India",
   "USA",
   "Australia",
@@ -32,7 +32,7 @@ const COUNTRIES = [
   "Hong Kong",
 ];
 
-const OFFICES = [
+export const OFFICES = [
   {
     country: "India",
     address: "505, Town Center 2, Andheri–Kurla Rd, Marol, Andheri East, Mumbai 400059",

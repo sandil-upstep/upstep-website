@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import "./header.scss";
 import Button from "./common/Button";
+import { COURSES } from "./courses/courseData";
 import { openDemoBooking } from "./demoBooking";
 import Image from "next/image";
 
@@ -15,12 +16,8 @@ const NAV_LINKS: NavLink[] = [
   { label: "About Us", href: "/about" },
 ];
 
-// Placeholder course list — swap for the real catalogue once it's settled.
-const COURSE_LINKS: NavLink[] = [
-  { label: "Beginner", href: "/courses/beginner" },
-  { label: "Intermediate", href: "/courses/intermediate" },
-  { label: "Advanced", href: "/courses/advanced" },
-];
+// The course pages (app/(site)/courses/[course]).
+const COURSE_LINKS: NavLink[] = COURSES.map((c) => ({ label: c.name, href: `/courses/${c.slug}` }));
 
 const TRAILING_LINKS: NavLink[] = [{ label: "Tournament Finder", href: "/tournament-finder" }];
 

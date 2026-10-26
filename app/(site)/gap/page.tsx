@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import CubeParallax from "@/components/CubeParallax";
-import Footer from "@/components/Footer";
 import { GapProvider } from "@/components/gap/GapContext";
 import GapClosing from "@/components/gap/GapClosing";
 import GapFees from "@/components/gap/GapFees";
@@ -36,7 +35,6 @@ export default function GapPage() {
         <GapFees />
         <GapClosing />
       </main>
-      <Footer />
       <GapRegisterPill />
       <GapRegister />
       <CubeParallax />

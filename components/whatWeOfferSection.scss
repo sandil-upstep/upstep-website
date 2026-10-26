@@ -20,6 +20,9 @@ $outline: #b4b4b4;
 $blue: #3273cd;
 $orange: #f56318;
 
+// Matches the page cover's light/dark fade (anandSection.scss).
+$theme-transition: 0.7s ease;
+
 $ease: cubic-bezier(0.65, 0, 0.25, 1);
 $dur: 0.75s;
 
@@ -134,13 +137,30 @@ $card-2: (
 }
 
 // ---------- Section shell ----------
+// No background: the page cover shows through, so the section follows the
+// cover's light/dark theme (.main-cover--dark) along with its neighbours.
 .wwo {
+  --wwo-fg: #{$ink};
+  --wwo-eyebrow: #222222;
+  --wwo-outline: #{$outline};
+  --wwo-line: #{$line};
+  --wwo-floor: #{$floor};
+  --wwo-nav-hover: rgba(255, 255, 255, 0.55);
   position: relative;
   overflow: hidden;
-  background: $white;
-  color: $ink;
+  color: var(--wwo-fg);
+  transition: color $theme-transition;
   font-family: var(--font-open-sans), system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
   container-type: inline-size;
+
+  .main-cover--dark & {
+    --wwo-fg: #ffffff;
+    --wwo-eyebrow: #ffffff;
+    --wwo-outline: rgba(255, 255, 255, 0.28);
+    --wwo-line: rgba(255, 255, 255, 0.07);
+    --wwo-floor: rgba(255, 255, 255, 0.06);
+    --wwo-nav-hover: rgba(255, 255, 255, 0.12);
+  }
 }
 
 // Scroll pin (WhatWeOfferSection sets the wrapper's height and --pin-top):
@@ -166,13 +186,15 @@ $card-2: (
 .wwo__gl {
   position: absolute;
   width: 1px;
-  background: $line;
+  background: var(--wwo-line);
+  transition: background-color $theme-transition;
   z-index: 0;
 }
 
 .wwo__floor {
   position: absolute;
-  background: $floor;
+  background: var(--wwo-floor);
+  transition: background-color $theme-transition;
   z-index: 0;
 }
 
@@ -207,7 +229,8 @@ $card-2: (
   font-family: var(--font-open-sans), Arial, sans-serif;
   font-size: 1.25rem;
   line-height: 1.75rem;
-  color: #222222;
+  color: var(--wwo-eyebrow);
+  transition: color $theme-transition;
   font-weight: 600;
   white-space: nowrap;
 
@@ -231,7 +254,8 @@ $card-2: (
   font-family: var(--font-open-sans), sans-serif;
   font-weight: 800;
   color: transparent;
-  -webkit-text-stroke: 2px $outline;
+  -webkit-text-stroke: 2px var(--wwo-outline);
+  transition: -webkit-text-stroke-color $theme-transition;
   @include outline-title-size;
 }
 
@@ -402,11 +426,11 @@ $card-2: (
     cursor: pointer;
     border-radius: 50%;
     background: transparent;
-    border: 1.5px solid $ink;
-    color: $ink;
-    transition: background-color 0.2s, transform 0.2s;
+    border: 1.5px solid var(--wwo-fg);
+    color: var(--wwo-fg);
+    transition: background-color 0.2s, transform 0.2s, color $theme-transition, border-color $theme-transition;
 
-    &:hover { background: rgba(255, 255, 255, 0.55); }
+    &:hover { background: var(--wwo-nav-hover); }
     &:active { transform: scale(0.96); }
 
     // First / last slide: scroll can't go further, so the button rests.
