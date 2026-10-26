@@ -7,6 +7,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Eyebrow from "./Eyebrow";
 import RevealTitle from "./RevealTitle";
+import YouTubeFrame from "./YouTubeFrame";
 import { getLenis, onFrame } from "./SmoothScroll";
 import "./whatWeOfferSection.scss";
 
@@ -94,6 +95,9 @@ const ytEmbed = (id: string) =>
 export default function WhatWeOfferSection() {
   const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(false);
+  // True while the carousel rests on a slide; the caption shows only then.
+  const [settled, setSettled] = useState(true);
+  const settledRef = useRef(true);
   const swipeX = useRef<number | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -292,6 +296,11 @@ export default function WhatWeOfferSection() {
       lastS = s;
       draw(s);
       const shown = Math.round(s);
+      const rest = Math.abs(s - shown) < 0.001;
+      if (rest !== settledRef.current) {
+        settledRef.current = rest;
+        setSettled(rest);
+      }
       if (shown !== shownRef.current) {
         shownRef.current = shown;
         setActive(shown);
@@ -571,12 +580,7 @@ export default function WhatWeOfferSection() {
               >
                 <div className="wwo__clip">
                   {isPlaying ? (
-                    <iframe
-                      src={ytEmbed(slide.videoId)}
-                      title={slide.title}
-                      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                      allowFullScreen
-                    />
+                    <YouTubeFrame src={ytEmbed(slide.videoId)} title={slide.title} />
                   ) : (
                     <Image
                       src={slide.kind === "image" ? slide.src : slide.poster ?? ytThumb(slide.videoId)}
@@ -587,7 +591,11 @@ export default function WhatWeOfferSection() {
                     />
                   )}
 
-                  {isActive && !isPlaying && <p className="wwo__caption">{slide.title}</p>}
+                  {isActive && !isPlaying && (
+                    <p className="wwo__caption" data-shown={settled || undefined}>
+                      <span>{slide.title}</span>
+                    </p>
+                  )}
 
                   {isActive && slide.kind === "youtube" && !isPlaying && (
                     <button

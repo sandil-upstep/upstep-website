@@ -361,7 +361,7 @@ export default function SuccessStoriesSection() {
             </p>
 
             <span className="stories__cube stories__cube--blue stories__cube--3" aria-hidden="true" data-cube="0.4" />
-            <span className="stories__cube stories__cube--beige stories__cube--4" aria-hidden="true" data-cube="1" />
+            <span className="stories__cube stories__cube--beige stories__cube--4" aria-hidden="true" data-cube="0.6" />
           </div>
         </div>
 

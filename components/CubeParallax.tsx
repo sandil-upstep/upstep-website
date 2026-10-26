@@ -29,11 +29,15 @@ const PHONE = 0.5; // strength of all of it on phones
 let phoneMQ: MediaQueryList | null = null;
 const strength = () => ((phoneMQ ??= window.matchMedia("(max-width: 767.98px)")).matches ? PHONE : 1);
 
+// How fast a cube drifts for its depth. Squared so near and far cubes part
+// clearly: depth 0.4 moves ~0.26×, 0.5 ~0.4×, 0.9 ~1.3×, 1 ~1.6×.
+const speed = (depth: number) => depth * depth * 1.6;
+
 // The scroll part of a cube's motion at `pass` through its section: y in px
 // (+ is down) and a turn in degrees, `spin` (±1) picking its direction. Shared
 // with the 3D cubes in ScientificallyStructuredSection.
 export const cubeScroll = (pass: number, depth: number, spin = 1) => {
-  const k = (0.5 - Math.min(1, Math.max(0, pass))) * depth * strength();
+  const k = (0.5 - Math.min(1, Math.max(0, pass))) * speed(depth) * strength();
   return { y: k * DRIFT, turn: k * TURN * spin };
 };
 
@@ -61,7 +65,8 @@ export default function CubeParallax() {
         el,
         pseudo,
         scope: el.closest<HTMLElement>("[data-cube-scope]") ?? el.closest("section") ?? el.parentElement ?? el,
-        depth: Number(pseudo ? el.dataset.cubeBefore : el.dataset.cube) || 0.5,
+        // Nudged ±15% by index so cubes sharing a depth still move at their own pace.
+        depth: (Number(pseudo ? el.dataset.cubeBefore : el.dataset.cube) || 0.5) * (0.85 + ((i * 0.382) % 1) * 0.3),
         spin: i % 2 ? 1 : -1,
         // Spread out so no two cubes float in step.
         phase: i * 1.7,

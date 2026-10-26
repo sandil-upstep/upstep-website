@@ -133,30 +133,32 @@ function Booked({ booking }: { booking: BookingSummary }) {
           Zoom link on your registered email address and Whatsapp number.
         </p>
 
-        <div className="demo-ticket">
+        <div className="demo-ticket-wrap">
           <span className="demo-cube demo-cube--ticket" aria-hidden="true" />
-          <div className="demo-ticket__top">
-            <Image src="/images/demo-booking/calendar.png" width={59} height={70} alt="" className="demo-ticket__icon" />
-            <div>
-              <p className="demo-ticket__meta">
-                <Image src="/images/book-demo/clock.png" width={82} height={80} alt="" />
-                {DEMO_MINUTES} minutes <span aria-hidden="true">•</span> FREE demo <span aria-hidden="true">•</span> On Zoom
-              </p>
-              <p className="demo-ticket__date">{dayFull(wall.day)}</p>
-              <p className="demo-ticket__time">
-                {timeLabel(wall.minutes)} {zoneShort(zone, booking.slot)}
-              </p>
+          <div className="demo-ticket">
+            <div className="demo-ticket__top">
+              <Image src="/images/demo-booking/calendar.png" width={59} height={70} alt="" className="demo-ticket__icon" />
+              <div>
+                <p className="demo-ticket__meta">
+                  <Image src="/images/time-icon.svg" width={82} height={80} alt="" />
+                  {DEMO_MINUTES} minutes <span aria-hidden="true">•</span> FREE demo <span aria-hidden="true">•</span> On Zoom
+                </p>
+                <p className="demo-ticket__date">{dayFull(wall.day)}</p>
+                <p className="demo-ticket__time">
+                  {timeLabel(wall.minutes)} {zoneShort(zone, booking.slot)}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="demo-ticket__child">
-            <span className="demo-ticket__avatar" aria-hidden="true">
-              {childName.charAt(0)}
-            </span>
-            <div>
-              <p className="demo-ticket__name">{childName}</p>
-              <p className="demo-ticket__child-meta">
-                {booking.age} years <span aria-hidden="true">•</span> {booking.level}
-              </p>
+            <div className="demo-ticket__child">
+              <span className="demo-ticket__avatar" aria-hidden="true">
+                {childName.charAt(0)}
+              </span>
+              <div>
+                <p className="demo-ticket__name">{childName}</p>
+                <p className="demo-ticket__child-meta">
+                  {booking.age} years <span aria-hidden="true">•</span> {booking.level}
+                </p>
+              </div>
             </div>
           </div>
         </div>

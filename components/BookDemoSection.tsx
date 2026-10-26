@@ -114,8 +114,8 @@ export default function BookDemoSection() {
       <Image
         src="/images/book-demo/board.png"
         alt=""
-        width={475}
-        height={459}
+        width={1036}
+        height={725}
         className="book-demo__board"
         aria-hidden="true"
       />

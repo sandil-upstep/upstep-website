@@ -177,11 +177,11 @@ $card: #b9d9fd;
   transform: rotate(8deg);
 }
 
-// Blue cube on the left card's outer edge.
+// Blue cube just under the row, on the left grid line, clear of the videos.
 .carousel__cube--left {
   z-index: 5;
   left: 9.2cqw;
-  top: 7.9cqw;
+  top: calc(var(--card-h) + 1cqw);
   width: clamp(24px, 3cqw, 58px);
   transform: rotate(18deg);
 }

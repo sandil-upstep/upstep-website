@@ -51,15 +51,23 @@ $cobalt: #3d78de;
 }
 
 // ---------- Decorations ----------
-// Isometric board running off the left edge, tucked in under the first card.
+// Isometric board centred near the left edge so the section clips it, turning
+// slowly around its own centre under the first card.
 .book-demo__board {
   position: absolute;
   z-index: 1;
-  left: 0;
-  top: 31.25cqw;
-  width: 24.7cqw;
+  left: -14cqw;
+  top: 29cqw;
+  width: 38cqw;
   height: auto;
   pointer-events: none;
+  animation: book-demo-board-spin 120s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+@keyframes book-demo-board-spin {
+  to { transform: rotate(360deg); }
 }
 
 .book-demo__cube {

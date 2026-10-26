@@ -1,0 +1,12 @@
+// YouTubeFrame's shield: clear, over the player, for mouse users only.
+.yt-frame__shield {
+  display: none;
+
+  @media (hover: hover) and (pointer: fine) {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    cursor: pointer;
+  }
+}

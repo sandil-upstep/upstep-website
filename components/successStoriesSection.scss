@@ -283,8 +283,10 @@ $yellow: #f3bb4f;
 
 .stories__cube--1 { width: 40px; right: -20px; top: -40px; transform: rotate(18deg); filter: blur(1.5px); }
 .stories__cube--2 { width: 46px; left: calc(-1 * var(--off) - 24px); top: 140px; transform: rotate(-30deg); }
-.stories__cube--3 { width: 8.3%; left: 9.7%; top: 22.4%; transform: rotate(-12deg); z-index: 2; }
-.stories__cube--4 { width: 12%; left: 84%; top: 62%; transform: rotate(-24deg); filter: blur(1.5px); z-index: 4; }
+// 3 and 4 sit in the empty corners the tilted card leaves (top-left and
+// bottom-right), with room for their scroll drift.
+.stories__cube--3 { width: 8.3%; left: 1%; top: 17%; transform: rotate(-12deg); z-index: 2; }
+.stories__cube--4 { width: 12%; left: 85%; top: 84%; transform: rotate(-24deg); filter: blur(1.5px); z-index: 4; }
 
 // ---------- Arrows ----------
 .stories__arrow {
@@ -447,6 +449,8 @@ $yellow: #f3bb4f;
 
   .stories__cube--1 { width: 28px; top: -44px; right: -14px; }
   .stories__cube--2 { width: 30px; top: 96px; left: calc(-1 * var(--off) - 15px); }
+  // The stacked name takes the card's top-left corner here.
+  .stories__cube--3 { display: none; }
 }
 
 // =========================================================

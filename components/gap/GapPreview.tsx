@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import YouTubeFrame from "../YouTubeFrame";
 import { GapHead, GapLines, useReveal } from "./GapParts";
 import { VIDEOS, ytEmbed, ytThumb } from "./gapData";
 import "./gapPreview.scss";
@@ -101,12 +102,7 @@ export default function GapPreview() {
                     inert={!isActive && !isSide}
                   >
                     {playing && isActive ? (
-                      <iframe
-                        src={ytEmbed(v.videoId)}
-                        title={v.title}
-                        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                        allowFullScreen
-                      />
+                      <YouTubeFrame src={ytEmbed(v.videoId)} title={v.title} />
                     ) : (
                       <button
                         type="button"

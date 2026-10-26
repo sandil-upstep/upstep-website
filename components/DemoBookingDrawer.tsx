@@ -383,15 +383,10 @@ export default function DemoBookingDrawer() {
       className={`demo-drawer is-${step}${rising ? " is-rising" : ""}${closing ? " is-closing" : ""}`}
       aria-labelledby="demo-drawer-title"
       data-lenis-prevent
-      onCancel={(e) => {
-        e.preventDefault();
-        close();
-      }}
+      // Only the close button closes it: not Escape, not a backdrop click.
+      {...{ closedby: "none" }}
+      onCancel={(e) => e.preventDefault()}
       onKeyDown={onKeyDown}
-      onClick={(e) => {
-        // A click on the backdrop, outside the sheet.
-        if (e.target === e.currentTarget) close();
-      }}
     >
       {open && (
         <div className="demo-drawer__panel">
@@ -554,25 +549,7 @@ export default function DemoBookingDrawer() {
                           error={msg.phone}
                           onLeave={touch("phone")}
                         />
-                        {!showPhone2 && (
-                          <button type="button" className="demo-add" onClick={() => setShowPhone2(true)}>
-                            <svg
-                              viewBox="0 0 20 20"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.6"
-                              strokeLinecap="round"
-                              aria-hidden="true"
-                            >
-                              <circle cx="10" cy="10" r="8.2" />
-                              <path d="M10 6.2v7.6M6.2 10h7.6" />
-                            </svg>
-                            Add Another Number
-                          </button>
-                        )}
-                      </div>
-                      {showPhone2 && (
-                        <div className="demo-form__row demo-form__row--phone">
+                        {showPhone2 ? (
                           <PhoneField
                             id="demo-phone2"
                             name="code2"
@@ -591,8 +568,23 @@ export default function DemoBookingDrawer() {
                             onLeave={touch("phone2")}
                             autoFocus
                           />
-                        </div>
-                      )}
+                        ) : (
+                          <button type="button" className="demo-add" onClick={() => setShowPhone2(true)}>
+                            <svg
+                              viewBox="0 0 20 20"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                              aria-hidden="true"
+                            >
+                              <circle cx="10" cy="10" r="8.2" />
+                              <path d="M10 6.2v7.6M6.2 10h7.6" />
+                            </svg>
+                            Add Another Number
+                          </button>
+                        )}
+                      </div>
                     </fieldset>
                   </form>
 
