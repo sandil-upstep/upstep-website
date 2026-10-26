@@ -99,17 +99,17 @@ $theme-transition: 0.7s ease;
   // Keeps the ::before wash below the card's content.
   isolation: isolate;
   border: 1px solid rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
+  border-radius: 1.25rem;
   // Milky-white glass: a faintly grey core with a thick, blurred white rim
   // glowing inward, and a soft grey halo just outside the edge.
   background-color: rgba(246, 246, 246, 0.7);
   box-shadow:
-    0 0 6px rgba(0, 0, 0, 0.06),
-    0 14px 36px -20px rgba(0, 0, 0, 0.1),
-    inset 0 0 14px 6px rgba(255, 255, 255, 0.95),
+    0 0 0.375rem rgba(0, 0, 0, 0.06),
+    0 0.875rem 2.25rem -1.25rem rgba(0, 0, 0, 0.1),
+    inset 0 0 0.875rem 0.375rem rgba(255, 255, 255, 0.95),
     inset 0 0 2px 1px rgba(255, 255, 255, 1);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(1.125rem) saturate(150%);
+  -webkit-backdrop-filter: blur(1.125rem) saturate(150%);
   transition:
     background-color $theme-transition,
     border-color $theme-transition,
@@ -138,9 +138,9 @@ $theme-transition: 0.7s ease;
     background-color: rgba(255, 255, 255, 0);
     // Same four layers as the light glass, so the shadows tween smoothly.
     box-shadow:
-      0 0 6px rgba(0, 0, 0, 0.2),
-      0 12px 32px -12px rgba(0, 0, 0, 0.4),
-      inset 0 0 14px 6px rgba(255, 255, 255, 0.03),
+      0 0 0.375rem rgba(0, 0, 0, 0.2),
+      0 0.75rem 2rem -0.75rem rgba(0, 0, 0, 0.4),
+      inset 0 0 0.875rem 0.375rem rgba(255, 255, 255, 0.03),
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
 
     &::before {
@@ -241,8 +241,8 @@ $theme-transition: 0.7s ease;
 
   @media (max-width: $sm-max) {
     padding: 0.875rem;
-    min-height: 120px;
-    border-radius: 16px;
+    min-height: 7.5rem;
+    border-radius: 1rem;
   }
 
   // @media (prefers-color-scheme: dark) {
@@ -308,7 +308,7 @@ $theme-transition: 0.7s ease;
   span {
     text-decoration: underline;
     text-decoration-thickness: 1px;
-    text-underline-offset: 4px;
+    text-underline-offset: 0.25rem;
   }
 }
 
@@ -318,7 +318,7 @@ $theme-transition: 0.7s ease;
   right: 1rem;
   width: auto;
   height: 50%;
-  min-height:80px;
+  min-height:5rem;
   pointer-events: none;
   transition: filter $theme-transition;
   // The line art is black with a blue accent: flip it to white on the dark

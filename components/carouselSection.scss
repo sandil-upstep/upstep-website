@@ -24,7 +24,7 @@ $card: #b9d9fd;
   position: relative;
   container-type: inline-size;
   overflow: hidden;
-  padding: clamp(60px, 6.25cqw, 120px) 0 clamp(80px, 7cqw, 140px);
+  padding: clamp(3.75rem, 6.25cqw, 7.5rem) 0 clamp(5rem, 7cqw, 8.75rem);
   background: #ffffff;
   color: $ink;
   font-family: var(--font-plus-jakarta-sans), "Helvetica Neue", Arial, sans-serif;
@@ -55,10 +55,10 @@ $card: #b9d9fd;
 .carousel__title {
   position: relative;
   z-index: 3;
-  margin: 0 0 clamp(24px, 2cqw, 40px);
+  margin: 0 0 clamp(1.5rem, 2cqw, 2.5rem);
   text-align: center;
   font-weight: 800;
-  font-size: clamp(36px, 4.4cqw, 84px);
+  font-size: clamp(2.25rem, 4.4cqw, 5.25rem);
   line-height: 1.15;
   letter-spacing: -0.01em;
   color: $ink;
@@ -136,23 +136,23 @@ $card: #b9d9fd;
 // Sound toggle, bottom-right of each card, lifted clear of the bottom arc.
 .carousel__controls {
   position: absolute;
-  right: clamp(10px, 0.9cqw, 18px);
-  bottom: calc(var(--wave) + clamp(6px, 0.6cqw, 12px));
+  right: clamp(0.625rem, 0.9cqw, 1.125rem);
+  bottom: calc(var(--wave) + clamp(0.375rem, 0.6cqw, 0.75rem));
   display: flex;
-  gap: clamp(6px, 0.5cqw, 10px);
+  gap: clamp(0.375rem, 0.5cqw, 0.625rem);
 }
 
 .carousel__control {
-  width: clamp(36px, 2.5cqw, 48px);
-  height: clamp(36px, 2.5cqw, 48px);
+  width: clamp(2.25rem, 2.5cqw, 3rem);
+  height: clamp(2.25rem, 2.5cqw, 3rem);
   border-radius: 50%;
   display: grid;
   place-items: center;
   cursor: pointer;
   color: #ffffff;
   background: rgba(11, 19, 36, 0.45);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(0.5rem);
+  backdrop-filter: blur(0.5rem);
   transition: background-color 0.2s;
 
   svg { width: 50%; height: 50%; }
@@ -173,7 +173,7 @@ $card: #b9d9fd;
   z-index: 5;
   right: 12cqw;
   top: -2.6cqw;
-  width: clamp(36px, 4.2cqw, 80px);
+  width: clamp(2.25rem, 4.2cqw, 5rem);
   transform: rotate(8deg);
 }
 
@@ -182,7 +182,7 @@ $card: #b9d9fd;
   z-index: 5;
   left: 9.2cqw;
   top: calc(var(--card-h) + 1cqw);
-  width: clamp(24px, 3cqw, 58px);
+  width: clamp(1.5rem, 3cqw, 3.625rem);
   transform: rotate(18deg);
 }
 
@@ -196,14 +196,14 @@ $card: #b9d9fd;
 // On phones the cards are wider, so about one and a half are on screen.
 @media (max-width: 767.98px) {
   .carousel {
-    --off: 16px;
-    --w: calc(100cqw - 56px);
+    --off: 1rem;
+    --w: calc(100cqw - 3.5rem);
     --gap: 3cqw;
     --card-w: 76cqw;
     --card-h: 70cqw;
     --wave: 6cqw;
-    padding: 80px 0 70px;
+    padding: 5rem 0 4.375rem;
   }
-  .carousel__title { margin-bottom: 24px; }
+  .carousel__title { margin-bottom: 1.5rem; }
   .carousel__cube { display: none; }
 }

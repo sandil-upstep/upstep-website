@@ -203,10 +203,10 @@ $card-2: (
   position: relative;
   z-index: 3;
   margin: 0;
-  padding-left: 15px;
+  padding-left: 0.9375rem;
   font-family: var(--font-open-sans), Arial, sans-serif;
-  font-size: 20px;
-  line-height: 28px;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
   color: #222222;
   font-weight: 600;
   white-space: nowrap;
@@ -218,8 +218,8 @@ $card-2: (
   position: absolute;
   left: 0;
   top: 0;
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
   border: 1px solid #3274CD;
 }
 
@@ -354,7 +354,7 @@ $card-2: (
   display: grid;
   place-items: center;
   width: 15cqw;
-  min-width: 44px;
+  min-width: 2.75rem;
   aspect-ratio: 1;
   padding: 0;
   border: 0;

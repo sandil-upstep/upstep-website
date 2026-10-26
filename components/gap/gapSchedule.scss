@@ -10,8 +10,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
-  font-size: 15px;
+  gap: 0.5rem 0.75rem;
+  font-size: 0.9375rem;
   color: $text;
 
   // Opens under the button's right edge, the side it sits on.
@@ -27,14 +27,14 @@
 .gap-schedule__batches {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: clamp(16px, 1.25cqw, 24px);
+  gap: 0.75rem;
+  margin-bottom: clamp(1rem, 1.25cqw, 1.5rem);
 }
 
 .gap-week {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 8px;
+  gap: 0.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -42,12 +42,12 @@
 .gap-week__day {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.625rem;
   min-width: 0;
-  min-height: clamp(170px, 12cqw, 220px);
-  padding: 14px 10px;
+  min-height: clamp(10.625rem, 12cqw, 13.75rem);
+  padding: 0.875rem 0.625rem;
   border: 1.5px solid transparent;
-  border-radius: 22px;
+  border-radius: 1.375rem;
   background: $card;
   transition:
     background-color 0.3s ease,
@@ -59,7 +59,7 @@
   }
 }
 .gap-week__name {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 800;
   color: #8a8a8a;
   text-align: center;
@@ -70,24 +70,24 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
 }
 .gap-week__session {
   display: flex;
   flex-direction: column;
   gap: 2px;
   margin: 0;
-  padding: 10px;
-  border-radius: 16px;
+  padding: 0.625rem;
+  border-radius: 1rem;
   animation: gap-in 0.35s $ease both;
 
   span {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     opacity: 0.85;
   }
   b {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 800;
     line-height: 1.25;
   }
@@ -102,14 +102,14 @@
 }
 .gap-week__rest {
   margin: auto 0;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #8a8a8a;
   text-align: center;
 }
 
 .gap-schedule__note {
-  margin: 16px 0 0;
-  font-size: 14px;
+  margin: 1rem 0 0;
+  font-size: 0.875rem;
   line-height: 1.5;
   color: $muted;
 }
@@ -164,7 +164,7 @@
     .gap-batch__dot {
       border-color: $cobalt;
       background: transparent;
-      box-shadow: inset 0 0 0 4px $navy;
+      box-shadow: inset 0 0 0 0.25rem $navy;
     }
     [aria-pressed="true"] > .gap-batch__dot { background: $cobalt; }
 
@@ -185,14 +185,14 @@
 
 // A row a day: the name, then that day's classes.
 @media (max-width: 899.98px) {
-  .gap-week { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .gap-week { grid-template-columns: minmax(0, 1fr); gap: 0.375rem; }
   .gap-week__day {
     display: grid;
-    grid-template-columns: 52px minmax(0, 1fr);
+    grid-template-columns: 3.25rem minmax(0, 1fr);
     align-items: center;
     min-height: 0;
-    padding: 10px 14px;
-    border-radius: 18px;
+    padding: 0.625rem 0.875rem;
+    border-radius: 1.125rem;
   }
   .gap-week__name { text-align: left; }
   .gap-week__slots { flex-flow: row wrap; }
@@ -200,9 +200,9 @@
     flex-direction: row;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 2px 8px;
-    padding: 8px 12px;
-    border-radius: 12px;
+    gap: 2px 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
   }
   .gap-week__rest { text-align: left; }
 }
@@ -213,6 +213,6 @@
   .gap-schedule__tz .demo-pop {
     left: 0;
     right: auto;
-    width: min(300px, calc(100vw - 64px));
+    width: min(18.75rem, calc(100vw - 4rem));
   }
 }

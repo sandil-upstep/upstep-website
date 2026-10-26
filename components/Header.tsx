@@ -26,12 +26,12 @@ const TRAILING_LINKS: NavLink[] = [{ label: "Tournament Finder", href: "/tournam
 
 // --nav-fg flips between ink and white with the bar's theme (header.scss).
 const NAV_LINK_CLASS =
-  "text-[15px] font-medium text-(--nav-fg) transition-colors hover:text-[#f8661a]";
+  "text-[0.9375rem] font-medium text-(--nav-fg) transition-colors hover:text-[#f8661a]";
 
 // The floating frosted bar and its row, shared with the demo confirmation
 // page's slim header (DemoConfirmed.tsx) so the two match.
 export const NAV_BAR_CLASS =
-  "site-nav mx-auto max-w-285 lg:max-w-[max(71.25rem,78vw)] rounded-[10px] border backdrop-blur-xl backdrop-saturate-150";
+  "site-nav mx-auto max-w-285 lg:max-w-[max(71.25rem,78vw)] rounded-[0.625rem] border backdrop-blur-xl backdrop-saturate-150";
 export const NAV_ROW_CLASS = "flex h-16 items-center justify-between gap-6 px-5 lg:px-6";
 
 // Stand-in wordmark until the real logo SVG lands in /public/images — then
@@ -49,7 +49,7 @@ function GapBadge() {
   return (
     <Link href="/gap" aria-label="GAP" className="gap-badge">
       {/* GAP */}
-      <Image src="/images/GAP1.svg" alt="GAP" width={24} height={24} className="absolute w-auto h-[46px] -left-5" />
+      <Image src="/images/GAP1.svg" alt="GAP" width={24} height={24} className="absolute w-auto h-[2.875rem] -left-5" />
       <span className="gap-badge__text">GAP</span>
     </Link>
   );
@@ -124,7 +124,7 @@ function CoursesDropdown() {
                     setOpen(false);
                     setHovered(false);
                   }}
-                  className="block rounded-lg px-3 py-2 text-[15px] font-medium text-[#141b34] transition-colors hover:bg-orange-50 hover:text-[#f8661a]"
+                  className="block rounded-lg px-3 py-2 text-[0.9375rem] font-medium text-[#141b34] transition-colors hover:bg-orange-50 hover:text-[#f8661a]"
                 >
                   {link.label}
                 </Link>
@@ -292,7 +292,7 @@ export default function Header() {
 
           <div className="hidden items-center gap-4 lg:flex">
             <GapBadge />
-            <Button size="sm" className="h-[46px]" onClick={openDemoBooking}>
+            <Button size="sm" className="h-[2.875rem]" onClick={openDemoBooking}>
               Book a FREE demo class
             </Button>
           </div>

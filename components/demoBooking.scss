@@ -38,16 +38,16 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 @keyframes demo-fade-out { to { opacity: 0; } }
 @keyframes demo-rise { from { transform: translateY(100%); } }
 @keyframes demo-sink { to { transform: translateY(100%); } }
-@keyframes demo-in { from { opacity: 0; transform: translateY(16px); } }
-@keyframes demo-pop { from { opacity: 0; transform: translateY(-6px) scale(0.97); } }
-@keyframes demo-slide { from { opacity: 0; transform: translateX(18px); } }
+@keyframes demo-in { from { opacity: 0; transform: translateY(1rem); } }
+@keyframes demo-pop { from { opacity: 0; transform: translateY(-0.375rem) scale(0.97); } }
+@keyframes demo-slide { from { opacity: 0; transform: translateX(1.125rem); } }
 @keyframes demo-bounce { 0% { transform: scale(0); } 60% { transform: scale(1.15); } }
 @keyframes demo-spin { to { transform: rotate(360deg); } }
 
 // ---------- Shell ----------
 // The dialog is the full-screen layer and the scroller; the panel is the sheet.
 .demo-drawer {
-  --top: clamp(16px, 11vh, 100px);
+  --top: clamp(1rem, 11vh, 6.25rem);
   position: fixed;
   inset: 0;
   width: 100%;
@@ -55,7 +55,7 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   max-width: none;
   max-height: none;
   margin: 0;
-  padding: 0 24px;
+  padding: 0 1.5rem;
   border: 0;
   background: transparent;
   color: $ink;
@@ -105,16 +105,16 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 .demo-drawer__panel {
   container: demo-panel / inline-size;
   position: relative;
-  max-width: 1168px;
+  max-width: 73rem;
   min-height: calc(100dvh - var(--top));
   margin: var(--top) auto 0;
-  border-radius: 48px 48px 0 0;
+  border-radius: 3rem 3rem 0 0;
   // Frosted white: the page shows through, blurred, behind the sheet.
   background: rgba(255, 255, 255, 0.78);
-  -webkit-backdrop-filter: blur(28px) saturate(1.4);
-  backdrop-filter: blur(28px) saturate(1.4);
+  -webkit-backdrop-filter: blur(1.75rem) saturate(1.4);
+  backdrop-filter: blur(1.75rem) saturate(1.4);
   box-shadow:
-    0 -12px 40px rgba(10, 20, 40, 0.12),
+    0 -0.75rem 2.5rem rgba(10, 20, 40, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
   animation: demo-rise 0.6s $ease both;
   background:#ffffff;
@@ -139,9 +139,9 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 }
 .demo-drawer__checks {
   position: absolute;
-  top: -96px;
-  right: -40px;
-  width: 640px;
+  top: -6rem;
+  right: -2.5rem;
+  width: 40rem;
   aspect-ratio: 729 / 939;
   background: url("/images/checked-bg.png") center / contain no-repeat;
   transition: opacity 0.4s ease;
@@ -149,9 +149,9 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   .is-slot & {
     top: auto;
     right: auto;
-    bottom: -560px;
-    left: -60px;
-    width: 860px;
+    bottom: -35rem;
+    left: -3.75rem;
+    width: 53.75rem;
     transform: scaleX(-1) rotate(90deg);
     opacity: 0.8;
   }
@@ -160,31 +160,31 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   position: absolute;
   top: 0;
   right: 0;
-  width: 204px;
-  height: 215px;
+  width: 12.75rem;
+  height: 13.4375rem;
   background: $corner;
   clip-path: path("M0 0H224V198C214 206 200 212 186 212C170 212 158 204 148 192Z");
   transition: translate 0.5s $ease;
 
   @media (max-width: 640px) {
     
-    width: 160px;
-    height: 210px;
+    width: 10rem;
+    height: 13.125rem;
   }
   // Slides 60px out past the edge while the close button spins.
   @media (hover: hover) {
-    .demo-drawer__panel:has(.demo-drawer__close:hover) & { translate: 50px 0; height: 215px; }
+    .demo-drawer__panel:has(.demo-drawer__close:hover) & { translate: 3.125rem 0; height: 13.4375rem; }
   }
 }
 .demo-drawer__close {
   position: absolute;
   z-index: 5;
-  top: 21px;
-  right: 45px;
+  top: 1.3125rem;
+  right: 2.8125rem;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 2.75rem;
+  height: 2.75rem;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -194,7 +194,7 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
     background-color 0.2s ease,
     transform 0.5s $ease;
 
-  svg { width: 30px; height: 30px; }
+  svg { width: 1.875rem; height: 1.875rem; }
   // A full turn on hover.
   &:hover {
     background: rgba(255, 255, 255, 0.16);
@@ -212,7 +212,7 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 
   &.is-leaving {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-0.5rem);
   }
 }
 
@@ -226,23 +226,23 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 0;
+  gap: 0.625rem 0;
   animation: demo-in 0.55s $ease both;
 }
 .demo-steps__item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-right:12px;
-  font-size: 15px;
+  gap: 0.75rem;
+  margin-right:0.75rem;
+  font-size: 0.9375rem;
   font-weight: 500;
   color: $ink;
 
   & + &::before {
     content: "";
-    width: 36px;
+    width: 2.25rem;
     height: 2px;
-    margin: 0 4px 0 2px;
+    margin: 0 0.25rem 0 2px;
     border-radius: 2px;
     background: #c9c9c9; // the todo ring's grey
   }
@@ -251,10 +251,10 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   display: grid;
   place-items: center;
   flex: none;
-  width: 28px;
-  height: 28px;
+  width: 1.75rem;
+  height: 1.75rem;
   border-radius: 50%;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
 
   // A white disc with its ring: the frosted sheet behind it is greyer than
@@ -270,7 +270,7 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
     color: #ffffff;
     animation: demo-bounce 0.45s $ease both;
   }
-  svg { width: 16px; height: 16px; }
+  svg { width: 1rem; height: 1rem; }
 }
 
 // Scales with the panel: 30px on phones up to 40px from a ~960px panel.
@@ -287,8 +287,8 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   animation: demo-in 0.55s $ease 0.04s both;
 }
 .demo-sub {
-  margin-top: 16px;
-  font-size: 15px;
+  margin-top: 1rem;
+  font-size: 0.9375rem;
   line-height: 1.5;
   color: $text;
   animation: demo-in 0.55s $ease 0.08s both;
@@ -297,7 +297,7 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 .demo-card {
   position: relative;
   border: 1.5px solid #e3e3e5;
-  border-radius: 28px;
+  border-radius: 1.75rem;
   background: linear-gradient(160deg, #ffffff 55%, rgba(246, 247, 250, 0.9));
   animation: demo-in 0.55s $ease 0.12s both;
 
@@ -305,11 +305,11 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   &::after {
     content: "";
     position: absolute;
-    top: 22px;
+    top: 1.375rem;
     left: 62%;
-    width: 30px;
-    height: 30px;
-    border-radius: 6px;
+    width: 1.875rem;
+    height: 1.875rem;
+    border-radius: 0.375rem;
     background: rgba(53, 118, 203, 0.07);
     transform: rotate(45deg);
     filter: blur(1.5px);
@@ -348,20 +348,20 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   position: absolute;
   inset: 0;
   border: 1px solid #b4511d;
-  border-radius: 10px;
-  transform: translate(-8px, 9px);
+  border-radius: 0.625rem;
+  transform: translate(-0.5rem, 0.5625rem);
   transition: border-color 0.2s ease;
   pointer-events: none;
 }
 .demo-cta__btn.upstep-btn {
   position: relative;
   z-index: 1;
-  min-width: 223px;
-  height: 49px;
-  padding: 0 26px;
-  font-size: 20px;
+  min-width: 13.9375rem;
+  height: 3.0625rem;
+  padding: 0 1.625rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  gap: 10px;
+  gap: 0.625rem;
 }
 .demo-cta.is-dim {
   .demo-cta__outline { border-color: rgba(180, 81, 29, 0.35); }
@@ -372,13 +372,13 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   }
 }
 .demo-arrow {
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
 }
 .demo-spinner {
-  width: 18px;
-  height: 18px;
-  border: 2.5px solid currentColor;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 0.15625rem solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
   animation: demo-spin 0.7s linear infinite;
@@ -388,7 +388,7 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px 24px;
+  gap: 1rem 1.5rem;
   animation: demo-in 0.55s $ease 0.18s both;
 }
 
@@ -399,7 +399,7 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 .demo-form {
   border: 1px solid #201E1D29;
   z-index: 2;
-  padding: 33px 40px 43px 43px;
+  padding: 2.0625rem 2.5rem 2.6875rem 2.6875rem;
   // border-color: rgba(255, 255, 255, 0.7);
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.28));
   // No blur to frost with: the plain card instead.
@@ -415,9 +415,9 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   border: 0;
 }
 .demo-form__legend {
-  margin-bottom: 11px;
+  margin-bottom: 0.6875rem;
   padding: 0;
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 500;
   line-height: 1.25;
   letter-spacing: -0.01em;
@@ -426,9 +426,9 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 .demo-form__row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px 11px;
+  gap: 1.5rem 0.6875rem;
 
-  & + & { margin-top: 24px; }
+  & + & { margin-top: 1.5rem; }
   // The WhatsApp number and, beside it, "Add Another Number" or the other number.
   &--phone {
     align-items: start;
@@ -439,7 +439,7 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 }
 .demo-form__rule {
   height: 1px;
-  margin: 27px 0 22px;
+  margin: 1.6875rem 0 1.375rem;
   border: 0;
   background: $rule;
 }
@@ -451,14 +451,14 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 .demo-field {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   width: 100%;
-  height: 40px;
-  padding: 0 16px;
+  height: 2.5rem;
+  padding: 0 1rem;
   border: 1px solid #dddddd;
-  border-radius: 999px;
+  border-radius: 62.4375rem;
   background: #ffffff;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: $ink;
   text-align: left;
@@ -475,7 +475,7 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
     border: 0;
     outline: none;
     background: transparent;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
 
     // Lighter than what's typed, so a filled field reads apart from an empty one.
@@ -491,8 +491,8 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
     &:-webkit-autofill:focus {
       -webkit-text-fill-color: $ink;
       caret-color: $ink;
-      -webkit-box-shadow: 0 0 0 40px $cream inset;
-      box-shadow: 0 0 0 40px $cream inset;
+      -webkit-box-shadow: 0 0 0 2.5rem $cream inset;
+      box-shadow: 0 0 0 2.5rem $cream inset;
       transition: background-color 600000s 0s;
     }
   }
@@ -512,17 +512,17 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   &:focus-within:has(input:focus-visible),
   &:focus-visible {
     border-color: $blue;
-    box-shadow: 0 0 0 3px rgba(53, 118, 203, 0.16);
+    box-shadow: 0 0 0 0.1875rem rgba(53, 118, 203, 0.16);
     outline: none;
   }
   &.is-error {
     border-color: $orange;
-    box-shadow: 0 0 0 3px rgba(245, 99, 24, 0.12);
+    box-shadow: 0 0 0 0.1875rem rgba(245, 99, 24, 0.12);
   }
 }
 .demo-field--select {
   justify-content: space-between;
-  padding-right: 10px;
+  padding-right: 0.625rem;
 
   span {
     overflow: hidden;
@@ -534,24 +534,24 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 }
 .demo-chevron {
   flex: none;
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
   color: $orange;
 }
 .demo-field--phone {
-  padding-left: 4px;
+  padding-left: 0.25rem;
 }
 .demo-code {
   display: flex;
   flex: none;
   align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 6px 0 10px;
+  gap: 0.375rem;
+  height: 2rem;
+  padding: 0 0.375rem 0 0.625rem;
   border: 1px solid $cream-line;
-  border-radius: 999px;
+  border-radius: 62.4375rem;
   background: $cream;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   white-space: nowrap;
 
@@ -561,30 +561,30 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 .demo-add {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  height: 40px;
+  gap: 0.4375rem;
+  height: 2.5rem;
   padding: 0;
   border: 0;
   background: none;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: $ink;
 
-  svg { width: 18px; height: 18px; color: $orange; }
+  svg { width: 1.125rem; height: 1.125rem; color: $orange; }
   &:hover { color: $orange-ink; }
-  &:focus-visible { outline: 2px solid $blue; outline-offset: 3px; border-radius: 6px; }
+  &:focus-visible { outline: 2px solid $blue; outline-offset: 0.1875rem; border-radius: 0.375rem; }
 }
 .demo-error {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
-  margin: 7px 0 0 16px;
-  font-size: 12px;
+  gap: 0.375rem;
+  margin: 0.4375rem 0 0 1rem;
+  font-size: 0.75rem;
   line-height: 1.35;
   color: $orange-ink;
   animation: demo-pop 0.22s ease-out both;
 
-  svg { flex: none; width: 14px; height: 14px; margin-top: 1px; }
+  svg { flex: none; width: 0.875rem; height: 0.875rem; margin-top: 1px; }
 }
 
 // ---------- Popovers ----------
@@ -594,41 +594,41 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 .demo-pop {
   position: absolute;
   z-index: 20;
-  top: calc(100% + 8px);
+  top: calc(100% + 0.5rem);
   left: 0;
   min-width: 100%;
-  padding: 8px;
+  padding: 0.5rem;
   border: 1px solid $line;
-  border-radius: 22px;
+  border-radius: 1.375rem;
   background: #ffffff;
-  box-shadow: 0 18px 40px rgba(16, 24, 40, 0.14);
+  box-shadow: 0 1.125rem 2.5rem rgba(16, 24, 40, 0.14);
   transform-origin: top center;
   animation: demo-pop 0.2s ease-out both;
 }
 .demo-pop__title {
   display: block;
-  margin: 2px 4px 10px;
-  font-size: 11px;
+  margin: 2px 0.25rem 0.625rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #666666;
 }
 .demo-pop--ages {
-  width: 292px;
-  padding: 16px;
+  width: 18.25rem;
+  padding: 1rem;
 }
 .demo-pop__grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 0.5rem;
 }
 .demo-chip {
-  height: 40px;
+  height: 2.5rem;
   border: 1px solid $line;
-  border-radius: 999px;
+  border-radius: 62.4375rem;
   background: #ffffff;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 
@@ -639,17 +639,17 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  width: max(100%, 260px);
+  width: max(100%, 16.25rem);
 }
-.demo-pop--tz { width: 300px; }
+.demo-pop--tz { width: 18.75rem; }
 .demo-option {
   display: flex;
   flex-direction: column;
   gap: 2px;
   width: 100%;
-  padding: 10px 14px;
+  padding: 0.625rem 0.875rem;
   border: 0;
-  border-radius: 14px;
+  border-radius: 0.875rem;
   background: transparent;
   text-align: left;
 
@@ -657,49 +657,49 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   &[aria-pressed="true"] { background: $blue-soft; color: $blue-ink; }
 }
 .demo-option__label {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 .demo-option__sub {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #6b6b6b;
 }
-.demo-pop--codes { width: 320px; }
+.demo-pop--codes { width: 20rem; }
 .demo-pop__search {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 40px;
-  margin-bottom: 6px;
-  padding: 0 14px;
+  gap: 0.5rem;
+  height: 2.5rem;
+  margin-bottom: 0.375rem;
+  padding: 0 0.875rem;
   border: 1px solid $line;
-  border-radius: 999px;
+  border-radius: 62.4375rem;
 
   &:focus-within { border-color: $blue; }
-  svg { flex: none; width: 16px; height: 16px; color: $muted; }
+  svg { flex: none; width: 1rem; height: 1rem; color: $muted; }
   input {
     flex: 1;
     min-width: 0;
     border: 0;
     outline: none;
     background: transparent;
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 }
 .demo-pop__scroll {
-  max-height: 240px;
+  max-height: 15rem;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 .demo-country {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
+  grid-template-columns: 2.125rem minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   width: 100%;
-  padding: 9px 12px;
+  padding: 0.5625rem 0.75rem;
   border: 0;
-  border-radius: 999px;
+  border-radius: 62.4375rem;
   background: transparent;
   text-align: left;
 
@@ -707,47 +707,47 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   &[aria-pressed="true"] { background: $blue-soft; }
 }
 .demo-country__iso {
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   color: #666666;
 }
-.demo-country__name { font-size: 14px; font-weight: 500; }
-.demo-country__dial { font-size: 14px; font-weight: 600; color: $blue; }
+.demo-country__name { font-size: 0.875rem; font-weight: 500; }
+.demo-country__dial { font-size: 0.875rem; font-weight: 600; color: $blue; }
 .demo-pop__empty {
   display: block;
-  padding: 10px 12px;
-  font-size: 14px;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
   color: #666666;
 }
 
 // ---------- Step 1: details (CTA-1-1) ----------
 .demo-details {
-  padding: 43px 58px 42px;
+  padding: 2.6875rem 3.625rem 2.625rem;
 
-  .demo-main { max-width: 556px; }
-  .demo-form { margin-top: 12px; }
+  .demo-main { max-width: 34.75rem; }
+  .demo-form { margin-top: 0.75rem; }
   .demo-foot {
-    margin-top: 11px;
-    padding-left: 43px;
+    margin-top: 0.6875rem;
+    padding-left: 2.6875rem;
   }
   .demo-illustration {
-    top: 255px;
-    right: -92px;
-    width: 452px;
+    top: 15.9375rem;
+    right: -5.75rem;
+    width: 28.25rem;
   }
 }
 // By the card's bottom corner, in the 58px gutter beside it (clear of the
 // card), however tall the card is.
 .demo-cube--form {
-  bottom: -20px;
-  left: -52px;
-  width: 46px;
-  height: 46px;
+  bottom: -1.25rem;
+  left: -3.25rem;
+  width: 2.875rem;
+  height: 2.875rem;
   background-image: url("/images/cubes/cube-14.png");
 }
 .demo-consent {
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-style: italic;
   line-height: 1.4;
   color: $ink;
@@ -757,27 +757,27 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 6px 52px;
-  min-height: 40px;
-  margin: 27px 0 0 -4px;
-  padding: 5px 24px;
-  border-radius: 999px;
+  gap: 0.375rem 3.25rem;
+  min-height: 2.5rem;
+  margin: 1.6875rem 0 0 -0.25rem;
+  padding: 0.3125rem 1.5rem;
+  border-radius: 62.4375rem;
   background: $strip;
   animation: demo-in 0.55s $ease 0.22s both;
 
   li {
     display: flex;
     align-items: center;
-    gap: 10px;
-    max-width: 196px;
-    font-size: 13px;
-    line-height: 15px;
+    gap: 0.625rem;
+    max-width: 12.25rem;
+    font-size: 0.8125rem;
+    line-height: 0.9375rem;
     color: #3f4752;
   }
   img {
     flex: none;
     width: auto;
-    height: 28px;
+    height: 1.75rem;
   }
 
   @media (max-width: 640px) {
@@ -790,26 +790,26 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   display: grid;
   // grid-template-columns: 318px minmax(0, 766px);
   align-items: start;
-  column-gap: 69px;
-  padding: 42px 58px 38px;
+  column-gap: 4.3125rem;
+  padding: 2.625rem 3.625rem 2.375rem;
 
   // The illustration stays where it was on the details step, the calendar
   // clear of it.
-  .demo-main { max-width: 750px; }
+  .demo-main { max-width: 46.875rem; }
   .demo-illustration {
-    top: 255px;
-    right: -92px;
-    width: 452px;
+    top: 15.9375rem;
+    right: -5.75rem;
+    width: 28.25rem;
   }
-  .demo-foot { margin-top: 19px; }
+  .demo-foot { margin-top: 1.1875rem; }
 }
 
 .demo-info {
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 30px 22px 22px 16px;
-  border-radius: 28px;
+  padding: 1.875rem 1.375rem 1.375rem 1rem;
+  border-radius: 1.75rem;
   background: $card;
   animation: demo-in 0.55s $ease both;
   display: none;
@@ -818,127 +818,127 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   position: absolute;
   top: 0;
   right: 0;
-  width: 90px;
-  height: 90px;
-  border-radius: 0 28px 0 40px;
+  width: 5.625rem;
+  height: 5.625rem;
+  border-radius: 0 1.75rem 0 2.5rem;
   background: $amber;
 }
 .demo-info__tag {
   position: relative;
   align-self: flex-start;
-  padding: 2px 10px 3px;
-  border-radius: 999px;
+  padding: 2px 0.625rem 0.1875rem;
+  border-radius: 62.4375rem;
   background: $tag;
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 600;
-  line-height: 14px;
+  line-height: 0.875rem;
   color: #ffffff;
 }
 .demo-info__title {
   position: relative;
-  margin-top: 14px;
-  font-size: 24px;
+  margin-top: 0.875rem;
+  font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.02em;
 }
 .demo-info__text {
-  margin-top: 12px;
-  font-size: 15px;
-  line-height: 19.5px;
+  margin-top: 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.21875rem;
   color: #474238;
   font-weight: 500;
 
   b { font-weight: 600; color: #333333; }
 }
 .demo-info__needs-title {
-  margin-top: 26px;
+  margin-top: 1.625rem;
   font-family: $title-font;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 700;
 }
 .demo-info__needs {
   display: grid;
   grid-template-columns: repeat(2, auto);
   justify-content: start;
-  gap: 12px 30px;
-  margin-top: 8px;
+  gap: 0.75rem 1.875rem;
+  margin-top: 0.5rem;
 
   li {
     display: flex;
     align-items: center;
-    gap: 7px;
-    font-size: 14px;
+    gap: 0.4375rem;
+    font-size: 0.875rem;
     color: $ink;
   }
   li.is-wide { grid-column: 1 / -1; }
   img {
     flex: none;
-    width: 25px;
-    height: 22px;
+    width: 1.5625rem;
+    height: 1.375rem;
     object-fit: contain;
   }
 }
 .demo-info__slot {
   display: flex;
   flex-direction: column;
-  margin: 26px 0 0;
-  padding: 18px 18px 20px;
-  border-radius: 14px;
+  margin: 1.625rem 0 0;
+  padding: 1.125rem 1.125rem 1.25rem;
+  border-radius: 0.875rem;
   background: $navy;
   color: #ffffff;
 }
 .demo-info__slot-label {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .demo-info__slot-none,
 .demo-info__slot-date {
-  margin-top: 12px;
-  font-size: 15px;
+  margin-top: 0.75rem;
+  font-size: 0.9375rem;
   line-height: 1.3;
 }
 .demo-info__slot-date { font-weight: 600; }
 .demo-info__slot-time {
-  margin-top: 4px;
-  font-size: 15px;
+  margin-top: 0.25rem;
+  font-size: 0.9375rem;
 }
 .demo-info__hold {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 14px;
-  padding-top: 14px;
+  gap: 0.5rem;
+  margin-top: 0.875rem;
+  padding-top: 0.875rem;
   border-top: 1px solid rgba(255, 255, 255, 0.22);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.35;
 
-  img { flex: none; width: auto; height: 24px; }
-  b { margin-left: 4px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  img { flex: none; width: auto; height: 1.5rem; }
+  b { margin-left: 0.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 }
 .demo-info__trust {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 18px;
+  gap: 0.5rem;
+  margin-top: 1.125rem;
 
   li {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    line-height: 15px;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    line-height: 0.9375rem;
     color: #444444;
   }
-  img { flex: none; width: auto; height: 22px; }
+  img { flex: none; width: auto; height: 1.375rem; }
 }
 .demo-cube--info {
-  top: 423px;
-  left: -42px;
-  width: 64px;
-  height: 64px;
+  top: 26.4375rem;
+  left: -2.625rem;
+  width: 4rem;
+  height: 4rem;
   background-image: url("/images/cubes/cube-14.png");
 }
 
@@ -948,34 +948,34 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 10px;
-  margin-top: 12px;
-  font-size: 15px;
+  gap: 0.5rem 0.625rem;
+  margin-top: 0.75rem;
+  font-size: 0.9375rem;
   color: #333333;
   animation: demo-in 0.55s $ease 0.08s both;
 
-  > svg { flex: none; width: 19px; height: 19px; }
+  > svg { flex: none; width: 1.1875rem; height: 1.1875rem; }
 }
 .demo-tz__btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  height: 40px;
-  padding: 0 14px 0 20px;
+  gap: 0.375rem;
+  height: 2.5rem;
+  padding: 0 0.875rem 0 1.25rem;
   border: 1.5px solid $line;
-  border-radius: 999px;
+  border-radius: 62.4375rem;
   background: #ffffff;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 500;
   color: $ink;
 
-  svg { width: 14px; height: 14px; }
+  svg { width: 0.875rem; height: 0.875rem; }
   &:hover,
   &[aria-expanded="true"] { border-color: #cfd5de; }
   &:focus-visible { outline: 2px solid $blue; outline-offset: 2px; }
 }
 .demo-tz__note {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: #777777;
 }
 
@@ -983,37 +983,37 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 // the wrapper is the size container the calendar's own query reads).
 .demo-cal-wrap {
   container-type: inline-size;
-  margin-top: 23px;
+  margin-top: 1.4375rem;
 }
 .demo-cal {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
-  padding: 30px 26px 26px;
+  padding: 1.875rem 1.625rem 1.625rem;
   transition:
     grid-template-columns 0.55s $ease,
     column-gap 0.55s $ease;
 
   &.has-day {
-    grid-template-columns: minmax(0, 1.75fr) minmax(220px, 1fr);
-    column-gap: 22px;
+    grid-template-columns: minmax(0, 1.75fr) minmax(13.75rem, 1fr);
+    column-gap: 1.375rem;
   }
   &::after { display: none; }
 }
 // In the 58px gutters either side of the calendar, clear of it.
 .demo-cube--cal-a {
-  top: -4px;
-  left: -47px;
+  top: -0.25rem;
+  left: -2.9375rem;
   z-index: 2;
-  width: 36px;
-  height: 36px;
+  width: 2.25rem;
+  height: 2.25rem;
   background-image: url("/images/cubes/cube-4.png");
 }
 .demo-cube--cal-b {
-  top: 96px;
-  right: -46px;
+  top: 6rem;
+  right: -2.875rem;
   z-index: 2;
-  width: 34px;
-  height: 34px;
+  width: 2.125rem;
+  height: 2.125rem;
   background-image: url("/images/cubes/cube-8.png");
 }
 .demo-cal__month {
@@ -1025,12 +1025,12 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding-left: 27px;
+  gap: 0.75rem;
+  padding-left: 1.6875rem;
 }
 .demo-cal__label {
   overflow: hidden;
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 500;
   letter-spacing: -0.01em;
   text-overflow: ellipsis;
@@ -1039,13 +1039,13 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 .demo-cal__nav {
   display: flex;
   flex: none;
-  gap: 8px;
+  gap: 0.5rem;
 
   button {
     display: grid;
     place-items: center;
-    width: 34px;
-    height: 34px;
+    width: 2.125rem;
+    height: 2.125rem;
     padding: 0;
     border: 1.5px solid $orange;
     border-radius: 50%;
@@ -1053,7 +1053,7 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
     color: $ink;
     transition: background-color 0.15s ease, opacity 0.15s ease;
 
-    svg { width: 16px; height: 16px; }
+    svg { width: 1rem; height: 1rem; }
     &:hover:not(:disabled) { background: #fff3ec; }
     &:disabled {
       border-color: rgba(245, 99, 24, 0.45);
@@ -1066,11 +1066,11 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 .demo-cal__grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  row-gap: 8px;
+  row-gap: 0.5rem;
 }
 .demo-cal__dow {
-  margin: 22px 0 6px;
-  font-size: 12px;
+  margin: 1.375rem 0 0.375rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #474238;
   font-weight: 500;
@@ -1079,19 +1079,19 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
 .demo-cal__cell {
   display: grid;
   place-items: center;
-  height: 50px;
+  height: 3.125rem;
 }
 .demo-day {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: min(100%, 50px);
-  height: 50px;
+  width: min(100%, 3.125rem);
+  height: 3.125rem;
   padding: 0;
   border: 0;
-  border-radius: 999px;
-  font-size: 15px;
+  border-radius: 62.4375rem;
+  font-size: 0.9375rem;
   font-variant-numeric: tabular-nums;
 
   &.is-off {
@@ -1109,8 +1109,8 @@ button.demo-day {
   // The orange dot under an open day.
   &::after {
     content: "";
-    width: 4px;
-    height: 4px;
+    width: 0.25rem;
+    height: 0.25rem;
     border-radius: 50%;
     background: $orange;
   }
@@ -1126,21 +1126,21 @@ button.demo-day {
 .demo-cal__legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 16px;
-  margin-top: 10px;
-  font-size: 13px;
+  gap: 0.5rem 1rem;
+  margin-top: 0.625rem;
+  font-size: 0.8125rem;
   color: #474238;
   font-weight: 500;
 
   span {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 0.4375rem;
 
     &::before {
       content: "";
-      width: 11px;
-      height: 11px;
+      width: 0.6875rem;
+      height: 0.6875rem;
       border-radius: 50%;
     }
   }
@@ -1162,8 +1162,8 @@ button.demo-day {
   inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-left: 20px;
+  gap: 0.625rem;
+  padding-left: 1.25rem;
   border-left: 1px solid $rule;
   animation: demo-slide 0.42s $ease 0.12s both;
 }
@@ -1171,22 +1171,22 @@ button.demo-day {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 10px;
+  gap: 0.625rem;
 
   > div {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 0.375rem;
   }
 }
 .demo-times__day {
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 500;
   line-height: 1.15;
   letter-spacing: -0.01em;
 }
 .demo-times__count {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #474238;
   font-weight: 500;
@@ -1197,14 +1197,14 @@ button.demo-day {
   display: grid;
   flex: none;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 2.125rem;
+  height: 2.125rem;
   padding: 0;
   border: 1px solid #dddddd;
   border-radius: 50%;
   background: #ffffff;
 
-  svg { width: 20px; height: 20px; }
+  svg { width: 1.25rem; height: 1.25rem; }
   &:hover { background: #f5f5f5; }
   &:focus-visible { outline: 2px solid $blue; outline-offset: 2px; }
 }
@@ -1212,23 +1212,23 @@ button.demo-day {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 22px;
+  gap: 1.375rem;
   min-height: 0;
-  padding: 4px 4px 18px 0;
+  padding: 0.25rem 0.25rem 1.125rem 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none; // the fade at the bottom shows there's more
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 1.875rem), transparent);
 
   &::-webkit-scrollbar { display: none; }
 }
 .demo-times__group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
 }
 .demo-times__name {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -1236,16 +1236,16 @@ button.demo-day {
 }
 .demo-times__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-  gap: 13px 8px;
+  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+  gap: 0.8125rem 0.5rem;
 }
 .demo-time {
-  height: 38px;
-  padding: 0 8px;
+  height: 2.375rem;
+  padding: 0 0.5rem;
   border: 1px solid #f0e8da;
-  border-radius: 999px;
+  border-radius: 62.4375rem;
   background: $cream;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   white-space: nowrap;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
@@ -1258,24 +1258,24 @@ button.demo-day {
 .demo-back {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.375rem;
   padding: 0;
   border: 0;
   background: none;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 600;
   color: $orange;
 
-  svg { width: 18px; height: 18px; }
+  svg { width: 1.125rem; height: 1.125rem; }
   &:hover { color: $orange-ink; }
-  &:focus-visible { outline: 2px solid $blue; outline-offset: 3px; border-radius: 6px; }
+  &:focus-visible { outline: 2px solid $blue; outline-offset: 0.1875rem; border-radius: 0.375rem; }
 }
-.demo-foot--slot .demo-cta__btn.upstep-btn { min-width: 290px; height: 50px; }
+.demo-foot--slot .demo-cta__btn.upstep-btn { min-width: 18.125rem; height: 3.125rem; }
 // The picked slot, just left of the button (Back stays at the far left).
 .demo-foot__slot {
   min-width: 0;
   margin-left: auto;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.35;
   color: $text;
   text-align: right;
@@ -1289,7 +1289,7 @@ button.demo-day {
 }
 .demo-foot__error {
   justify-content: flex-end;
-  margin: 14px 0 0;
+  margin: 0.875rem 0 0;
   text-align: right;
 }
 
@@ -1310,9 +1310,9 @@ button.demo-day {
 }
 .demo-confirmed__checks {
   position: absolute;
-  top: 40px;
+  top: 2.5rem;
   right: 0;
-  width: 720px;
+  width: 45rem;
   aspect-ratio: 729 / 939;
   background: url("/images/checked-bg.png") center / contain no-repeat;
 }
@@ -1320,8 +1320,8 @@ button.demo-day {
   position: absolute;
   top: 0;
   right: 0;
-  width: 154px;
-  height: 398px;
+  width: 9.625rem;
+  height: 24.875rem;
   background: $corner;
 }
 // While the booking goes through, or if it can't be shown.
@@ -1332,28 +1332,28 @@ button.demo-day {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
-  min-height: calc(100dvh - 80px);
-  padding: 40px 24px;
+  gap: 1.125rem;
+  min-height: calc(100dvh - 5rem);
+  padding: 2.5rem 1.5rem;
   text-align: center;
   animation: demo-in 0.5s $ease both;
 
   .demo-spinner {
-    width: 34px;
-    height: 34px;
-    border-width: 3px;
+    width: 2.125rem;
+    height: 2.125rem;
+    border-width: 0.1875rem;
     color: $orange;
   }
   h1 {
     margin: 0;
     font-family: $title-font;
-    font-size: 32px;
+    font-size: 2rem;
     font-weight: 700;
     letter-spacing: -0.02em;
   }
   p {
-    max-width: 460px;
-    font-size: 15px;
+    max-width: 28.75rem;
+    font-size: 0.9375rem;
     line-height: 1.5;
     color: #474238;
     font-weight: 500;
@@ -1365,25 +1365,25 @@ button.demo-day {
   position: sticky;
   z-index: 4;
   top: 0;
-  padding: 16px 16px 0;
+  padding: 1rem 1rem 0;
   animation: demo-fade 0.5s ease both;
 }
 .demo-done__inner {
   position: relative;
-  padding: 52px 24px 72px max(24px, 13.2%);
+  padding: 3.25rem 1.5rem 4.5rem max(1.5rem, 13.2%);
 
-  .demo-main { max-width: 1016px; }
+  .demo-main { max-width: 63.5rem; }
   .demo-illustration {
-    top: 115px;
+    top: 7.1875rem;
     left: 69.3%;
-    width: min(470px, 28.5cqw);
+    width: min(29.375rem, 28.5cqw);
   }
 }
 .demo-done__lead {
-  max-width: 760px;
-  margin-top: 22px;
-  font-size: 15px;
-  line-height: 23px;
+  max-width: 47.5rem;
+  margin-top: 1.375rem;
+  font-size: 0.9375rem;
+  line-height: 1.4375rem;
   color: #474238;
   animation: demo-in 0.55s $ease 0.08s both;
 
@@ -1392,108 +1392,108 @@ button.demo-day {
 // Holds the cube outside the ticket so it can sit behind the glass.
 .demo-ticket-wrap {
   position: relative;
-  max-width: 657px;
-  margin-top: 52px;
+  max-width: 41.0625rem;
+  margin-top: 3.25rem;
 }
 .demo-ticket {
   position: relative;
   z-index: 1;
-  padding: 24px 30px 32px 33px;
+  padding: 1.5rem 1.875rem 2rem 2.0625rem;
   border: 1.5px solid #201e1d29;
-  border-radius: 28px;
+  border-radius: 1.75rem;
   // A light sheen over the peach tint reads as glass.
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 60%),
     #fbdfaf33;
-  -webkit-backdrop-filter: blur(10px) saturate(180%);
-  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(0.625rem) saturate(180%);
+  backdrop-filter: blur(0.625rem) saturate(180%);
   box-shadow:
-    0 16px 40px -18px rgba(32, 30, 29, 0.3),
+    0 1rem 2.5rem -1.125rem rgba(32, 30, 29, 0.3),
     inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
     inset 1.5px 0 0 rgba(255, 255, 255, 0.7),
-    inset 0 -10px 24px -14px rgba(251, 223, 175, 0.9);
+    inset 0 -0.625rem 1.5rem -0.875rem rgba(251, 223, 175, 0.9);
   animation: demo-in 0.6s $ease 0.12s both;
 }
 .demo-ticket__top {
   display: flex;
   align-items: flex-start;
-  gap: 23px;
+  gap: 1.4375rem;
 }
 .demo-ticket__icon {
   flex: none;
-  width: 62px;
+  width: 3.875rem;
   height: auto;
 }
 .demo-ticket__meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 8px;
-  font-size: 15px;
+  gap: 0.25rem 0.5rem;
+  font-size: 0.9375rem;
   color: #474238;
   font-weight: 500;
-  img { width: 21px; height: 21px; margin-right: -3px; }
-  span { color: $blue; font-size: 11px;  }
+  img { width: 1.3125rem; height: 1.3125rem; margin-right: -0.1875rem; }
+  span { color: $blue; font-size: 0.6875rem;  }
 }
 .demo-ticket__date {
-  margin-top: 10px;
-  font-size: 26px;
+  margin-top: 0.625rem;
+  font-size: 1.625rem;
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: -0.01em;
   color: #111111;
 }
 .demo-ticket__time {
-  margin-top: 6px;
-  font-size: 20px;
+  margin-top: 0.375rem;
+  font-size: 1.25rem;
   font-weight: 600;
 }
 .demo-ticket__child {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 40px;
-  padding-top: 28px;
+  gap: 0.5rem;
+  margin-top: 2.5rem;
+  padding-top: 1.75rem;
   border-top: 2px dashed #8db4e8;
 }
 .demo-ticket__avatar {
   display: grid;
   flex: none;
   place-items: center;
-  width: 47px;
-  height: 47px;
+  width: 2.9375rem;
+  height: 2.9375rem;
   border-radius: 50%;
   background: #f2ab2c;
   font-family: $title-font;
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 600;
   color: #ffffff;
 }
 .demo-ticket__name {
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 800;
   line-height: 1.2;
 }
 .demo-ticket__child-meta {
-  margin-top: 3px;
-  font-size: 15px;
+  margin-top: 0.1875rem;
+  font-size: 0.9375rem;
   color: #474238;
   font-weight: 500;
 
-  span { color: $blue; font-size: 11px;  }
+  span { color: $blue; font-size: 0.6875rem;  }
 }
 .demo-cube--ticket {
-  top: 152px;
-  left: -44px;
+  top: 9.5rem;
+  left: -2.75rem;
   z-index: 0;
-  width: 64px;
-  height: 64px;
+  width: 4rem;
+  height: 4rem;
   background-image: url("/images/cubes/cube-14.png");
 }
 .demo-done__subtitle {
-  margin-top: 40px;
+  margin-top: 2.5rem;
   font-family: $title-font;
-  font-size: 44px;
+  font-size: 2.75rem;
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.01em;
@@ -1501,89 +1501,89 @@ button.demo-day {
 }
 .demo-expect-wrap {
   position: relative;
-  margin-top: 36px;
+  margin-top: 2.25rem;
 }
 .demo-expect {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 325px));
-  gap: 19px;
+  grid-template-columns: repeat(3, minmax(0, 20.3125rem));
+  gap: 1.1875rem;
 
   li {
     position: relative;
     // Above the big cube, which shows through the glass blurred.
     z-index: 1;
-    min-height: 182px;
-    padding: 28px 20px 30px;
-    border-radius: 18px;
+    min-height: 11.375rem;
+    padding: 1.75rem 1.25rem 1.875rem;
+    border-radius: 1.125rem;
     background: linear-gradient(125deg, rgba(255, 255, 255, 0.3) 30%, rgba(255, 255, 255, 0.05));
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(1.5rem) saturate(160%);
+    backdrop-filter: blur(1.5rem) saturate(160%);
     box-shadow:
-      -14px -10px 30px -20px rgba(16, 24, 40, 0.14),
-      inset 3px 3px 12px -6px rgba(16, 24, 40, 0.05),
-      inset -4px -4px 14px -6px rgba(255, 255, 255, 0.9);
+      -0.875rem -0.625rem 1.875rem -1.25rem rgba(16, 24, 40, 0.14),
+      inset 0.1875rem 0.1875rem 0.75rem -0.375rem rgba(16, 24, 40, 0.05),
+      inset -0.25rem -0.25rem 0.875rem -0.375rem rgba(255, 255, 255, 0.9);
     // Staggered in on scroll (DemoConfirmed.tsx).
   }
   h3 {
-    margin-top: 6px;
-    font-size: 20px;
+    margin-top: 0.375rem;
+    font-size: 1.25rem;
     font-weight: 500;
     color: $ink;
   }
   p {
-    margin-top: 6px;
-    font-size: 16px;
-    line-height: 20px;
+    margin-top: 0.375rem;
+    font-size: 1rem;
+    line-height: 1.25rem;
     color: #616161;
     font-weight: 500;
   }
 }
 .demo-expect__num {
   display: block;
-  font-size: 42px;
+  font-size: 2.625rem;
   font-weight: 800;
   line-height: 1;
   color: transparent;
   -webkit-text-stroke: 1.2px $amber;
 }
 .demo-cube--expect-a {
-  top: 94px;
-  left: -30px;
+  top: 5.875rem;
+  left: -1.875rem;
   z-index: 2;
-  width: 38px;
-  height: 38px;
+  width: 2.375rem;
+  height: 2.375rem;
   background-image: url("/images/cubes/cube-23.png");
 }
 .demo-cube--expect-b {
-  top: -20px;
+  top: -1.25rem;
   // Tucked just behind the last card's top-right corner.
-  right: max(-62px, calc(100% - 1075px));
+  right: max(-3.875rem, calc(100% - 67.1875rem));
   z-index: 0;
-  width: 74px;
-  height: 74px;
+  width: 4.625rem;
+  height: 4.625rem;
   background-image: url("/images/cubes/cube-2.png");
   // Its blue cast reads through the card's glass as a soft smudge.
-  filter: drop-shadow(-26px 14px 20px rgba(46, 98, 196, 0.35));
+  filter: drop-shadow(-1.625rem 0.875rem 1.25rem rgba(46, 98, 196, 0.35));
 }
 .demo-cube--done {
-  top: 188px;
+  top: 11.75rem;
   left: 59%;
   display: none;
   z-index: 0;
-  width: 38px;
-  height: 38px;
+  width: 2.375rem;
+  height: 2.375rem;
   background-image: url("/images/cubes/cube-12.png");
 }
 .demo-foot--done {
-  margin-top: 54px;
-  padding-left: 8px;
+  margin-top: 3.375rem;
+  padding-left: 0.5rem;
 }
 
 // ---------- Narrower panels ----------
 // Details: the illustration shrinks, then goes; phones get one column.
 @container demo-panel (max-width: 1100px) {
   .demo-details .demo-illustration {
-    top: 300px;
+    top: 18.75rem;
     right: 0;
     width: 36cqw;
   }
@@ -1598,44 +1598,44 @@ button.demo-day {
 // (Phones scroll, with the buttons kept at the bottom; see below.)
 @media (min-width: 641px) {
   // The gap above the sheet: 100px from a 900px-tall window, down to 24px.
-  .demo-drawer { --top: clamp(24px, (100dvh - 650px) * 0.4, 100px); }
+  .demo-drawer { --top: clamp(1.5rem, (100dvh - 40.625rem) * 0.4, 6.25rem); }
 
   .demo-details {
-    padding-top: fit(20px, 43px);
-    padding-bottom: fit(16px, 42px);
+    padding-top: fit(1.25rem, 2.6875rem);
+    padding-bottom: fit(1rem, 2.625rem);
 
-    .demo-title { margin-top: fit(12px, 44px); }
-    .demo-sub { margin-top: fit(8px, 16px); }
+    .demo-title { margin-top: fit(0.75rem, 2.75rem); }
+    .demo-sub { margin-top: fit(0.5rem, 1rem); }
     .demo-form {
-      margin-top: fit(10px, 12px);
-      padding-top: fit(20px, 33px);
-      padding-bottom: fit(24px, 43px);
+      margin-top: fit(0.625rem, 0.75rem);
+      padding-top: fit(1.25rem, 2.0625rem);
+      padding-bottom: fit(1.5rem, 2.6875rem);
     }
-    .demo-form__legend { margin-bottom: fit(8px, 11px); }
-    .demo-form__row + .demo-form__row { margin-top: fit(14px, 24px); }
-    .demo-form__rule { margin: fit(16px, 27px) 0 fit(14px, 22px); }
-    .demo-trust { margin-top: fit(18px, 27px); }
+    .demo-form__legend { margin-bottom: fit(0.5rem, 0.6875rem); }
+    .demo-form__row + .demo-form__row { margin-top: fit(0.875rem, 1.5rem); }
+    .demo-form__rule { margin: fit(1rem, 1.6875rem) 0 fit(0.875rem, 1.375rem); }
+    .demo-trust { margin-top: fit(1.125rem, 1.6875rem); }
     // The illustration rises and shrinks with it, inside the sheet.
     .demo-illustration {
-      top: fit(230px, 255px);
-      max-width: fit(395px, 452px);
+      top: fit(14.375rem, 15.9375rem);
+      max-width: fit(24.6875rem, 28.25rem);
     }
     // A country list this near the foot opens upwards.
     .demo-form__row--phone .demo-pop {
       top: auto;
-      bottom: calc(100% + 8px);
+      bottom: calc(100% + 0.5rem);
       transform-origin: bottom center;
     }
   }
   @container demo-panel (max-width: 1100px) {
-    .demo-details .demo-illustration { top: fit(230px, 300px); }
+    .demo-details .demo-illustration { top: fit(14.375rem, 18.75rem); }
   }
 }
 
 // Date and time: on wide panels the heading runs a little past the calendar,
 // as in the design.
 @container demo-panel (min-width: 1241px) {
-  .demo-slot .demo-title { margin-right: -110px; }
+  .demo-slot .demo-title { margin-right: -6.875rem; }
 }
 // The illustration goes and the calendar takes the width, then the
 // columns stack (slot summary under the calendar, before the button).
@@ -1648,20 +1648,20 @@ button.demo-day {
 @container demo-panel (max-width: 1240px) {
   .demo-slot {
     // grid-template-columns: 290px minmax(0, 1fr);
-    column-gap: 40px;
+    column-gap: 2.5rem;
   }
 }
 @container demo-panel (max-width: 900px) {
   .demo-slot {
     grid-template-columns: minmax(0, 1fr);
-    padding-right: 58px;
+    padding-right: 3.625rem;
 
     .demo-main { display: contents; }
     .demo-steps { order: 1; }
     .demo-title { order: 2; }
     .demo-tz { order: 3; }
     .demo-cal-wrap { order: 4; }
-    .demo-info { order: 5; margin-top: 28px; }
+    .demo-info { order: 5; margin-top: 1.75rem; }
     .demo-foot__error { order: 6; }
     .demo-foot { order: 7; }
   }
@@ -1682,9 +1682,9 @@ button.demo-day {
   }
   .demo-times {
     position: relative;
-    max-height: 380px;
-    margin-top: 22px;
-    padding: 20px 0 0;
+    max-height: 23.75rem;
+    margin-top: 1.375rem;
+    padding: 1.25rem 0 0;
     border-top: 1px solid $rule;
     border-left: 0;
   }
@@ -1708,45 +1708,45 @@ button.demo-day {
 }
 @container demo-panel (max-width: 900px) {
   .demo-expect { grid-template-columns: minmax(0, 1fr); }
-  .demo-cube--expect-b { right: -40px; }
+  .demo-cube--expect-b { right: -2.5rem; }
 }
 
 // ---------- Phones ----------
 @media (max-width: 640px) {
-  .demo-drawer { padding: 0 8px; }
-  .demo-drawer__panel { border-radius: 28px 28px 0 0; }
+  .demo-drawer { padding: 0 0.5rem; }
+  .demo-drawer__panel { border-radius: 1.75rem 1.75rem 0 0; }
   .demo-drawer__corner {
     transform: scale(0.55);
     transform-origin: top right;
   }
   .demo-drawer__close {
-    top: 6px;
-    right: 10px;
+    top: 0.375rem;
+    right: 0.625rem;
 
-    svg { width: 24px; height: 24px; }
+    svg { width: 1.5rem; height: 1.5rem; }
   }
-  .demo-drawer__checks { width: 420px; opacity: 0.55; }
+  .demo-drawer__checks { width: 26.25rem; opacity: 0.55; }
 
   .demo-steps__item {
-    gap: 8px;
-    font-size: 13px;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
 
-    & + &::before { width: 16px; }
+    & + &::before { width: 1rem; }
   }
-  .demo-steps__dot { width: 24px; height: 24px; font-size: 12px; }
+  .demo-steps__dot { width: 1.5rem; height: 1.5rem; font-size: 0.75rem; }
   // Only the current step is named; the others are their numbers.
   .demo-steps__item:not(.is-current) .demo-steps__label { display: none; }
   .demo-confirmed .demo-steps__item:last-child .demo-steps__label { display: inline; }
-  .demo-sub { margin-top: 10px; }
+  .demo-sub { margin-top: 0.625rem; }
 
   // No padding under the sticky button bar: it ends the sheet, flush with the
   // screen's bottom, with nothing showing through below it.
-  .demo-details { padding: 28px 16px 0; }
-  .demo-form { padding: 24px 18px 28px; }
-  .demo-form__legend { font-size: 19px; }
+  .demo-details { padding: 1.75rem 1rem 0; }
+  .demo-form { padding: 1.5rem 1.125rem 1.75rem; }
+  .demo-form__legend { font-size: 1.1875rem; }
   .demo-form__row,
-  .demo-form__row--phone { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
-  .demo-form__row + .demo-form__row { margin-top: 14px; }
+  .demo-form__row--phone { grid-template-columns: minmax(0, 1fr); row-gap: 0.875rem; }
+  .demo-form__row + .demo-form__row { margin-top: 0.875rem; }
   .demo-form__row--phone .demo-add { justify-self: start; height: auto; }
   .demo-cube--form { display: none; }
   // Each step's buttons stay at the bottom of the screen, on frosted white
@@ -1755,13 +1755,13 @@ button.demo-day {
     position: sticky;
     z-index: 5;
     bottom: 0;
-    margin: 20px -16px 0;
-    padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
+    margin: 1.25rem -1rem 0;
+    padding: 0.75rem 1rem calc(0.875rem + env(safe-area-inset-bottom));
     border-top: 1px solid rgba(16, 24, 40, 0.06);
     background: rgba(255, 255, 255, 0.88);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
-    backdrop-filter: blur(16px) saturate(1.4);
-    box-shadow: 0 -10px 24px rgba(16, 24, 40, 0.08);
+    -webkit-backdrop-filter: blur(1rem) saturate(1.4);
+    backdrop-filter: blur(1rem) saturate(1.4);
+    box-shadow: 0 -0.625rem 1.5rem rgba(16, 24, 40, 0.08);
   }
   // An open list (age, level, country code) hangs over the bar.
   .demo-drawer:has(.demo-pop) .demo-foot { z-index: 1; }
@@ -1769,7 +1769,7 @@ button.demo-day {
     order: 2;
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
+    gap: 0.625rem;
   }
   // The trust strip comes before the sticky button bar.
   .demo-details .demo-main {
@@ -1778,7 +1778,7 @@ button.demo-day {
   }
   .demo-details .demo-trust {
     order: 1;
-    margin-top: 20px;
+    margin-top: 1.25rem;
   }
   .demo-cta,
   .demo-cta__btn.upstep-btn { width: 100%; min-width: 0; }
@@ -1786,16 +1786,16 @@ button.demo-day {
   .demo-trust {
     justify-content: flex-start;
     margin-left: 0;
-    padding: 12px 18px;
-    border-radius: 22px;
+    padding: 0.75rem 1.125rem;
+    border-radius: 1.375rem;
   }
 
   // As on the details step: the sticky bar ends the sheet, flush with the bottom.
-  .demo-slot { padding: 28px 16px 0; }
-  .demo-cal { padding: 22px 14px 18px; }
-  .demo-cal__head { padding-left: 6px; }
+  .demo-slot { padding: 1.75rem 1rem 0; }
+  .demo-cal { padding: 1.375rem 0.875rem 1.125rem; }
+  .demo-cal__head { padding-left: 0.375rem; }
   .demo-cal__cell,
-  .demo-day { height: 42px; }
+  .demo-day { height: 2.625rem; }
   .demo-cube--cal-a,
   .demo-cube--cal-b { display: none; }
   // Back and Confirm side by side, so the bar stays short.
@@ -1803,16 +1803,16 @@ button.demo-day {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px 18px;
+    gap: 0.5rem 1.125rem;
 
     // Just the arrow, in a full-size tap target that keeps it at the left edge;
     // the label stays for screen readers.
     .demo-back {
       flex: none;
       justify-content: center;
-      width: 44px;
-      height: 44px;
-      margin-left: -13px;
+      width: 2.75rem;
+      height: 2.75rem;
+      margin-left: -0.8125rem;
     }
     .demo-back__label {
       position: absolute;
@@ -1827,24 +1827,24 @@ button.demo-day {
       order: -1;
       flex-basis: 100%;
       margin-left: 0;
-      font-size: 14px;
+      font-size: 0.875rem;
       text-align: center;
     }
     .demo-cta { flex: 1; min-width: 0; }
-    .demo-cta__btn.upstep-btn { padding: 0 14px; font-size: 16px; }
+    .demo-cta__btn.upstep-btn { padding: 0 0.875rem; font-size: 1rem; }
   }
-  .demo-info { padding: 24px 18px 20px; }
+  .demo-info { padding: 1.5rem 1.125rem 1.25rem; }
 
-  .demo-done__inner { padding: 28px 16px 48px; }
+  .demo-done__inner { padding: 1.75rem 1rem 3rem; }
   .demo-confirmed__corner { display: none; }
-  .demo-confirmed__checks { width: 420px; }
-  .demo-done__subtitle { font-size: 30px; }
-  .demo-ticket { padding: 22px 18px 24px; }
-  .demo-ticket__top { gap: 14px; }
-  .demo-ticket__icon { width: 44px; }
-  .demo-ticket__date { font-size: 20px; }
-  .demo-ticket__time { font-size: 17px; }
-  .demo-ticket__child { margin-top: 24px; padding-top: 20px; }
+  .demo-confirmed__checks { width: 26.25rem; }
+  .demo-done__subtitle { font-size: 1.875rem; }
+  .demo-ticket { padding: 1.375rem 1.125rem 1.5rem; }
+  .demo-ticket__top { gap: 0.875rem; }
+  .demo-ticket__icon { width: 2.75rem; }
+  .demo-ticket__date { font-size: 1.25rem; }
+  .demo-ticket__time { font-size: 1.0625rem; }
+  .demo-ticket__child { margin-top: 1.5rem; padding-top: 1.25rem; }
   .demo-cube--ticket,
   .demo-cube--expect-a,
   .demo-cube--expect-b { display: none; }
@@ -1857,7 +1857,7 @@ button.demo-day {
   .demo-field input,
   .demo-code,
   .demo-pop__search input {
-    font-size: 16px;
+    font-size: 1rem;
   }
 }
 

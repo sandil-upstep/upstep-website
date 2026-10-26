@@ -55,6 +55,17 @@
   }
 } */
 
+/* Past the 1440px desktop the root size grows with the viewport (16px at
+   1440, 21.33px at 1920, 28.44px at 2560; up to 3840), so rem-sized type and
+   spacing keep their proportions on large or zoomed-out screens instead of
+   shrinking against the page. Written as 100% plus a delta to keep honoring
+   the browser's default font size. */
+@media (min-width: 1440px) {
+  html {
+    font-size: calc(100% + (min(100vw, 3840px) - 1440px) / 90);
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

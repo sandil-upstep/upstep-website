@@ -1,6 +1,5 @@
 // The site's dark navy (as in anandSection.scss); the reference uses pure black.
 $bg: #071025;
-$fg: #ededed;
 
 // Lock scrolling from the very first paint, before any script runs, until the
 // curtain starts to leave. Lenis is held separately (SmoothScroll.tsx), since
@@ -39,11 +38,6 @@ html:has(.preloader:not(.is-leaving)) {
   &--top {
     top: 0;
     z-index: 1;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: clamp(1rem, 3vh, 2rem);
-    color: $fg;
   }
 
   &--bottom {
@@ -51,51 +45,9 @@ html:has(.preloader:not(.is-leaving)) {
   }
 }
 
-// Everything that moves is promoted to its own layer from the first paint, so
-// the animations start without a repaint hitch.
-.preloader__counter,
-.preloader__reel,
-.preloader__bar-fill {
-  will-change: transform;
-}
-
-.preloader__counter {
-  display: flex;
-  font-family: var(--font-sans);
-  font-size: 50px;
-  // Plus Jakarta Sans only goes down to 200, so this renders at 200.
-  font-weight: 100;
-  line-height: 1;
-  letter-spacing: -0.03em;
-
-  @media (max-width: 640px) {
-    font-size: 30px;
-  }
-}
-
-// One digit's window, with its reel of cells rolling up through it. Fixed at
-// the width of a "0" so the number never shifts sideways as digits change;
-// blank leading slots keep their width, and the counter's centring shift
-// (Preloader.tsx) makes up for them.
-.preloader__slot {
-  width: 1ch;
-  height: 1em;
-  overflow: hidden;
-  text-align: center;
-}
-
-.preloader__reel,
-.preloader__cell {
-  display: block;
-}
-
-.preloader__cell {
-  height: 1em;
-}
-
 // The thin white progress bar across the top half's lower edge, centred on
 // the screen's vertical middle (the half runs a pixel past it), filling from
-// the left as the counter climbs.
+// the left as the page loads.
 .preloader__bar {
   position: absolute;
   left: 0;
@@ -111,4 +63,6 @@ html:has(.preloader:not(.is-leaving)) {
   background: #fff;
   transform: scaleX(0);
   transform-origin: left;
+  // Its own layer from the first paint, so the fill starts without a hitch.
+  will-change: transform;
 }

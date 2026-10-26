@@ -2,14 +2,14 @@ $btn-orange-light: #ff7a2b;
 $btn-orange: #f8661a;
 $btn-orange-dark: #ec5a0f;
 $btn-text: #ffffff;
-$btn-radius: 10px;
+$btn-radius: 0.625rem;
 
 .upstep-btn {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 0.5rem;
   overflow: hidden;
   isolation: isolate;
 
@@ -31,8 +31,8 @@ $btn-radius: 10px;
   cursor: pointer;
 
   box-shadow:
-    0 10px 30px -6px rgba($btn-orange, 0.35),
-    0 4px 12px -4px rgba($btn-orange-dark, 0.3);
+    0 0.625rem 1.875rem -0.375rem rgba($btn-orange, 0.35),
+    0 0.25rem 0.75rem -0.25rem rgba($btn-orange-dark, 0.3);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
@@ -59,8 +59,8 @@ $btn-radius: 10px;
   &:hover {
     transform: translateY(-2px);
     box-shadow:
-      0 16px 36px -8px rgba($btn-orange, 0.45),
-      0 6px 16px -4px rgba($btn-orange-dark, 0.35);
+      0 1rem 2.25rem -0.5rem rgba($btn-orange, 0.45),
+      0 0.375rem 1rem -0.25rem rgba($btn-orange-dark, 0.35);
 
     &::before {
       background-position: 0% 0;
@@ -73,8 +73,8 @@ $btn-radius: 10px;
   }
 
   &:focus-visible {
-    outline: 3px solid rgba($btn-orange, 0.45);
-    outline-offset: 3px;
+    outline: 0.1875rem solid rgba($btn-orange, 0.45);
+    outline-offset: 0.1875rem;
   }
 
   &:disabled,
@@ -87,17 +87,17 @@ $btn-radius: 10px;
 
   // Sizes
   &--sm {
-    padding: 10px 20px;
+    padding: 0.625rem 1.25rem;
     font-size: 0.9375rem;
   }
 
   &--md {
-    padding: 16px 30px;
+    padding: 1rem 1.875rem;
     font-size: 1.25rem;
   }
 
   &--lg {
-    padding: 20px 40px;
+    padding: 1.25rem 2.5rem;
     font-size: 1.5rem;
   }
 
@@ -107,12 +107,12 @@ $btn-radius: 10px;
 
   @media (max-width: 640px) {
     &--md {
-      padding: 14px 24px;
+      padding: 0.875rem 1.5rem;
       font-size: 1.0625rem;
     }
 
     &--lg {
-      padding: 16px 30px;
+      padding: 1rem 1.875rem;
       font-size: 1.25rem;
     }
   }

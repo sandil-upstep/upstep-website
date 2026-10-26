@@ -609,7 +609,7 @@ export default function HeroSection() {
     >
       {/* The copy column runs a little wider than half on desktop: the title
           is meant to reach in past the frame line, as in the design. */}
-      <div className="min-h-[780px] mx-auto grid w-full max-w-full grid-cols-1 items-center sm:gap-1 px-4 pt-24 pb-12 sm:px-10 sm:pt-32 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-16 lg:px-[clamp(2.5rem,4vw,5rem)] lg:pt-[clamp(8rem,10vw,12rem)] lg:pb-24">
+      <div className="min-h-[48.75rem] mx-auto grid w-full max-w-full grid-cols-1 items-center sm:gap-1 px-4 pt-24 pb-12 sm:px-10 sm:pt-32 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-16 lg:px-[clamp(2.5rem,4vw,5rem)] lg:pt-[clamp(8rem,10vw,12rem)] lg:pb-24">
         {/* Left: copy */}
         {/* Desktop gaps shrink with the viewport, like the rest of the
             design, so the copy clears the card row on 1280-1440 laptops. */}
@@ -633,7 +633,7 @@ export default function HeroSection() {
             <div className="relative inline-flex self-start mx-3">
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 -translate-x-2.5 translate-y-2.5 rounded-[10px] border border-[#B4511D]"
+                className="pointer-events-none absolute inset-0 -translate-x-2.5 translate-y-2.5 rounded-[0.625rem] border border-[#B4511D]"
               />
               <Button className="relative z-10" onClick={openDemoBooking}>
                 Book a FREE demo today!

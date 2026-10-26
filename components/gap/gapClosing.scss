@@ -8,12 +8,12 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  padding: clamp(24px, 4.2cqw, 84px);
+  padding: clamp(1.5rem, 4.2cqw, 5.25rem);
   border-radius: var(--radius);
   background: $navy;
   color: #ffffff;
 
-  .gap-head { margin-bottom: clamp(24px, 2cqw, 40px); }
+  .gap-head { margin-bottom: clamp(1.5rem, 2cqw, 2.5rem); }
   .gap-title { max-width: 13em; }
 }
 
@@ -24,7 +24,7 @@
   right: -8%;
   width: 46%;
   aspect-ratio: 1;
-  @include checker(clamp(40px, 3.3cqw, 64px));
+  @include checker(clamp(2.5rem, 3.3cqw, 4rem));
   -webkit-mask-image: radial-gradient(circle, #000 15%, transparent 68%);
   mask-image: radial-gradient(circle, #000 15%, transparent 68%);
 }
@@ -32,8 +32,8 @@
   position: absolute;
   z-index: -1;
   right: 14%;
-  bottom: clamp(-150px, -9cqw, -80px);
-  width: clamp(160px, 15cqw, 280px);
+  bottom: clamp(-9.375rem, -9cqw, -5rem);
+  width: clamp(10rem, 15cqw, 17.5rem);
   aspect-ratio: 1;
   border-radius: 50%;
   background: linear-gradient(160deg, $gold 0%, $amber 55%, $gold-deep 100%);
@@ -42,9 +42,9 @@
 .gap-closing__cube {
   position: absolute;
   z-index: -1;
-  top: clamp(28px, 3cqw, 56px);
-  right: clamp(28px, 4cqw, 80px);
-  width: clamp(34px, 2.8cqw, 54px);
+  top: clamp(1.75rem, 3cqw, 3.5rem);
+  right: clamp(1.75rem, 4cqw, 5rem);
+  width: clamp(2.125rem, 2.8cqw, 3.375rem);
   height: auto;
   transform: rotate(16deg);
 }
@@ -54,12 +54,12 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 20px 28px;
-  padding-left: 8px;
+  gap: 1.25rem 1.75rem;
+  padding-left: 0.5rem;
 }
 
 @media (max-width: 767.98px) {
-  .gap-closing__sun { right: -40px; }
+  .gap-closing__sun { right: -2.5rem; }
 }
 
 // Full-width buttons, from where the site's button goes full width

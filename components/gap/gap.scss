@@ -8,13 +8,13 @@
 @keyframes gap-in {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(0.75rem);
   }
 }
 @keyframes gap-pulse {
   0%,
   100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6); }
-  50% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
+  50% { box-shadow: 0 0 0 0.375rem rgba(255, 255, 255, 0); }
 }
 
 // ---------- Page ----------
@@ -32,7 +32,7 @@
 .gap {
   --off: 4.64cqw;
   --w: 69.18cqw;
-  --radius: clamp(18px, 1.46cqw, 28px);
+  --radius: clamp(1.125rem, 1.46cqw, 1.75rem);
   --gap-bg: #ffffff;
   --gap-fg: #{$ink};
   --gap-line: #{$line};
@@ -60,12 +60,12 @@
   }
 
   @media (max-width: 1199.98px) {
-    --off: 20px;
-    --w: calc(100cqw - 96px);
+    --off: 1.25rem;
+    --w: calc(100cqw - 6rem);
   }
   @media (max-width: 767.98px) {
-    --off: 16px;
-    --w: calc(100cqw - 64px);
+    --off: 1rem;
+    --w: calc(100cqw - 4rem);
   }
 }
 
@@ -78,7 +78,7 @@
 
 .gap-section {
   position: relative;
-  padding: clamp(72px, 6.25cqw, 120px) 0;
+  padding: clamp(4.5rem, 6.25cqw, 7.5rem) 0;
 
   // Phones: less between sections, where the screen is mostly content.
   @media (max-width: 767.98px) { padding: 56px 0; }
@@ -119,7 +119,7 @@
 // ---------- Section heads ----------
 // Eyebrow, then the outlined headline, both on the outer grid line.
 .gap-head {
-  margin-bottom: clamp(32px, 2.6cqw, 52px);
+  margin-bottom: clamp(2rem, 2.6cqw, 3.25rem);
 }
 // A head with something beside it (the schedule's time zone).
 .gap-head--split {
@@ -127,17 +127,17 @@
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 24px 40px;
+  gap: 1.5rem 2.5rem;
 }
 
 .gap-eyebrow {
   position: relative;
-  margin: 0 0 clamp(14px, 1.1cqw, 22px);
-  padding-left: 15px;
+  margin: 0 0 clamp(0.875rem, 1.1cqw, 1.375rem);
+  padding-left: 0.9375rem;
   font-family: $title-font;
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 600;
-  line-height: 28px;
+  line-height: 1.75rem;
   color: var(--gap-eyebrow);
   transition: color $theme-transition;
 }
@@ -145,8 +145,8 @@
   position: absolute;
   left: 0;
   top: 0;
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
   border: 1px solid $eyebrow-box;
 }
 
@@ -171,8 +171,8 @@
 
 .gap-lead {
   max-width: 38em;
-  margin: clamp(16px, 1.25cqw, 24px) 0 0;
-  font-size: clamp(16px, 1.04cqw, 20px);
+  margin: clamp(1rem, 1.25cqw, 1.5rem) 0 0;
+  font-size: clamp(1rem, 1.04cqw, 1.25rem);
   line-height: 1.55;
   color: var(--gap-muted);
   text-wrap: pretty;
@@ -202,14 +202,14 @@
   flex: none;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  height: 49px;
-  padding: 0 24px;
+  gap: 0.5rem;
+  height: 3.0625rem;
+  padding: 0 1.5rem;
   border: 1px solid rgba($ink, 0.2);
-  border-radius: 10px;
+  border-radius: 0.625rem;
   background: transparent;
   color: $ink;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 600;
   line-height: 1.2;
   text-decoration: none;
@@ -249,13 +249,13 @@
   color: $orange-ink;
   text-decoration: underline;
   text-decoration-color: transparent;
-  text-underline-offset: 3px;
+  text-underline-offset: 0.1875rem;
   transition: text-decoration-color 0.2s ease;
 
   &:hover { text-decoration-color: currentColor; }
   &:focus-visible {
     @include focus-ring;
-    border-radius: 4px;
+    border-radius: 0.25rem;
   }
 }
 
@@ -263,18 +263,18 @@
 // One of a few (currency, rating site): the drawer's blue for the pick.
 .gap-seg {
   display: inline-flex;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 999px;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 62.4375rem;
   background: #f4f4f4;
 }
 .gap-seg__opt {
-  min-height: 40px;
-  padding: 0 5px;
+  min-height: 2.5rem;
+  padding: 0 0.3125rem;
   border: 0;
-  border-radius: 999px;
+  border-radius: 62.4375rem;
   background: transparent;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: $text;
   white-space: nowrap;
@@ -308,13 +308,13 @@
 .gap-check {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
   width: 100%;
-  padding: 13px 18px;
+  padding: 0.8125rem 1.125rem;
   border: 1px solid $field-line;
-  border-radius: 16px;
+  border-radius: 1rem;
   background: #ffffff;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.35;
   color: $ink;
@@ -335,8 +335,8 @@
   display: grid;
   flex: none;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
   border: 1.5px solid #c9c9c9;
   border-radius: 50%;
   background: #ffffff;
@@ -345,7 +345,7 @@
     background-color 0.15s ease,
     border-color 0.15s ease;
 
-  svg { width: 14px; height: 14px; }
+  svg { width: 0.875rem; height: 0.875rem; }
 
   [aria-pressed="true"] > & {
     border-color: $blue;
@@ -359,11 +359,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 0.75rem;
   width: 100%;
-  padding: 16px 20px;
+  padding: 1rem 1.25rem;
   border: 1.5px solid $card-line;
-  border-radius: 20px;
+  border-radius: 1.25rem;
   background: #ffffff;
   color: $ink;
   text-align: left;
@@ -386,23 +386,23 @@
 }
 .gap-batch__name {
   font-family: $title-font;
-  font-size: clamp(18px, 1.15cqw, 22px);
+  font-size: clamp(1.125rem, 1.15cqw, 1.375rem);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 .gap-batch__note {
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
   color: $muted;
 }
 .gap-batch__dot {
   flex: none;
-  width: 22px;
-  height: 22px;
+  width: 1.375rem;
+  height: 1.375rem;
   border: 2px solid $blue;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: inset 0 0 0 4px #ffffff;
+  box-shadow: inset 0 0 0 0.25rem #ffffff;
   transition: background-color 0.15s ease;
 
   [aria-pressed="true"] > & { background: $blue; }
@@ -412,14 +412,14 @@
 .gap-switch {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 0.875rem;
   width: 100%;
-  padding: 14px 18px;
+  padding: 0.875rem 1.125rem;
   border: 0;
-  border-radius: 18px;
+  border-radius: 1.125rem;
   background: rgba(255, 255, 255, 0.07);
   color: #ffffff;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.4;
   text-align: left;
   transition: background-color 0.2s ease;
@@ -432,19 +432,19 @@
 .gap-switch__track {
   position: relative;
   flex: none;
-  width: 46px;
-  height: 28px;
-  border-radius: 999px;
+  width: 2.875rem;
+  height: 1.75rem;
+  border-radius: 62.4375rem;
   background: rgba(255, 255, 255, 0.2);
   transition: background-color 0.2s ease;
 
   &::after {
     content: "";
     position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 22px;
-    height: 22px;
+    top: 0.1875rem;
+    left: 0.1875rem;
+    width: 1.375rem;
+    height: 1.375rem;
     border-radius: 50%;
     background: #ffffff;
     transition: transform 0.2s $ease;
@@ -452,7 +452,7 @@
   [aria-checked="true"] > & {
     background: $amber;
 
-    &::after { transform: translateX(18px); }
+    &::after { transform: translateX(1.125rem); }
   }
 }
 
@@ -463,7 +463,7 @@
 .gap-pill {
   position: fixed;
   z-index: 40;
-  bottom: 24px;
+  bottom: 1.5rem;
   left: 50%;
   translate: -50% 0;
   transition:
@@ -474,7 +474,7 @@
   &:not(.is-shown) {
     opacity: 0;
     visibility: hidden;
-    transform: translateY(24px) scale(0.95);
+    transform: translateY(1.5rem) scale(0.95);
     pointer-events: none;
     transition:
       opacity 0.3s ease,
@@ -483,15 +483,15 @@
   }
 
   .upstep-btn {
-    height: 52px;
-    padding: 0 24px 0 20px;
-    border-radius: 999px;
-    font-size: 16px;
+    height: 3.25rem;
+    padding: 0 1.5rem 0 1.25rem;
+    border-radius: 62.4375rem;
+    font-size: 1rem;
   }
 
   @media (max-width: 480px) {
-    left: 16px;
-    right: 88px;
+    left: 1rem;
+    right: 5.5rem;
     translate: none;
 
     .upstep-btn { width: 100%; }
@@ -499,13 +499,13 @@
   // Desktop: at the right, beside the scroll-to-top button (52px, 24px in).
   @media (min-width: 1024px) {
     left: auto;
-    right: 88px;
+    right: 5.5rem;
     translate: none;
   }
 }
 .gap-pill__dot {
-  width: 8px;
-  height: 8px;
+  width: 0.5rem;
+  height: 0.5rem;
   border-radius: 50%;
   background: #ffffff;
   animation: gap-pulse 2s ease-in-out infinite;
