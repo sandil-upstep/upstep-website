@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Open_Sans } from "next/font/google";
 import AnandSliderPin from "./AnandSliderPin";
+import AnandVideo from "./AnandVideo";
 import AnandYears from "./AnandYears";
 import Eyebrow from "./Eyebrow";
 import RevealTitle from "./RevealTitle";
@@ -20,6 +21,8 @@ const CHAMPIONSHIP_YEARS = ["2012", "2010", "2008", "2007", "2000"];
 const CERTIFICATE_SRC = "/images/certificate.png";
 const PORTRAIT_SRC = "/images/anand-video-thumb.png";
 const CROWN_SRC = "/images/crown.svg";
+// TODO: a placeholder (the GAP preview video) until GM Anand's own is published.
+const ANAND_VIDEO_ID = "XHOmBV4js_E";
 // depth: how far each drifts with the scroll (see CubeParallax).
 const CUBES = [
   { src: "/images/cubes/cube-1.png", depth: 0.4 },
@@ -123,11 +126,7 @@ export default function AnandSection() {
                 descriptionClassName="anand__card-text"
               />
             </div>
-            <button className="anand__play" type="button" aria-label="Watch video">
-              <svg viewBox="0 0 18 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round">
-                <path d="M1.5 1.8v16.4L16.5 10 1.5 1.8z" />
-              </svg>
-            </button>
+            <AnandVideo videoId={ANAND_VIDEO_ID} title="GM Viswanathan Anand on UpStep Academy" />
           </div>
 
           <div className="anand__champ">

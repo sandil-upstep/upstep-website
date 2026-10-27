@@ -1,0 +1,75 @@
+// AnandVideo's modal: a 16:9 player centred over the dimmed, blurred page.
+
+$navy: #071025;
+
+@keyframes anand-video-fade { from { opacity: 0; } }
+@keyframes anand-video-in { from { opacity: 0; transform: scale(0.96); } }
+
+// The dialog is the whole window (a click on it, beside the video, closes it).
+.anand-video {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 1rem;
+  border: 0;
+  background: transparent;
+  overflow: hidden;
+
+  &[open] { display: grid; place-items: center; }
+
+  &::backdrop {
+    background: rgba($navy, 0.75);
+    -webkit-backdrop-filter: blur(0.625rem);
+    backdrop-filter: blur(0.625rem);
+    animation: anand-video-fade 0.3s ease both;
+  }
+}
+
+.anand-video__frame {
+  position: relative;
+  width: min(100%, 70rem, (100dvh - 8rem) * 16 / 9);
+  aspect-ratio: 16 / 9;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.5);
+  animation: anand-video-in 0.35s ease both;
+
+  iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+}
+
+.anand-video__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover { background: rgba(255, 255, 255, 0.2); }
+  &:focus-visible { outline: 2px solid #3d6df2; outline-offset: 0.1875rem; }
+
+  svg { width: 1rem; height: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anand-video::backdrop,
+  .anand-video__frame { animation: none; }
+}
