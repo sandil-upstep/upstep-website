@@ -96,6 +96,10 @@ $tint: #f7f8fa;
     mask-image: none;
     animation: none;
   }
+  // Phones go straight into the text.
+  @media (max-width: 767.98px) {
+    display: none;
+  }
 
   ol {
     display: grid;
