@@ -481,6 +481,7 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
     // Lighter than what's typed, so a filled field reads apart from an empty one.
     &::placeholder {
       color: $muted;
+      font-weight: 500;
       opacity: 1;
     }
     // The browser's autofill paints its own (blue) fill and text colour on
@@ -530,7 +531,7 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
     white-space: nowrap;
   }
   // Nothing picked yet: its label is a placeholder, like the inputs'.
-  &:not(.is-filled) span { color: $muted; }
+  &:not(.is-filled) span { color: $muted; font-weight: 500; }
 }
 .demo-chevron {
   flex: none;
@@ -573,6 +574,26 @@ $title-font: var(--font-open-sans), system-ui, sans-serif;
   svg { width: 1.125rem; height: 1.125rem; color: $orange; }
   &:hover { color: $orange-ink; }
   &:focus-visible { outline: 2px solid $blue; outline-offset: 0.1875rem; border-radius: 0.375rem; }
+}
+// The ✕ at the end of a field that can be taken away (the other number).
+.demo-remove {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: -0.375rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: $muted;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+
+  svg { width: 1rem; height: 1rem; }
+  &:hover { color: $orange-ink; background: rgba(245, 99, 24, 0.08); }
+  &:focus-visible { outline: 2px solid $blue; outline-offset: 1px; }
 }
 .demo-error {
   display: flex;

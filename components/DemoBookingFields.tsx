@@ -158,6 +158,7 @@ export function PhoneField({
   error,
   autoFocus,
   onLeave,
+  onRemove,
 }: {
   id: string;
   name: string;
@@ -175,6 +176,7 @@ export function PhoneField({
   error?: string | false;
   autoFocus?: boolean;
   onLeave?: () => void;
+  onRemove?: () => void; // shows a ✕ that takes the field away
 }) {
   const cc = countryFor(code);
   // Going to the country code, or its list, isn't leaving the field.
@@ -214,6 +216,13 @@ export function PhoneField({
           onChange={(e) => onChange(e.target.value)}
           onBlur={blur}
         />
+        {onRemove && (
+          <button type="button" className="demo-remove" aria-label={`Remove ${label.toLowerCase()}`} onClick={onRemove}>
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+              <path d="m6.5 6.5 7 7m0-7-7 7" />
+            </svg>
+          </button>
+        )}
       </div>
       {open && (
         <div className="demo-pop demo-pop--codes" role="group" aria-label="Country code">

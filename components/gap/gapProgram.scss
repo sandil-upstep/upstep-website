@@ -167,8 +167,33 @@
   width: 70%;
   aspect-ratio: 1;
   @include checker(clamp(2.25rem, 2.8cqw, 3.5rem));
+  background-position: right bottom;
   -webkit-mask-image: radial-gradient(circle at 60% 60%, #000 20%, transparent 70%);
   mask-image: radial-gradient(circle at 60% 60%, #000 20%, transparent 70%);
+}
+// Hovered, the checkerboard shows through around the pointer (GapProgram
+// sets --mx/--my). It shares the corner checker's bottom-right corner and
+// anchors its squares there, so the two are one grid, and it reaches back to
+// the panel's top-left, which --mx/--my are measured from.
+.gap-module__spot {
+  --r: clamp(7rem, 9cqw, 11rem);
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  right: -12%;
+  bottom: -24%;
+  @include checker(clamp(2.25rem, 2.8cqw, 3.5rem));
+  background-position: right bottom;
+  -webkit-mask-image: radial-gradient(circle var(--r) at var(--mx, 50%) var(--my, 50%), #000 35%, transparent);
+  mask-image: radial-gradient(circle var(--r) at var(--mx, 50%) var(--my, 50%), #000 35%, transparent);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+
+  @media (hover: hover) and (pointer: fine) {
+    .gap-module:hover & { opacity: 1; }
+  }
 }
 // The module's 3D icon, in the top corner (the meta and title keep clear).
 .gap-module__icon {

@@ -82,6 +82,8 @@ export default function DemoBookingDrawer() {
   const [tried, setTried] = useState(false);
   const { touch, clear: clearTouched, shown } = useTouched<keyof Details>();
   const [showPhone2, setShowPhone2] = useState(false);
+  const addPhone2Ref = useRef<HTMLButtonElement>(null);
+  const focusAddPhone2 = useRef(false);
   const [pop, setPop] = useState<Pop | null>(null);
   const [q, setQ] = useState("");
 
@@ -231,6 +233,20 @@ export default function DemoBookingDrawer() {
   const valid = Object.keys(errors).length === 0;
   const err = shown(errors, tried);
   const set = (k: keyof Details) => (v: string) => setF((prev) => ({ ...prev, [k]: v }));
+
+  // Takes the other number away, emptied, and puts the focus back on the
+  // button that adds it.
+  const removePhone2 = () => {
+    setF((prev) => ({ ...prev, phone2: "", code2: prev.code }));
+    if (pop === "code2") setPop(null);
+    focusAddPhone2.current = true;
+    setShowPhone2(false);
+  };
+  useEffect(() => {
+    if (showPhone2 || !focusAddPhone2.current) return;
+    focusAddPhone2.current = false;
+    addPhone2Ref.current?.focus({ preventScroll: true });
+  }, [showPhone2]);
   // What each field's error says.
   const letters = "Use letters only";
   const validNumber = (iso: string) => {
@@ -566,10 +582,11 @@ export default function DemoBookingDrawer() {
                             close={() => setPop(null)}
                             error={msg.phone2}
                             onLeave={touch("phone2")}
+                            onRemove={removePhone2}
                             autoFocus
                           />
                         ) : (
-                          <button type="button" className="demo-add" onClick={() => setShowPhone2(true)}>
+                          <button ref={addPhone2Ref} type="button" className="demo-add" onClick={() => setShowPhone2(true)}>
                             <svg
                               viewBox="0 0 20 20"
                               fill="none"

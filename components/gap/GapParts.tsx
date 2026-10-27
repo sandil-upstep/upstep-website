@@ -41,7 +41,7 @@ export function GapHead({
 }) {
   const head = (
     <div>
-      <Eyebrow className="gap-eyebrow" boxClassName="gap-eyebrow__box">
+      <Eyebrow className="gap-eyebrow" boxClassName="gap-eyebrow__box" rotate={45}>
         {eyebrow}
       </Eyebrow>
       <RevealTitle className="gap-title" id={id}>

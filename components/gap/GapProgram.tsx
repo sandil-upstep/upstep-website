@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, type PointerEvent } from "react";
 import Image from "next/image";
 import { GapHead, GapLines, useReveal } from "./GapParts";
 import { FREE_HOURS, MODULES, TOTAL_HOURS } from "./gapData";
@@ -13,6 +13,16 @@ export default function GapProgram() {
   const [picked, setPicked] = useState(0);
   const ref = useReveal<HTMLElement>();
   const mod = MODULES[picked];
+  const spotRef = useRef<HTMLSpanElement>(null);
+
+  // The hover checkerboard follows the pointer across the panel.
+  const moveSpot = (e: PointerEvent<HTMLDivElement>) => {
+    const spot = spotRef.current;
+    if (!spot || e.pointerType !== "mouse") return;
+    const box = e.currentTarget.getBoundingClientRect();
+    spot.style.setProperty("--mx", `${e.clientX - box.left}px`);
+    spot.style.setProperty("--my", `${e.clientY - box.top}px`);
+  };
 
   return (
     <section ref={ref} id="program" className="gap-section gap-program" aria-labelledby="gap-program-title">
@@ -78,8 +88,9 @@ export default function GapProgram() {
             ))}
           </ul>
 
-          <div id="gap-module" className="gap-module" aria-live="polite" data-reveal>
+          <div id="gap-module" className="gap-module" aria-live="polite" data-reveal onPointerMove={moveSpot}>
             <span className="gap-module__checker" aria-hidden="true" />
+            <span ref={spotRef} className="gap-module__spot" aria-hidden="true" />
             <Image
               key={mod.icon.src}
               src={mod.icon.src}

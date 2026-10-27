@@ -43,7 +43,7 @@ export const OFFICES = [
 ];
 
 const LEGAL = [
-  { label: "Privacy", href: "https://www.upstepacademy.com/privacypolicy/" },
+  { label: "Privacy", href: "/privacy-policy" },
   { label: "Terms", href: "https://www.upstepacademy.com/terms-of-service/" },
   { label: "Refunds", href: "https://www.upstepacademy.com/refund-policy/" },
   { label: "Cancellation", href: "https://www.upstepacademy.com/cancellation-policy/" },

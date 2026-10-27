@@ -8,13 +8,16 @@ gsap.registerPlugin(ScrollTrigger);
 
 // Section eyebrow: the outlined accent box pops in, then the label slides out
 // from behind it through a clipping mask once the eyebrow scrolls into view.
+// `rotate` is the angle (deg) the box turns from as it pops in.
 export default function Eyebrow({
   className,
   boxClassName,
+  rotate = -90,
   children,
 }: {
   className: string;
   boxClassName: string;
+  rotate?: number;
   children: ReactNode;
 }) {
   const rootRef = useRef<HTMLParagraphElement>(null);
@@ -27,12 +30,12 @@ export default function Eyebrow({
     const ctx = gsap.context(() => {
       gsap
         .timeline({ scrollTrigger: { trigger: root, start: "top 85%", once: true } })
-        .from("[data-eyebrow-box]", { scale: 0, rotate: -90, duration: 0.6, ease: "back.out(2)" })
+        .from("[data-eyebrow-box]", { scale: 0, rotate, duration: 0.6, ease: "back.out(2)" })
         .from("[data-eyebrow-text]", { xPercent: -105, duration: 0.9, ease: "power4.out" }, "-=0.2");
     }, root);
 
     return () => ctx.revert();
-  }, []);
+  }, [rotate]);
 
   return (
     <p ref={rootRef} className={className}>

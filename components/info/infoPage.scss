@@ -14,7 +14,9 @@ $navy: #071025;
 
   position: relative;
   container-type: inline-size;
-  overflow: hidden;
+  // clip, not hidden: hidden would make this the scroll box and stop sticky
+  // children (the legal pages' contents list) from sticking.
+  overflow: clip;
   background: #ffffff;
   color: $ink;
   font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
