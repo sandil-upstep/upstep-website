@@ -1,0 +1,111 @@
+// "Key Benefits" (CoursesBenefits): the coaches' navy runs on, with pill cards
+// over a checkerboard floor seen in perspective.
+
+@use "../gap/tokens" as *;
+
+.courses-benefits {
+  isolation: isolate;
+  overflow: clip;
+  padding-top: clamp(1.5rem, 2.5cqw, 3rem);
+  padding-bottom: clamp(7rem, 10cqw, 12rem);
+  background: $navy;
+  color: #ffffff;
+}
+
+.courses-benefits__floor {
+  position: absolute;
+  inset: auto -60% -6% -60%;
+  z-index: -1;
+  height: 78%;
+  perspective: 700px;
+  perspective-origin: 30% 0;
+  pointer-events: none;
+}
+.courses-benefits__plane {
+  position: absolute;
+  inset: 0;
+  transform: rotateX(62deg);
+  transform-origin: 50% 100%;
+  @include checker(96px);
+  -webkit-mask-image: radial-gradient(70% 90% at 38% 100%, #000 30%, transparent 72%);
+  mask-image: radial-gradient(70% 90% at 38% 100%, #000 30%, transparent 72%);
+}
+
+.courses-benefits__grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  margin: clamp(2rem, 3cqw, 3.5rem) 0 0;
+  padding: 0;
+  list-style: none;
+  perspective: 900px;
+}
+
+.courses-benefits__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.375rem;
+}
+.courses-benefits__row--2 { transform: translateX(-4%); }
+.courses-benefits__row--3 { transform: translateX(2%); }
+
+.courses-benefit {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: clamp(16rem, 17cqw, 20rem);
+  padding: 0.75rem 1.375rem 0.75rem 0.875rem;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 0.875rem;
+  background: linear-gradient(100.5deg, rgba(255, 255, 255, 0.2) 13.06%, rgba(153, 153, 153, 0.2) 81.56%);
+  box-shadow: 0 18px 30px -18px rgba(0, 0, 0, 0.7);
+  font-size: clamp(0.9375rem, 0.95cqw, 1.125rem);
+  font-weight: 500;
+  line-height: 1.25;
+  transition:
+    transform 0.35s $ease,
+    border-color 0.3s;
+
+  img {
+    flex: none;
+    width: 3rem;
+    height: 3rem;
+    object-fit: contain;
+    transition: transform 0.4s $ease;
+  }
+
+  &:hover {
+    transform: translateY(-6px);
+    border-color: rgba(255, 160, 90, 0.6);
+
+    img { transform: rotate(-8deg) scale(1.08); }
+  }
+}
+// No icon: centred text, padded to the same height as the iconed cards.
+.courses-benefit--plain {
+  justify-content: center;
+  min-height: 4.625rem;
+  padding-inline: 2.625rem;
+}
+
+.courses-benefits__cube--a { right: 12%; top: 12%; width: clamp(1.25rem, 1.7cqw, 2.25rem); }
+.courses-benefits__cube--b { left: 7%; top: 48%; width: clamp(1.25rem, 1.7cqw, 2.25rem); }
+
+@media (max-width: 899.98px) {
+  .courses-benefits__grid,
+  .courses-benefits__row { gap: 0.75rem; }
+  .courses-benefits__row,
+  .courses-benefits__row--2,
+  .courses-benefits__row--3 {
+    flex-direction: column;
+    width: 100%;
+    transform: none;
+  }
+  .courses-benefit { min-width: 0; width: 100%; }
+  .courses-benefit--plain {
+    justify-content: flex-start;
+    padding-left: 4.625rem;
+  }
+}

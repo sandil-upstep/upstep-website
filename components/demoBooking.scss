@@ -1600,6 +1600,144 @@ button.demo-day {
   padding-left: 0.5rem;
 }
 
+// ---------- Thank you ----------
+// Shown in the drawer for a few seconds once the booking has gone through,
+// before the confirmation page opens.
+@keyframes demo-ring { from { stroke-dashoffset: 0; } }
+// Round the close button, emptying until the confirmation opens.
+.demo-drawer__close > .demo-drawer__ring {
+  position: absolute;
+  inset: -0.25rem;
+  width: calc(100% + 0.5rem);
+  height: calc(100% + 0.5rem);
+  rotate: -90deg;
+  pointer-events: none;
+
+  circle {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.28);
+    stroke-width: 2.5;
+  }
+  .is-bar {
+    stroke: #ffffff;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    // Kept for reduced motion too (see the end): it's the time left.
+    animation: demo-ring var(--ring-ms) linear both !important;
+  }
+}
+.is-thanks .demo-drawer__checks {
+  // Turned so its straight edge sits along the sheet's top, centred.
+  top: -4.9rem;
+  right: auto;
+  left: 50%;
+  width: 34rem;
+  margin-left: -17rem;
+  transform: rotate(-90deg);
+}
+.demo-thanks__cube {
+  position: absolute;
+  background: center / contain no-repeat;
+  animation: demo-fade 0.7s ease 0.3s both;
+}
+.demo-thanks__cube--a {
+  top: 36rem;
+  left: 1.5rem;
+  width: 4.25rem;
+  height: 4.25rem;
+  background-image: url("/images/cubes/cube-14.png");
+}
+.demo-thanks__cube--b {
+  top: 37.5rem;
+  right: 4.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  background-image: url("/images/cubes/cube-12.png");
+  filter: blur(0.5px);
+}
+
+.demo-thanks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(7rem, 2rem + 14cqi, 12.25rem) 2rem 6rem;
+  overflow-x: clip;
+  text-align: center;
+}
+// The pieces are sized in ems of the title, so they scale with it.
+.demo-thanks__head {
+  position: relative;
+  font-size: clamp(3rem, 0.5rem + 9cqi, 7rem);
+}
+.demo-thanks__title {
+  font-family: $title-font;
+  font-size: 1em;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: $navy;
+  outline: none;
+  animation: demo-in 0.55s $ease 0.04s both;
+}
+.demo-thanks__piece {
+  position: absolute;
+  background: url("/images/why/king.webp") center / contain no-repeat;
+  pointer-events: none;
+  animation: demo-fade 0.7s ease 0.2s both;
+}
+.demo-thanks__piece--knight {
+  top: 0.1em;
+  left: -0.75em;
+  width: 0.75em;
+  height: 1.15em;
+}
+.demo-thanks__piece--pawn {
+  top: -0.75em;
+  left: 1em;
+  width: 0.3em;
+  height: 0.45em;
+  filter: brightness(0.3);
+}
+.demo-thanks__piece--queen {
+  top: -0.65em;
+  right: -0.7em;
+  width: 0.5em;
+  height: 0.85em;
+  rotate: 20deg;
+  filter: brightness(0.3) blur(2px);
+}
+.demo-thanks__piece--far {
+  top: 0.95em;
+  right: 0.75em;
+  width: 0.25em;
+  height: 0.5em;
+  opacity: 0.7;
+  filter: blur(2px);
+}
+.demo-thanks__text {
+  max-width: 56rem;
+  margin-top: 1.75rem;
+  font-size: clamp(1.0625rem, 0.75rem + 1.2cqi, 1.375rem);
+  line-height: 1.4;
+  color: $navy;
+  text-wrap: balance;
+  animation: demo-in 0.55s $ease 0.1s both;
+
+  .demo-thanks__head + & { margin-top: clamp(2rem, 1rem + 3cqi, 3.25rem); }
+  b { font-weight: 700; }
+}
+.demo-thanks__trust {
+  margin: 3.5rem 0 0;
+}
+// Narrow: the cubes would sit on the text, and the knight tucks in closer.
+@container demo-panel (max-width: 640px) {
+  .demo-thanks { padding-inline: 1rem; }
+  .demo-thanks__cube { display: none; }
+  .demo-thanks__piece--knight { left: -0.5em; }
+}
+
 // ---------- Narrower panels ----------
 // Details: the illustration shrinks, then goes; phones get one column.
 @container demo-panel (max-width: 1100px) {

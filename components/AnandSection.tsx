@@ -6,12 +6,12 @@ import AnandYears from "./AnandYears";
 import Eyebrow from "./Eyebrow";
 import RevealTitle from "./RevealTitle";
 import RollingText, { type RollingTextItem } from "./RollingText";
+import TiltCard from "./TiltCard";
 import "./anandSection.scss";
 
 const openSans = Open_Sans({
   variable: "--font-open-sans",
   subsets: ["latin"],
-  weight: "800",
 });
 
 // GM Anand's World Championship titles, listed under the crown (newest first).
@@ -56,31 +56,35 @@ type SlideCard = {
   image: { src: string; width: number; height: number; alt: string };
 };
 
-const FAMILY_IMAGE = {
-  src: "/images/anand-cards-img.png",
-  width: 818,
-  height: 680,
-  alt: "A family giving a thumbs up",
-};
-// The student photo isn't in the repo yet, so its card borrows the family one.
-const STUDENT_IMAGE = { ...FAMILY_IMAGE, alt: "A girl learning chess on a laptop" };
-
-const QUALITY_CARD = {
-  title: "High quality online chess classes and results.",
-  description: "Shaping young minds through chess, loved by students and trusted by parents.",
-  image: FAMILY_IMAGE,
-};
-const CURRICULUM_CARD = {
-  title: "Structured Chess Curriculum",
-  description:
-    "A scientifically designed chess training curriculum developed through years of expertise for steady learning and success.",
-  image: STUDENT_IMAGE,
-};
 const SLIDE_CARDS: SlideCard[] = [
-  { id: "quality", ...QUALITY_CARD },
-  { id: "curriculum", ...CURRICULUM_CARD },
-  { id: "quality-2", ...QUALITY_CARD },
-  { id: "curriculum-2", ...CURRICULUM_CARD },
+  {
+    id: "coaching",
+    title: "Coaching Expertise for Every Stage",
+    description:
+      "Internationally experienced, certified chess coaches who combine strong chess expertise with the ability to connect with children.",
+    image: { src: "/images/anand-card1.png", width: 818, height: 680, alt: "A family giving a thumbs up" },
+  },
+  {
+    id: "path",
+    title: "A Clear Path Forward",
+    description:
+      "A scientifically structured curriculum shows every child where to start, what to learn, and how to progress.",
+    image: { src: "/images/anand-card2.png", width: 818, height: 680, alt: "A family giving a thumbs up" },
+  },
+  {
+    id: "beyond-class",
+    title: "Learning Beyond Class",
+    description:
+      "Gamified homework, training apps, leaderboards and tournaments keep children practising, progressing and connected between classes.",
+    image: { src: "/images/anand-card3.png", width: 818, height: 680, alt: "A family giving a thumbs up" },
+  },
+  {
+    id: "parents",
+    title: "Parents Stay Connected",
+    description:
+      "A dedicated Relationship Manager keeps parents informed, supported and connected throughout their child’s learning journey.",
+    image: { src: "/images/anand-card4.png", width: 818, height: 680, alt: "A family giving a thumbs up" },
+  },
 ];
 
 export default function AnandSection() {
@@ -139,7 +143,7 @@ export default function AnandSection() {
         {/* Cards slider */}
         <div className="anand__slider">
           {SLIDE_CARDS.map((card) => (
-            <article key={card.id} className="anand__item">
+            <TiltCard key={card.id} className="anand__item">
               <div className="anand__item-img">
                 <Image
                   src={card.image.src}
@@ -150,7 +154,7 @@ export default function AnandSection() {
               </div>
               <h3>{card.title}</h3>
               <p>{card.description}</p>
-            </article>
+            </TiltCard>
           ))}
         </div>
         <div className="anand__progress" aria-hidden="true">

@@ -19,7 +19,6 @@ import "./successStoriesSection.scss";
 const openSans = Open_Sans({
   variable: "--font-open-sans",
   subsets: ["latin"],
-  weight: ["400", "600", "800"],
 });
 
 const plusJakartaSans = Plus_Jakarta_Sans({

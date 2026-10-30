@@ -16,7 +16,6 @@ gsap.registerPlugin(ScrollTrigger);
 const openSans = Open_Sans({
   variable: "--font-open-sans",
   subsets: ["latin"],
-  weight: ["400", "700", "800"],
 });
 
 // Transparent cut-outs sharing one frame (same width, top-left aligned). The

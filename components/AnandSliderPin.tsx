@@ -30,25 +30,43 @@ export default function AnandSliderPin({ children, markers = false }: { children
 
     // Slides the cards with a transform rather than slider.scrollLeft: the
     // slider is masked, so scrolling it repaints the whole strip every frame,
-    // while a transform only moves the cards' composited layers.
+    // while a transform only moves the cards' composited layers. Uses the
+    // `translate` property, leaving `transform` to the cards' hover tilt (TiltCard).
     const sync = () => {
       if (distance <= 0) return;
       const progress = Math.min(1, Math.max(0, (stickTop - wrap.getBoundingClientRect().top) / distance));
-      const x = `translate3d(${(-progress * distance).toFixed(2)}px, 0, 0)`;
-      for (const item of items) item.style.transform = x;
+      const x = `${(-progress * distance).toFixed(2)}px 0 0`;
+      for (const item of items) item.style.translate = x;
       if (thumb) thumb.style.transform = `translate3d(${(progress * THUMB_TRAVEL).toFixed(2)}%, 0, 0)`;
     };
 
     const reset = () => {
-      for (const item of items) item.style.transform = "";
+      for (const item of items) item.style.translate = "";
       if (thumb) thumb.style.transform = "";
+    };
+
+    // The cards row's full width, from layout offsets rather than
+    // slider.scrollWidth: scrollWidth counts transformed boxes, so a card
+    // tilted or lifted on hover would stretch the scroll distance.
+    const rowWidth = () => {
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (!first || !last) return 0;
+      const sliderStyle = getComputedStyle(slider);
+      return (
+        parseFloat(sliderStyle.paddingLeft) +
+        parseFloat(getComputedStyle(first).marginLeft) +
+        last.offsetLeft - first.offsetLeft + last.offsetWidth +
+        parseFloat(getComputedStyle(last).marginRight) +
+        parseFloat(sliderStyle.paddingRight)
+      );
     };
 
     const measure = () => {
       // Measure the slider at rest, without the cards' offset.
       reset();
       slider.scrollLeft = 0;
-      distance = Math.max(0, slider.scrollWidth - slider.clientWidth);
+      distance = Math.max(0, rowWidth() - slider.clientWidth);
       const active = distance > 1;
       wrap.classList.toggle("anand-pin--active", active);
       if (!active) {

@@ -24,9 +24,9 @@ import "./demoBooking.scss";
 gsap.registerPlugin(ScrollTrigger);
 
 // The demo booking's confirmation (CTA-4), on its own page: the drawer opens
-// it in a new tab the moment "Confirm" is pressed, then hands it the booking
-// through localStorage (see saveBooking in demoBookingData.ts). It shows the
-// booking going through until then.
+// it after its thank-you, handing it the booking through localStorage (see
+// saveBooking in demoBookingData.ts). It shows a booking still going through
+// until it hears how it went.
 
 const EXPECT = [
   { title: "Say Hello", body: "The coach gets to know your child: their age, interests and how much chess they know." },

@@ -276,10 +276,10 @@ export function bookDemo(booking: Booking): Promise<void> {
 }
 
 // ---- Handing the booking to the confirmation page ----
-// The confirmation opens in a new tab (/book-demo/confirmed?id=…) the moment
-// "Confirm" is pressed, and this tab tells it how the booking went through
-// localStorage, which the site's tabs share. Only what the page shows is kept,
-// for a week.
+// The drawer opens the confirmation (/book-demo/confirmed?id=…) after its
+// thank-you and hands it the booking through localStorage, which the site's
+// tabs share, so a reload or another tab finds it too. Only what the page
+// shows is kept, for a week.
 // TODO: once the API saves bookings, have the confirmation page load the
 // booking by its id from there instead.
 export type BookingSummary = Pick<Details, "firstName" | "lastName" | "age" | "level" | "email"> & {

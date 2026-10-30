@@ -1,0 +1,103 @@
+// "Presence in" (CoursesPresence).
+
+.courses-presence {
+  overflow: clip;
+  padding-bottom: clamp(3rem, 4cqw, 5rem);
+}
+
+.courses-presence__head {
+  position: relative;
+
+  .courses-head {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 0;
+  }
+}
+
+// Same globe as the home page testimonials: a breathing glow behind an Earth
+// that floats with a slow tilt, washed out toward the bottom by the mask.
+// Pinned top-right, hanging a little past the column like the design, and
+// fading out just above the flags.
+.courses-presence__globe {
+  position: absolute;
+  top: -2.4cqw;
+  right: -3cqw;
+  display: block;
+  width: clamp(10rem, 23.4cqw, 28.125rem);
+  aspect-ratio: 1 / 1;
+  padding: 0.625rem;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 65% 48% at 50% 15%, #000 50%, transparent 95%);
+  mask-image: radial-gradient(ellipse 65% 48% at 50% 15%, #000 50%, transparent 95%);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 4%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(80, 160, 255, 0.45) 55%, rgba(80, 160, 255, 0) 72%);
+    filter: blur(1.125rem);
+    animation: courses-globe-glow 6s ease-in-out infinite;
+  }
+
+  @media (max-width: 767.98px) {
+    top: -2.5rem;
+    right: -0.5rem;
+    width: 46cqw;
+  }
+}
+
+.courses-presence__globe-img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: courses-globe-float 9s ease-in-out infinite;
+}
+
+@keyframes courses-globe-float {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-4%) rotate(3deg); }
+}
+@keyframes courses-globe-glow {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+
+.courses-presence__marquee {
+  position: relative;
+  z-index: 1;
+  margin-top: 1.75rem;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+
+// Each flag carries its gap as a right margin so both halves match.
+.courses-presence__track {
+  display: flex;
+  width: max-content;
+  animation: courses-flags 30s linear infinite;
+
+  .courses-presence__marquee:hover & { animation-play-state: paused; }
+}
+@keyframes courses-flags {
+  to { transform: translateX(-50%); }
+}
+
+.courses-presence__flag {
+  flex: none;
+  width: clamp(3.5rem, 3.6cqw, 4.5rem);
+  aspect-ratio: 3 / 2;
+  margin-right: 1.125rem;
+  border-radius: 0.25rem;
+  object-fit: cover;
+  box-shadow: 0 6px 14px -8px rgba(15, 18, 34, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .courses-presence__globe::before,
+  .courses-presence__globe-img,
+  .courses-presence__track { animation: none; }
+}

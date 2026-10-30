@@ -80,11 +80,11 @@ $theme-transition: 0.7s ease;
   }
 
   .anand__slider {
-    overflow-x: hidden;
+    overflow: hidden;
     scroll-snap-type: none;
   }
 
-  .anand__item { will-change: transform; }
+  .anand__item { will-change: translate, transform; }
 
   .anand__progress span {
     animation: none;
@@ -370,6 +370,9 @@ $theme-transition: 0.7s ease;
   margin-left: u(-116);
   padding: u(22) 0 u(6) u(116);
   overflow-x: auto;
+  // Hidden rather than the implied auto: a card lifted on hover pokes out of
+  // the top, which would otherwise let the wheel scroll the row vertically.
+  overflow-y: hidden;
   scroll-snap-type: x mandatory;
   scroll-padding-left: u(116);
   scrollbar-width: none;
@@ -438,6 +441,25 @@ $theme-transition: 0.7s ease;
     object-fit: cover;
     object-position: center top;
     @include mask(linear-gradient(to bottom, #000 72%, transparent));
+  }
+}
+
+// 3D hover tilt (TiltCard sets the card's rotation): the photo, title and copy
+// lift off the card at different depths. Mouse-driven, so hover devices only.
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .tilt-card {
+    transform-style: preserve-3d;
+    transition: transform 0.2s linear, border-color $theme-transition;
+
+    .anand__item-img,
+    h3 { transition: transform 0.2s linear; }
+    p { transition: transform 0.2s linear, color $theme-transition; }
+
+    &:hover {
+      .anand__item-img { transform: translateZ(60px); }
+      h3 { transform: translateZ(40px); }
+      p { transform: translateZ(30px); }
+    }
   }
 }
 

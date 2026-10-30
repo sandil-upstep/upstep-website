@@ -1,0 +1,214 @@
+// "Meet our coaches" (CoursesCoaches): navy, like the home page's dark
+// sections, with the coaches' stats and reviews beside a photo collage.
+
+@use "../gap/tokens" as *;
+
+$card: #ffffff1a;
+$edge: rgba(255, 255, 255, 0.14);
+
+.courses-coaches {
+  overflow: clip;
+  background: $navy;
+  color: #ffffff;
+}
+
+.courses-coaches__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(2.5rem, 3.5cqw, 4.5rem);
+
+  @media (max-width: 899.98px) { grid-template-columns: 1fr; }
+}
+
+.courses-coaches__lead {
+  max-width: 48ch;
+  margin: 0;
+  font-size: clamp(0.9375rem, 0.95cqw, 1.125rem);
+  line-height: 1.6;
+  color: $dark-muted;
+}
+
+// ---------- Stats ----------
+.courses-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 15rem));
+  gap: 1rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+
+  @media (max-width: 899.98px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.courses-stat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 6.5rem;
+  padding: 1rem;
+  overflow: hidden;
+  border: 1px solid $edge;
+  border-radius: 0.75rem;
+  background: $card;
+
+  b {
+    font-size: clamp(1.75rem, 1.9cqw, 2.25rem);
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    @include gold-text;
+  }
+  span {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: $dark-muted;
+  }
+}
+.courses-stat__icon {
+  position: absolute;
+  right: 0.625rem;
+  top: 0.5rem;
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+}
+
+// ---------- Reviews ----------
+.courses-quote {
+  position: relative;
+  max-width: 28rem;
+  margin: 3rem 0 0;
+  padding-left: 2.75rem;
+
+  &::before,
+  &::after {
+    position: absolute;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 5.5rem;
+    line-height: 1;
+    @include outlined(rgba(255, 255, 255, 0.4), 1.2px);
+  }
+  &::before { content: "\201C"; left: -0.25rem; top: -1.375rem; }
+  &::after { content: "\201D"; right: -1.25rem; bottom: -3.875rem; }
+
+  @media (max-width: 899.98px) {
+    &::after { right: 0; }
+  }
+}
+
+.courses-quote__slides {
+  display: grid;
+}
+.courses-quote__slide {
+  grid-area: 1 / 1;
+  margin: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(1.5rem);
+  transition:
+    opacity 0.4s,
+    transform 0.5s $ease,
+    visibility 0s 0.5s;
+
+  &.is-active {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition-delay: 0.1s, 0.1s, 0s;
+  }
+
+  p {
+    margin: 0;
+    font-size: clamp(1rem, 1.15cqw, 1.375rem);
+    line-height: 1.5;
+  }
+}
+
+.courses-quote__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: 0.625rem;
+  font-size: 0.75rem;
+  color: $dark-muted;
+}
+.courses-quote__stars {
+  letter-spacing: 2px;
+  color: $amber;
+}
+
+.courses-quote__nav {
+  display: flex;
+  gap: 0.625rem;
+  margin-top: 1.25rem;
+
+  .courses-round-btn {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-color: $edge;
+  }
+}
+
+// ---------- Collage ----------
+.courses-coaches__collage {
+  position: relative;
+  width: 100%;
+  max-width: 40rem;
+  aspect-ratio: 1;
+  margin-top: 2.5rem;
+  justify-self: end;
+
+  @media (max-width: 899.98px) {
+    justify-self: center;
+    max-width: 26rem;
+    margin-top: 0;
+  }
+}
+
+.courses-coach {
+  position: absolute;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 0.25rem;
+  background: #1a2350;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 20%;
+  }
+
+  figcaption {
+    position: absolute;
+    left: 0.625rem;
+    bottom: 0.5rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #ffffff;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  }
+}
+.courses-coach--light {
+  background: #f2f4f8;
+
+  figcaption {
+    color: $ink;
+    text-shadow: none;
+  }
+}
+.courses-coach--p1 { left: 21%; top: 22%; width: 29%; height: 31%; }
+.courses-coach--p2 { left: 55%; top: 0; width: 45%; height: 45%; }
+.courses-coach--p3 { left: 0; top: 57%; width: 45%; height: 43%; }
+.courses-coach--p4 { left: 50%; top: 50%; width: 50%; height: 50%; }
+
+.courses-coaches__cube {
+  z-index: 3;
+}
+.courses-coaches__cube--a { left: 52%; top: 20%; }
+.courses-coaches__cube--b { left: 7%; top: 60%; width: clamp(1.25rem, 1.7cqw, 2.25rem); }
+.courses-coaches__cube--c { right: 9%; top: 6%; width: clamp(1.25rem, 1.7cqw, 2.25rem); }

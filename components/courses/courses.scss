@@ -1,0 +1,161 @@
+// The courses overview page (app/(site)/courses): its column, section heads
+// and the cubes its sections share. Each section's own layout lives in its
+// stylesheet beside it (coursesIntro.scss, coursesCoaches.scss…). Colours and
+// type are the GAP page's tokens, which gather the site's.
+
+@use "../gap/tokens" as *;
+@use "../outlineTitle" as *;
+
+// The page is the size container its sections measure against (1cqw = 1% of
+// its width), on the home page's column (--w). Below 1200px the column widens,
+// and phones keep a 16px margin from the screen's edges.
+.courses {
+  --w: 69.18cqw;
+  --off: 4.64cqw;
+  --radius: clamp(0.75rem, 0.9cqw, 1.125rem);
+
+  position: relative;
+  container-type: inline-size;
+  overflow-x: clip;
+  background: #ffffff;
+  color: $ink;
+  font-family: $body-font;
+
+  @media (max-width: 1199.98px) {
+    --w: calc(100cqw - 6rem);
+    --off: 1.25rem;
+  }
+  @media (max-width: 767.98px) {
+    --w: calc(100cqw - 2rem);
+    --off: 0px;
+  }
+}
+
+:where(.courses) :where(button) {
+  cursor: pointer;
+}
+
+.courses-section {
+  position: relative;
+  padding: clamp(4.5rem, 6.25cqw, 7.5rem) 0;
+
+  @media (max-width: 767.98px) { padding: 56px 0; }
+}
+
+// The home page's guide lines: a pair either side of the column, --off apart.
+.courses-lines span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: $line;
+  pointer-events: none;
+
+  &:nth-child(1) { left: calc((100% - var(--w)) / 2 - var(--off)); }
+  &:nth-child(2) { left: calc((100% - var(--w)) / 2); }
+  &:nth-child(3) { right: calc((100% - var(--w)) / 2); }
+  &:nth-child(4) { right: calc((100% - var(--w)) / 2 - var(--off)); }
+}
+.courses-lines--dark span {
+  background: $dark-line;
+}
+
+.courses-inner {
+  position: relative;
+  z-index: 4;
+  width: var(--w);
+  margin: 0 auto;
+}
+
+// ---------- Section heads ----------
+// The eyebrow hangs out on the outer grid line, as on the home page.
+.courses-head {
+  margin-bottom: clamp(2rem, 2.6cqw, 3.25rem);
+}
+
+.courses-eyebrow {
+  position: relative;
+  margin: 0 0 clamp(0.875rem, 1.1cqw, 1.375rem) calc(-1 * var(--off));
+  padding-left: 0.9375rem;
+  font-family: $title-font;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.75rem;
+  color: $text;
+}
+.courses-eyebrow__box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid $eyebrow-box;
+}
+
+// The site's outlined headline (_outlineTitle.scss).
+.courses-title {
+  margin: 0;
+  font-family: $title-font;
+  font-weight: 800;
+  line-height: 0.95;
+  @include outlined($outline, 2px);
+  @include outline-title-size;
+}
+
+.courses-head--dark {
+  .courses-eyebrow { color: #ffffff; }
+  .courses-title { -webkit-text-stroke-color: $dark-stroke; }
+}
+
+// ---------- Cubes ----------
+.courses-cube {
+  position: absolute;
+  z-index: 1;
+  width: clamp(1.75rem, 2.4cqw, 3rem);
+  height: auto;
+  pointer-events: none;
+
+  @media (max-width: 767.98px) { display: none; }
+}
+
+// Round prev/next buttons (the coaches' reviews, the showcase).
+.courses-round-btn {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  background: transparent;
+  color: inherit;
+  transition:
+    background-color 0.25s,
+    border-color 0.25s,
+    color 0.25s;
+
+  svg { width: 45%; height: 45%; }
+
+  &:hover {
+    background: $orange;
+    border-color: $orange;
+    color: #ffffff;
+  }
+  &:focus-visible { @include focus-ring; }
+}
+
+
+
+.glass-card {
+  background: rgba(50, 115, 205, 0.4);
+  border-radius: 30px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.orange-glass {
+  background: #F56419;
+  border-radius: 30px;
+}
+
+.yellow-glass {
+  background: #F0A723;
+  border-radius: 30px;
+}

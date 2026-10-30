@@ -41,18 +41,19 @@ import "./demoBooking.scss";
 
 // The "Book a FREE demo" drawer: a sheet that slides up over the page with
 // the child's and parent's details, then a date and time (held for HOLD_MS
-// once picked). Confirming opens the confirmation page in a new tab
-// (DemoConfirmed.tsx) and closes the drawer once the booking has gone through.
+// once picked). Once the booking has gone through, a thank-you shows for
+// THANKS_MS, then the confirmation page (DemoConfirmed.tsx) opens in its place.
 // Ported from the "Demo booking flow revamp" reference (behaviour) and the
 // "book a demo drawer" designs (CTA-1-1 for the details, CTA-2/CTA-3 for the
 // date and time). Opened with openDemoBooking() (demoBooking.ts).
 
-type Step = "details" | "slot";
+type Step = "details" | "slot" | "thanks";
 type Pop = "age" | "level" | "code" | "code2" | "tz";
 const HOLD_MS = 10 * 60e3;
 const LEAVE_MS = 230; // a step fading out before the next comes in
 const RISE_MS = 600;
 const CLOSE_MS = 450;
+const THANKS_MS = 10e3;
 
 const NEEDS = [
   { icon: "/images/structured/books.webp", w: 218, h: 177, label: "Willingness to learn & play chess", wide: true },
@@ -80,7 +81,9 @@ export default function DemoBookingDrawer() {
 
   const [f, setF] = useState<Details>(EMPTY_DETAILS);
   const [tried, setTried] = useState(false);
-  const { touch, clear: clearTouched, shown } = useTouched<keyof Details>();
+  // A finished booking needs no clearing: the drawer goes with the page when
+  // the confirmation opens.
+  const { touch, shown } = useTouched<keyof Details>();
   const [showPhone2, setShowPhone2] = useState(false);
   const addPhone2Ref = useRef<HTMLButtonElement>(null);
   const focusAddPhone2 = useRef(false);
@@ -106,20 +109,6 @@ export default function DemoBookingDrawer() {
     const pending = timers.current;
     return () => pending.forEach(clearTimeout);
   }, []);
-
-  const reset = useCallback(() => {
-    setStep("details");
-    setF((prev) => ({ ...EMPTY_DETAILS, code: prev.code, code2: prev.code }));
-    setTried(false);
-    clearTouched();
-    setShowPhone2(false);
-    setMonth(0);
-    setSelDay(null);
-    setSelSlot(null);
-    setHoldUntil(null);
-    setSubmitting(false);
-    setFailed(false);
-  }, [clearTouched]);
 
   // ---- Opening and closing ----
   const zoneFound = useRef(false);
@@ -199,12 +188,15 @@ export default function DemoBookingDrawer() {
     setPop(null);
   }, []);
 
+  const confirmedUrl = useRef<string | null>(null);
   const close = useCallback(() => {
     if (!open || closing) return;
+    // From the thank-you, closing goes straight on to the confirmation.
+    if (confirmedUrl.current) return router.push(confirmedUrl.current);
     setClosing(true);
     setPop(null);
     later(finishClose, CLOSE_MS);
-  }, [open, closing, finishClose, later]);
+  }, [open, closing, finishClose, later, router]);
 
   useEffect(
     () => () => {
@@ -342,25 +334,20 @@ export default function DemoBookingDrawer() {
     const id = newBookingId();
     const url = `/book-demo/confirmed?id=${id}`;
     saveBooking(id, { status: "pending" });
-    // Opened now, inside the click, so pop-up blockers let it through; it
-    // shows the booking going through until this tab says how it went.
-    const tab = window.open(url, "_blank");
-    if (tab) tab.opener = null;
     setSubmitting(true);
     setFailed(false);
     setPop(null);
     bookDemo({ ...details, slot: selSlot, timeZone: zone.id }).then(
       () => {
         saveBooking(id, { status: "booked", booking: summary });
-        // Pop-ups blocked: the confirmation opens here instead.
-        if (!tab) return router.push(url);
-        // A finished booking starts afresh next time.
-        close();
-        later(reset, CLOSE_MS);
+        confirmedUrl.current = url;
+        // Counted from when the thank-you is in, with the ring round the close
+        // button. Not cut short for reduced motion, as later() would: it's
+        // there to be read.
+        go("thanks", () => timers.current.push(window.setTimeout(() => router.push(url), THANKS_MS)));
       },
       () => {
         saveBooking(id, { status: "failed" });
-        tab?.close();
         setSubmitting(false);
         setFailed(true);
       }
@@ -409,11 +396,29 @@ export default function DemoBookingDrawer() {
           <div className="demo-drawer__deco" aria-hidden="true">
             <span className="demo-drawer__checks" />
             <span className="demo-drawer__corner" />
+            {step === "thanks" && (
+              <>
+                <span className="demo-thanks__cube demo-thanks__cube--a" />
+                <span className="demo-thanks__cube demo-thanks__cube--b" />
+              </>
+            )}
           </div>
           <button type="button" className="demo-drawer__close" aria-label="Close" onClick={close}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M5 5l14 14M19 5 5 19" />
             </svg>
+            {/* The countdown to the confirmation page. */}
+            {step === "thanks" && !leaving && (
+              <svg
+                className="demo-drawer__ring"
+                viewBox="0 0 48 48"
+                aria-hidden="true"
+                style={{ "--ring-ms": `${THANKS_MS}ms` } as React.CSSProperties}
+              >
+                <circle cx="24" cy="24" r="22" />
+                <circle cx="24" cy="24" r="22" pathLength={1} className="is-bar" />
+              </svg>
+            )}
           </button>
 
           <div className={`demo-drawer__body${leaving ? " is-leaving" : ""}`} key={step}>
@@ -910,6 +915,37 @@ export default function DemoBookingDrawer() {
                   )}
                 </div>
                 <Illustration />
+              </div>
+            )}
+
+            {step === "thanks" && (
+              <div className="demo-thanks">
+                <div className="demo-thanks__head">
+                  {/* TODO: stand-ins made from the king; swap in the design's knight, pawn and queen. */}
+                  <span className="demo-thanks__piece demo-thanks__piece--knight" aria-hidden="true" />
+                  <span className="demo-thanks__piece demo-thanks__piece--pawn" aria-hidden="true" />
+                  <span className="demo-thanks__piece demo-thanks__piece--queen" aria-hidden="true" />
+                  <span className="demo-thanks__piece demo-thanks__piece--far" aria-hidden="true" />
+                  <h2 ref={headingRef} tabIndex={-1} className="demo-thanks__title" id="demo-drawer-title">
+                    Thank you
+                  </h2>
+                </div>
+                <p className="demo-thanks__text">
+                  Team Upstep will get in touch with you (via Email or WhatsApp) in <b>48 hours.</b>
+                </p>
+                <p className="demo-thanks__text">
+                  We are super excited to introduce your child to Chess and the unimaginable possibilities and benefits
+                </p>
+                <ul className="demo-trust demo-thanks__trust">
+                  <li>
+                    <Image src="/images/demo-booking/shield.png" width={38} height={39} alt="" />
+                    Trusted by families in 20+ countries
+                  </li>
+                  <li>
+                    <Image src="/images/demo-booking/medal.png" width={32} height={39} alt="" />
+                    Certified and inspired by GM Viswanathan Anand
+                  </li>
+                </ul>
               </div>
             )}
           </div>

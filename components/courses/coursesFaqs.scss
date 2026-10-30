@@ -1,0 +1,122 @@
+// FAQs (CoursesFaqs): white cards that open in place, under a faded peach
+// checkerboard in the top-right corner.
+
+@use "../gap/tokens" as *;
+
+.courses-faqs {
+  isolation: isolate;
+  overflow: clip;
+}
+
+.courses-faqs__checks {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: -1;
+  width: 45%;
+  height: 32rem;
+  background: conic-gradient(#fdebd9 25%, transparent 0 50%, #fdebd9 0 75%, transparent 0) 0 0 / 64px 64px;
+  -webkit-mask-image: radial-gradient(80% 70% at 85% 25%, #000 10%, transparent 70%);
+  mask-image: radial-gradient(80% 70% at 85% 25%, #000 10%, transparent 70%);
+  pointer-events: none;
+
+  @media (max-width: 899.98px) { width: 80%; }
+}
+
+.courses-faqs__list {
+  display: grid;
+  gap: 0.875rem;
+  max-width: 54rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.courses-faq {
+  border: 1px solid #e9eaf0;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  box-shadow: 0 10px 30px -22px rgba(15, 18, 34, 0.35);
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+
+  h3 { margin: 0; }
+
+  &.is-open {
+    border-color: #dfe2ea;
+    box-shadow: 0 18px 40px -24px rgba(15, 18, 34, 0.4);
+  }
+}
+
+.courses-faq__q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem 1.125rem;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: $ink;
+  font: inherit;
+  font-size: clamp(0.875rem, 0.85cqw, 1rem);
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: left;
+
+  &:focus-visible { @include focus-ring; }
+}
+
+.courses-faq__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border: 1px solid #c9ccd6;
+  border-radius: 50%;
+  transition:
+    transform 0.4s $ease,
+    background-color 0.3s,
+    border-color 0.3s,
+    color 0.3s;
+
+  svg { width: 0.625rem; height: 0.625rem; }
+
+  .is-open & {
+    transform: rotate(180deg);
+    border-color: $orange;
+    background: $orange;
+    color: #ffffff;
+  }
+}
+
+// Opens by animating its row from 0fr to 1fr.
+.courses-faq__a {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.45s $ease;
+
+  > div { overflow: hidden; }
+  .is-open & { grid-template-rows: 1fr; }
+}
+
+.courses-faq__inner {
+  padding: 0 1.125rem 1.125rem;
+  font-size: clamp(0.8125rem, 0.8cqw, 0.9375rem);
+  line-height: 1.6;
+  color: $muted;
+
+  p { margin: 0; }
+  p + p { margin-top: 0.375rem; }
+  ol { margin: 0.375rem 0 0.5rem 1.125rem; padding: 0; }
+}
+
+.courses-faqs__cube--a { left: 4%; top: 52%; }
+.courses-faqs__cube--b { right: 7%; top: 38%; width: clamp(1.25rem, 1.7cqw, 2.25rem); }
+
+@media (prefers-reduced-motion: reduce) {
+  .courses-faq__a { transition: none; }
+}

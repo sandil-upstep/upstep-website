@@ -1,0 +1,78 @@
+// "Title goes here" (CoursesShowcase): a coverflow of pale blue cards, like
+// the home page's carousel cards, under a plain centred headline.
+
+@use "../gap/tokens" as *;
+
+.courses-showcase {
+  overflow: clip;
+  padding-top: clamp(2rem, 3cqw, 3.5rem);
+}
+
+.courses-showcase__title {
+  margin: 0;
+  text-align: center;
+  font-family: $title-font;
+  font-size: clamp(2rem, 3.2cqw, 3.75rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.courses-showcase__flow {
+  --card-w: min(30cqw, 26rem);
+
+  position: relative;
+  height: clamp(18rem, 30cqw, 34rem);
+  margin-top: clamp(2rem, 3cqw, 3.5rem);
+  perspective: 1400px;
+  touch-action: pan-y;
+  user-select: none;
+
+  @media (max-width: 767.98px) { --card-w: 68cqw; }
+}
+
+.courses-showcase__card {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  display: flex;
+  align-items: flex-end;
+  width: var(--card-w);
+  height: 100%;
+  margin-left: calc(var(--card-w) / -2);
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(170deg, #c3d4f8, #a9c2f3);
+  color: #3b4f84;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition:
+    transform 0.7s $ease,
+    opacity 0.5s,
+    filter 0.5s;
+
+  &[aria-hidden="true"] { cursor: pointer; }
+}
+
+.courses-showcase__nav {
+  display: flex;
+  justify-content: center;
+  gap: 1.125rem;
+  margin-top: 2.5rem;
+
+  .courses-round-btn {
+    width: 3.375rem;
+    height: 3.375rem;
+    background: #ffffff;
+    color: #3a3f52;
+
+    &:hover {
+      background: $orange;
+      color: #ffffff;
+    }
+  }
+  .courses-round-btn--next { color: #ff8a4c; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .courses-showcase__card { transition: none; }
+}

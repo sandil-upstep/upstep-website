@@ -3,7 +3,6 @@ import { Open_Sans } from "next/font/google";
 const openSans = Open_Sans({
   variable: "--font-open-sans",
   subsets: ["latin"],
-  weight: "800",
 });
 
 // Live text instead of the old Figma glyph outlines, so the word list can be

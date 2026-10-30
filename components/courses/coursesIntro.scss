@@ -1,0 +1,291 @@
+// The courses page's hero and session format comparison (CoursesIntro), with
+// the laptop that stays on screen across both.
+
+@use "../gap/tokens" as *;
+
+$peach: #f9c98a;
+$salmon: #f6b7a0;
+$sky: #bcd0f6;
+
+.courses-scene {
+  position: relative;
+}
+
+// ---------- Laptop ----------
+// The track covers both sections, down to the table's foot (CoursesIntro sets
+// its bottom); its stage is one window tall and sticky, so the laptop holds
+// the window's bottom-right corner until it sits beside the table.
+.courses-laptop-track {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+
+  @media (max-width: 899.98px) { display: none; }
+}
+.courses-laptop-stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+}
+.courses-laptop {
+  position: absolute;
+  // The image at its natural size (1147px at 1920px), 6.8vw in from the
+  // window's right edge. CoursesIntro's shrink slides it back right by 5vw
+  // more than this was before (1.8vw), so it still ends beside the table.
+  right: 6.8vw;
+  bottom: 0;
+  width: min(59.75vw, calc((100svh - 110px) * 1147 / 757));
+  transform-origin: 100% 100%;
+  will-change: transform;
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 30px 40px rgba(20, 40, 110, 0.12));
+  }
+}
+
+// ---------- Hero ----------
+.courses-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: max(560px, 100svh);
+  padding: 8rem 0 5rem;
+
+  @media (max-width: 899.98px) {
+    min-height: 0;
+    padding: 7rem 0 3rem;
+  }
+}
+
+.courses-hero__curve {
+  position: absolute;
+  left: 0;
+  top: 3.75rem;
+  width: min(398px, 21cqw);
+  height: auto;
+  pointer-events: none;
+
+  @media (max-width: 899.98px) { width: 40vw; }
+}
+
+.courses-hero__copy {
+  position: relative;
+  z-index: 3;
+  max-width: clamp(28rem, 31cqw, 38rem);
+}
+
+.courses-hero__intro {
+  margin: 0 0 0.625rem;
+  font-size: clamp(1rem, 1.15cqw, 1.375rem);
+  font-weight: 600;
+}
+
+.courses-hero__title {
+  margin: 0;
+  font-family: $title-font;
+  font-size: clamp(2.5rem, 4.1cqw, 4.875rem);
+  font-weight: 600;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+}
+.courses-hero__line {
+  display: block;
+  overflow: hidden;
+
+  > span { display: inline-block; }
+}
+
+.courses-hero__lead {
+  max-width: 44ch;
+  margin: 1.25rem 0 0;
+  font-size: clamp(0.9375rem, 0.95cqw, 1.125rem);
+  line-height: 1.6;
+  color: $muted;
+
+  strong {
+    font-weight: 700;
+    color: $ink;
+  }
+}
+
+// Scroll hint: a mouse outline with its wheel rolling down.
+.courses-hero__mouse {
+  position: relative;
+  display: block;
+  width: 1.375rem;
+  height: 2.125rem;
+  margin-top: 2.25rem;
+  border: 1.5px solid #9aa0b4;
+  border-radius: 0.75rem;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0.4375rem;
+    width: 3px;
+    height: 0.4375rem;
+    border-radius: 2px;
+    background: #9aa0b4;
+    transform: translateX(-50%);
+    animation: courses-wheel 1.8s ease-in-out infinite;
+  }
+
+  @media (max-width: 899.98px) { display: none; }
+}
+@keyframes courses-wheel {
+  0% { opacity: 0; transform: translate(-50%, 0); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, 0.5625rem); }
+}
+
+// Phones and tablets: the laptop sits once under the copy instead.
+.courses-hero__laptop {
+  display: none;
+
+  @media (max-width: 899.98px) {
+    display: block;
+    margin: 2rem -1rem 0 0;
+
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+  }
+}
+
+.courses-hero__cube--a { left: 56%; top: 24%; }
+.courses-hero__cube--b { left: 24%; top: 78%; width: clamp(1.25rem, 1.7cqw, 2.25rem); }
+
+// ---------- Compare ----------
+.courses-compare {
+  padding-bottom: clamp(5rem, 8cqw, 9rem);
+}
+
+// Room either side (taken back by the margin) so the scroller's clip doesn't
+// cut off the bars, which overhang the table by 0.5rem, or their shadow.
+.courses-table-scroll {
+  overflow-x: auto;
+  margin-inline: -1.5rem;
+  padding: 0 1.5rem 0.375rem;
+  -webkit-overflow-scrolling: touch;
+
+  &:focus-visible { @include focus-ring; }
+}
+
+// Label column, then the three formats. Each format's colour runs down its
+// whole column, under glass bars across every row.
+.courses-table {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 0.9fr) repeat(3, minmax(9.5rem, 1fr));
+  grid-template-rows: clamp(3.25rem, 3.4cqw, 4rem) repeat(6, clamp(2.75rem, 2.8cqw, 3.375rem)) auto;
+  gap: 0.375rem clamp(1rem, 1.6cqw, 2rem);
+  width: min(54cqw, 100%);
+  min-width: 40rem;
+
+  @media (max-width: 899.98px) { width: 100%; }
+}
+
+.courses-table__row {
+  display: contents;
+}
+
+// Frosted-glass bars over the format columns: a white wash, strongest on the
+// label, that blurs the columns' colours showing through it.
+.courses-table__bar {
+  z-index: 2;
+  grid-column: 1 / -1;
+  margin-right: -1rem;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 40px;
+  background: linear-gradient(129.75deg, rgba(255, 255, 255, 0.2) 16.54%, rgba(153, 153, 153, 0.08) 77.83%);
+  -webkit-backdrop-filter: blur(0.75rem) saturate(160%);
+  backdrop-filter: blur(0.75rem) saturate(160%);
+  box-shadow:
+    0 4px 13px 0 #00000026,
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transform-origin: left center;
+}
+
+.courses-table__col {
+  grid-row: 1 / -1;
+  z-index: 1;
+  border-radius: 1rem 1rem 1.125rem 1.125rem;
+}
+.courses-table__col--peach {
+  // background: linear-gradient(180deg, rgba($peach, 0.95) 0, rgba(252, 228, 196, 0.75) 55%, rgba(253, 240, 222, 0.4) 100%);
+  background: radial-gradient(
+  circle,
+  rgba($peach, 0.95) 16.54%,
+  rgba($peach, 0.55) 100%
+  );
+}
+.courses-table__col--salmon {
+  // background: linear-gradient(180deg, rgba($salmon, 0.95) 0, rgba(250, 213, 198, 0.75) 55%, rgba(252, 232, 224, 0.4) 100%);
+  background: radial-gradient(
+  circle,
+  rgba($salmon, 0.95) 16.54%,
+  rgba($salmon, 0.55) 100%
+  );
+  // border-radius: 30px;
+  // backdrop-filter: blur(30px);
+  // -webkit-backdrop-filter: blur(30px);
+
+}
+.courses-table__col--sky {
+  background: radial-gradient(
+  circle,
+  rgba($sky, 0.95) 16.54%,
+  rgba($sky, 0.55) 100%
+  );
+  // background: linear-gradient(180deg, rgba($sky, 0.95) 0, rgba(214, 226, 250, 0.75) 55%, rgba(234, 240, 252, 0.4) 100%);
+}
+
+.courses-table__cell {
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.625rem;
+  text-align: center;
+  font-size: clamp(0.8125rem, 0.78cqw, 0.9375rem);
+  color: #000000;
+}
+.courses-table__cell--head {
+  font-size: clamp(0.875rem, 0.85cqw, 1rem);
+  font-weight: 700;
+  color: $ink;
+}
+.courses-table__cell--label {
+  justify-content: flex-start;
+  font-weight: 700;
+  color: #000000;
+}
+.courses-table__cell--note {
+  align-items: flex-start;
+  padding: 1rem 0.875rem 1.5rem;
+  font-size: clamp(0.75rem, 0.74cqw, 0.875rem);
+  line-height: 1.45;
+}
+
+.courses-compare__footnote {
+  width: min(54cqw, 100%);
+  margin: 1.5rem 0 0;
+  text-align: center;
+  font-size: clamp(0.8125rem, 0.78cqw, 0.9375rem);
+  color: #000;
+
+  @media (max-width: 899.98px) { text-align: left; }
+}
+
+.courses-compare__cube { right: 8%; top: 6%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .courses-hero__mouse::after { animation: none; }
+}
