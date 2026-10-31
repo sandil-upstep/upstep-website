@@ -31,20 +31,38 @@ $sky: #bcd0f6;
 .courses-laptop {
   position: absolute;
   // The image at its natural size (1147px at 1920px), 6.8vw in from the
-  // window's right edge. CoursesIntro's shrink slides it back right by 5vw
-  // more than this was before (1.8vw), so it still ends beside the table.
+  // window's right edge. CoursesIntro's shrink slides it 8vw + 50px right of this.
   right: 6.8vw;
   bottom: 0;
   width: min(59.75vw, calc((100svh - 110px) * 1147 / 757));
   transform-origin: 100% 100%;
   will-change: transform;
 
+  .courses-laptop-art { filter: drop-shadow(0 30px 40px rgba(20, 40, 110, 0.12)); }
+}
+
+// The laptop over its stand, placed as in the original single render
+// (1147×757: laptop 974 wide at 126, 0; stand 1027 wide at 70, 460). The
+// laptop levitates gently above the stand.
+.courses-laptop-art {
+  position: relative;
+  aspect-ratio: 1147 / 757;
+
   img {
+    position: absolute;
     display: block;
-    width: 100%;
     height: auto;
-    filter: drop-shadow(0 30px 40px rgba(20, 40, 110, 0.12));
   }
+}
+.courses-laptop-art__stand { left: 6.1%; top: 60.77%; width: 89.54%; }
+.courses-laptop-art__laptop {
+  left: 10.99%;
+  top: 0;
+  width: 84.92%;
+  animation: courses-laptop-float 4.5s ease-in-out infinite alternate;
+}
+@keyframes courses-laptop-float {
+  to { transform: translateY(-2.5%); }
 }
 
 // ---------- Hero ----------
@@ -150,13 +168,21 @@ $sky: #bcd0f6;
   @media (max-width: 899.98px) {
     display: block;
     margin: 2rem -1rem 0 0;
-
-    img {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
   }
+}
+
+// By the laptop screen's right edge at its starting spot (.courses-laptop),
+// where the old render had a cube, as a fraction of the laptop's width --w.
+// Held by the hero, so it scrolls with the page while the laptop shrinks.
+// Above the laptop track, as it overlaps the screen's edge.
+.courses-cube.courses-hero__cube--laptop {
+  --w: min(59.75vw, calc((100svh - 110px) * 1147 / 757));
+  z-index: 5;
+  right: calc(6.8vw + var(--w) * 0.0528);
+  bottom: calc(var(--w) * 757 / 1147 * 0.6129 - var(--w) * 0.0542);
+  width: calc(var(--w) * 0.055);
+
+  @media (max-width: 899.98px) { display: none; }
 }
 
 .courses-hero__cube--a { left: 56%; top: 24%; }
@@ -169,11 +195,18 @@ $sky: #bcd0f6;
 
 // Room either side (taken back by the margin) so the scroller's clip doesn't
 // cut off the bars, which overhang the table by 0.5rem, or their shadow.
+// It only scrolls where the table can outgrow it: a scroller clips both axes,
+// so the columns rising in from below (CoursesIntro) would flash a vertical
+// scrollbar. Phones clip that rise instead.
 .courses-table-scroll {
-  overflow-x: auto;
   margin-inline: -1.5rem;
   padding: 0 1.5rem 0.375rem;
-  -webkit-overflow-scrolling: touch;
+
+  @media (max-width: 899.98px) {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
 
   &:focus-visible { @include focus-ring; }
 }
@@ -267,6 +300,49 @@ $sky: #bcd0f6;
   font-weight: 700;
   color: #000000;
 }
+// Phones and tablets: the label column stays put while the formats scroll
+// under it. A white spine hides them behind the labels, which turn into
+// opaque pills over the rows' bars.
+.courses-table__spine {
+  display: none;
+
+  @media (max-width: 899.98px) {
+    display: block;
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    background: #ffffff;
+
+    // It sticks at the scroller's padding edge; this covers the 1.5rem of
+    // padding beside it too, or the formats show there as they pass.
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 100%;
+      width: 1.5rem;
+      background: inherit;
+    }
+  }
+}
+.courses-table__cell--label {
+  @media (max-width: 899.98px) {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 40px;
+    background: linear-gradient(129.75deg, #ffffff 16.54%, #f4f4f4 77.83%);
+    box-shadow:
+      0 4px 13px 0 #00000026,
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    padding-left: 1rem;
+  }
+}
+
 .courses-table__cell--note {
   align-items: flex-start;
   padding: 1rem 0.875rem 1.5rem;
@@ -287,5 +363,6 @@ $sky: #bcd0f6;
 .courses-compare__cube { right: 8%; top: 6%; }
 
 @media (prefers-reduced-motion: reduce) {
-  .courses-hero__mouse::after { animation: none; }
+  .courses-hero__mouse::after,
+  .courses-laptop-art__laptop { animation: none; }
 }

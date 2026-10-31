@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -11,12 +11,49 @@ import "./coursesCoaches.scss";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// The collage has four frames; with more coaches than that, one frame at a
+// time wipes in the next coach not on show, in this order of frames.
+const FRAMES = 4;
+const SWAP_ORDER = [1, 3, 0, 2];
+const SWAP_EVERY = 3000;
+
 // "Meet our coaches": stats that count up, a parent review slider, and a
-// collage of coach photos that wipe in and drift at their own speeds.
+// collage of coach photos that wipe in, drift at their own speeds and take
+// turns swapping to other coaches while the collage is on screen.
 export default function CoursesCoaches() {
   const ref = useReveal<HTMLElement>();
   const [quote, setQuote] = useState(0);
   const step = (d: number) => setQuote((q) => (q + d + QUOTES.length) % QUOTES.length);
+  const collageRef = useRef<HTMLDivElement>(null);
+  // Each frame's coach, and the one it replaced, left underneath the wipe.
+  const [frames, setFrames] = useState(() => Array.from({ length: FRAMES }, (_, i) => ({ cur: i, prev: -1 })));
+
+  useEffect(() => {
+    const collage = collageRef.current;
+    const count = COACH_PHOTOS.length;
+    if (!collage || count <= FRAMES || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const shown = Array.from({ length: FRAMES }, (_, i) => i);
+    let next = FRAMES;
+    let turn = 0;
+    let timer: number | undefined;
+    const swap = () => {
+      const frame = SWAP_ORDER[turn++ % FRAMES];
+      while (shown.includes(next % count)) next++;
+      const prev = shown[frame];
+      const cur = next++ % count;
+      shown[frame] = cur;
+      setFrames((f) => f.map((v, i) => (i === frame ? { cur, prev } : v)));
+    };
+    const io = new IntersectionObserver(([entry]) => {
+      window.clearInterval(timer);
+      timer = entry.isIntersecting ? window.setInterval(swap, SWAP_EVERY) : undefined;
+    });
+    io.observe(collage);
+    return () => {
+      io.disconnect();
+      window.clearInterval(timer);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     const root = ref.current;
@@ -106,13 +143,29 @@ export default function CoursesCoaches() {
           </figure>
         </div>
 
-        <div className="courses-coaches__collage">
-          {COACH_PHOTOS.map((p, i) => (
-            <figure key={i} className={`courses-coach courses-coach--p${i + 1}${p.light ? " courses-coach--light" : ""}`}>
-              <Image src={p.src} alt="Chess coach" width={p.width} height={p.height} sizes="(min-width: 900px) 18vw, 45vw" />
-              {p.caption && <figcaption>{p.caption}</figcaption>}
-            </figure>
-          ))}
+        <div ref={collageRef} className="courses-coaches__collage">
+          {frames.map(({ cur, prev }, i) => {
+            const p = COACH_PHOTOS[cur];
+            const old = COACH_PHOTOS[prev];
+            // Keyed by coach, so the outgoing photo stays mounted underneath.
+            return (
+              <figure key={i} className={`courses-coach courses-coach--p${i + 1}${p.light ? " courses-coach--light" : ""}`}>
+                {old && (
+                  <Image key={prev} src={old.src} alt="" width={old.width} height={old.height} sizes="(min-width: 900px) 18vw, 45vw" />
+                )}
+                <Image
+                  key={cur}
+                  src={p.src}
+                  alt="Chess coach"
+                  width={p.width}
+                  height={p.height}
+                  sizes="(min-width: 900px) 18vw, 45vw"
+                  className={old ? "is-entering" : undefined}
+                />
+                {p.caption && <figcaption key={`caption-${cur}`}>{p.caption}</figcaption>}
+              </figure>
+            );
+          })}
         </div>
       </div>
       <Cube className="courses-coaches__cube courses-coaches__cube--a" depth={0.6} />

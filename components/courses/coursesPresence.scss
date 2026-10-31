@@ -16,7 +16,7 @@
 }
 
 // Same globe as the home page testimonials: a breathing glow behind an Earth
-// that floats with a slow tilt, washed out toward the bottom by the mask.
+// that CoursesPresence turns clockwise with the scroll, washed out toward the bottom by the mask.
 // Pinned top-right, hanging a little past the column like the design, and
 // fading out just above the flags.
 .courses-presence__globe {
@@ -53,12 +53,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  animation: courses-globe-float 9s ease-in-out infinite;
-}
-
-@keyframes courses-globe-float {
-  0%, 100% { transform: translateY(0) rotate(-3deg); }
-  50% { transform: translateY(-4%) rotate(3deg); }
+  will-change: transform;
 }
 @keyframes courses-globe-glow {
   0%, 100% { opacity: 0.55; transform: scale(1); }
@@ -98,6 +93,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .courses-presence__globe::before,
-  .courses-presence__globe-img,
   .courses-presence__track { animation: none; }
 }

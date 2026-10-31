@@ -56,11 +56,10 @@ export default function CoursesIntro() {
         // Shrinks toward its bottom-right corner, where the sticky stage holds
         // it, to the design's 73% beside the table, sliding part way off the
         // window's right edge as it goes. Done as the table's foot reaches the
-        // window's, where the stage lets go. The hero holds it 5vw further
-        // left than here (coursesIntro.scss), hence 13vw rather than 8vw.
+        // window's, where the stage lets go. 8vw + 50px right of its hero spot.
         gsap.to(laptopRef.current, {
           scale: 0.73,
-          x: () => window.innerWidth * 0.13,
+          x: () => window.innerWidth * 0.08 + 50,
           ease: "power1.inOut",
           scrollTrigger: {
             trigger: ".courses-hero",
@@ -88,8 +87,28 @@ export default function CoursesIntro() {
     return () => ctx.revert();
   }, [sceneRef]);
 
+  // The stand and the laptop are separate images, so the laptop can hover.
   const laptop = (
-    <Image src="/images/courses/laptop.png" alt="" width={1147} height={757} priority sizes="(min-width: 900px) 60vw, 100vw" />
+    <div className="courses-laptop-art">
+      <Image
+        src="/images/courses/pedestal-cube.png"
+        alt=""
+        width={1027}
+        height={296}
+        priority
+        sizes="(min-width: 900px) 54vw, 90vw"
+        className="courses-laptop-art__stand"
+      />
+      <Image
+        src="/images/courses/laptop-1.png"
+        alt=""
+        width={974}
+        height={650}
+        priority
+        sizes="(min-width: 900px) 51vw, 85vw"
+        className="courses-laptop-art__laptop"
+      />
+    </div>
   );
 
   return (
@@ -134,6 +153,7 @@ export default function CoursesIntro() {
         </div>
         <Cube className="courses-hero__cube courses-hero__cube--a" depth={0.6} />
         <Cube className="courses-hero__cube courses-hero__cube--b" depth={0.4} />
+        <Cube className="courses-hero__cube courses-hero__cube--laptop" depth={0.5} n={9} />
       </section>
 
       <section className="courses-compare courses-section" aria-labelledby="courses-compare-title">
@@ -157,6 +177,7 @@ export default function CoursesIntro() {
                   aria-hidden="true"
                 />
               ))}
+              <span className="courses-table__spine" aria-hidden="true" />
 
               <div className="courses-table__row" role="row">
                 <span role="cell" style={{ gridArea: "1 / 1" }} />

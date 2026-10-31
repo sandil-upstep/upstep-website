@@ -11,8 +11,9 @@ import "./coursesBenefits.scss";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// "Key Benefits": pill cards in three staggered rows that tumble in, over a
-// checkerboard floor sliding toward the viewer while the section scrolls by.
+// "Key Benefits": pill cards in three staggered rows that rise in one by one
+// with the scroll, over a checkerboard floor sliding toward the viewer while
+// the section scrolls by.
 export default function CoursesBenefits() {
   const ref = useReveal<HTMLElement>();
 
@@ -29,16 +30,21 @@ export default function CoursesBenefits() {
           scrollTrigger: { trigger: root, start: "top bottom", end: "bottom top", scrub: true },
         },
       );
+      // Each card rises from below the window in turn, tied to the scroll.
       gsap.from(".courses-benefit", {
-        y: -70,
-        rotateX: -50,
+        y: () => window.innerHeight * 0.45,
+        rotateX: 25,
         autoAlpha: 0,
-        transformOrigin: "50% 0%",
-        duration: 0.8,
-        ease: "back.out(1.6)",
-        stagger: { each: 0.09, from: "random" },
-        clearProps: "transform",
-        scrollTrigger: { trigger: ".courses-benefits__grid", start: "top 80%", once: true },
+        transformOrigin: "50% 100%",
+        ease: "power2.out",
+        stagger: 0.18,
+        scrollTrigger: {
+          trigger: ".courses-benefits__grid",
+          start: "top bottom",
+          end: "top 30%",
+          scrub: 1,
+          invalidateOnRefresh: true,
+        },
       });
     }, root);
     return () => ctx.revert();

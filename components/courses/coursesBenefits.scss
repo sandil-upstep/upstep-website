@@ -64,8 +64,9 @@
   font-size: clamp(0.9375rem, 0.95cqw, 1.125rem);
   font-weight: 500;
   line-height: 1.25;
+  // The hover lift is `translate`, as GSAP holds `transform` for the rise.
   transition:
-    transform 0.35s $ease,
+    translate 0.35s $ease,
     border-color 0.3s;
 
   img {
@@ -77,12 +78,18 @@
   }
 
   &:hover {
-    transform: translateY(-6px);
+    translate: 0 -6px;
     border-color: rgba(255, 160, 90, 0.6);
 
     img { transform: rotate(-8deg) scale(1.08); }
   }
 }
+// Hidden until CoursesBenefits' rise fades them in (its autoAlpha sets
+// visibility back), so they don't flash in place before it starts.
+@media (prefers-reduced-motion: no-preference) {
+  .courses-benefit { visibility: hidden; }
+}
+
 // No icon: centred text, padded to the same height as the iconed cards.
 .courses-benefit--plain {
   justify-content: center;

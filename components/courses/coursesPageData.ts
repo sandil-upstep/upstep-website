@@ -56,12 +56,18 @@ export const QUOTES = [
   },
 ];
 
-// The collage's four photos, placed by .courses-coach--p1…p4.
-export const COACH_PHOTOS = [
-  { src: "/images/courses/coach-2.png", width: 370, height: 371, caption: undefined },
+export type CoachPhoto = { src: string; width: number; height: number; caption?: string; light?: boolean };
+
+// The collage shows four at a time (.courses-coach--p1…p4), starting with the
+// first four, and swaps the rest in one frame at a time. Any number works.
+// TODO: the last two are placeholders until the other coaches' photos land.
+export const COACH_PHOTOS: CoachPhoto[] = [
+  { src: "/images/courses/coach-2.png", width: 370, height: 371 },
   { src: "/images/courses/coach-1.png", width: 335, height: 336, caption: "FIDE Rating: 1800", light: true },
-  { src: "/images/courses/coach-1.png", width: 335, height: 336, caption: undefined, light: true },
+  { src: "/images/courses/coach-1.png", width: 335, height: 336, light: true },
   { src: "/images/courses/coach-2.png", width: 370, height: 371, caption: "FIDE Rating: 1800" },
+  { src: "/images/courses/coach-1.png", width: 335, height: 336, caption: "FIDE Rating: 2100", light: true },
+  { src: "/images/courses/coach-2.png", width: 370, height: 371, caption: "FIDE Rating: 1950" },
 ];
 
 // Three staggered rows, as in the design; a benefit without an icon is padded
