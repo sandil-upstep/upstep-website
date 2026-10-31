@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useReveal } from "../gap/GapParts";
+import { onScrollFrame } from "../SmoothScroll";
 import { CoursesHead, CoursesLines, Cube } from "./CoursesParts";
 import { FAQS } from "./coursesPageData";
 import "./coursesFaqs.scss";
@@ -11,6 +12,31 @@ import "./coursesFaqs.scss";
 export default function CoursesFaqs() {
   const ref = useReveal<HTMLElement>();
   const [open, setOpen] = useState<number | null>(1);
+
+  // Publishes how far the page has scrolled through the section as
+  // --faqs-scroll (0 = its top entering the viewport bottom, 1 = its bottom
+  // leaving the top), which the checkerboard uses to zoom and rotate, as in
+  // the home page's Anand section.
+  useEffect(() => {
+    const section = ref.current;
+    const checks = section?.querySelector<HTMLElement>(".courses-faqs__checks");
+    if (!section || !checks) return;
+
+    const update = () => {
+      const rect = section.getBoundingClientRect();
+      const progress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
+      checks.style.setProperty("--faqs-scroll", Math.min(1, Math.max(0, progress)).toFixed(4));
+    };
+
+    const offScroll = onScrollFrame(update);
+    window.addEventListener("resize", update);
+    update();
+
+    return () => {
+      offScroll();
+      window.removeEventListener("resize", update);
+    };
+  }, [ref]);
 
   return (
     <section ref={ref} className="courses-faqs courses-section" aria-labelledby="courses-faqs-title">

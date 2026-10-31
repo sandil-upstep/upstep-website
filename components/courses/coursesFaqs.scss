@@ -19,8 +19,13 @@
   -webkit-mask-image: radial-gradient(80% 70% at 85% 25%, #000 10%, transparent 70%);
   mask-image: radial-gradient(80% 70% at 85% 25%, #000 10%, transparent 70%);
   pointer-events: none;
+  // Zooms in and turns as the page scrolls through the section (--faqs-scroll
+  // is set by CoursesFaqs), like the home page's Anand checkerboard.
+  transform: scale(calc(1 + var(--faqs-scroll, 0) * 0.6)) rotate(calc(var(--faqs-scroll, 0) * 45deg));
+  will-change: transform;
 
   @media (max-width: 899.98px) { width: 80%; }
+  @media (prefers-reduced-motion: reduce) { transform: none; }
 }
 
 .courses-faqs__list {
